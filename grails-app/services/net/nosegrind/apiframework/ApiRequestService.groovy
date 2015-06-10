@@ -1,0 +1,199 @@
+/* ****************************************************************************
+ * Copyright 2014 Owen Rubel
+ *****************************************************************************/
+package net.nosegrind.apiframework
+
+import grails.converters.JSON
+import grails.converters.XML
+import grails.plugin.cache.GrailsCacheManager
+//import grails.plugin.springsecurity.SpringSecurityService
+
+import java.util.ArrayList
+import java.util.HashSet
+import java.util.List
+import java.util.Map
+import java.util.regex.Matcher
+import java.util.regex.Pattern
+
+import javax.servlet.forward.*
+
+import org.grails.groovy.grails.commons.*
+import grails.web.servlet.mvc.GrailsParameterMap
+import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper
+
+import net.nosegrind.apiframework.*
+
+
+class ApiRequestService extends ApiLayerService{
+
+	static transactional = false
+	
+	boolean handleApiRequest(LinkedHashMap cache, SecurityContextHolderAwareRequestWrapper request, GrailsParameterMap params, String entryPoint){
+		try{
+
+			setEnv()
+			
+			ApiStatuses error = new ApiStatuses()
+			setApiParams(request, params)
+			// CHECK IF URI HAS CACHE
+			if(cache[params.apiObject][params.action]){
+				// CHECK ACCESS TO METHOD
+				List roles = cache[params.apiObject][params.action]['roles']?.toList()
+				if(!checkAuth(request,roles)){
+					return false
+				}
+
+				// CHECK VERSION DEPRECATION DATE
+				if(cache[params.apiObject][params.action]['deprecated']?.get(0)){
+					String depdate = cache[params.apiObject][params.action]['deprecated'][0]
+					
+					if(checkDeprecationDate(depdate)){
+						String depMsg = cache[params.apiObject][params.action]['deprecated'][1]
+						// replace msg with config deprecation message
+						String msg = "[ERROR] ${depMsg}"
+						error._400_BAD_REQUEST(msg)?.send()
+						return false
+					}
+				}
+				
+				// CHECK METHOD FOR API CHAINING. DOES METHOD MATCH?
+				def method = cache[params.apiObject][params.action]['method']?.trim()
+
+				
+				// DOES api.methods.contains(request.method)
+				if(!isRequestMatch(method,request.method.toString())){
+					// check for apichain
+					
+					// TEST FOR CHAIN PATHS
+					if(chain && params?.apiChain){
+						List uri = [params.controller,params.action,params.id]
+						int pos = checkChainedMethodPosition(cache,request, params,uri,params?.apiChain?.order as Map)
+						if(pos==3){
+							String msg = "[ERROR] Bad combination of unsafe METHODS in api chain."
+							error._400_BAD_REQUEST(msg)?.send()
+							return false
+						}else{
+							return true
+						}
+					}else{
+						return true
+					}
+				}else{
+					// (NON-CHAIN) CHECK WHAT TO EXPECT; CLEAN REMAINING DATA
+					// RUN THIS CHECK AFTER MODELMAP FOR CHAINS
+
+					if(batch && params.apiBatch){
+						def temp = params.apiBatch.remove(0)
+						temp.each{ k,v ->
+							params[k] = v
+						}
+					}
+					
+					List batchRoles = cache[params.apiObject][params.action]['batchRoles']?.toList()
+					if(!checkAuth(request,batchRoles)){
+						return false
+					}else{
+						return true
+					}
+
+					if(!checkURIDefinitions(request,cache[params.apiObject][params.action]['receives'])){
+						String msg = 'Expected request variables do not match sent variables'
+						error._400_BAD_REQUEST(msg)?.send()
+						return false
+					}else{
+						return true
+					}
+				}
+
+			}
+		}catch(Exception e){
+			throw new Exception("[ApiRequestService :: handleApiRequest] : Exception - full stack trace follows:",e)
+		}
+	}
+	
+	protected void setApiParams(SecurityContextHolderAwareRequestWrapper request, GrailsParameterMap params){
+		try{
+			if(!params.contentType){
+				List content = getContentType(request.getHeader('Content-Type'))
+				params.contentType = content[0]
+				params.encoding = (content.size()>1)?content[1]:null
+				
+				if(chain && params?.apiChain?.combine=='true'){
+					if(!params.apiCombine){ params.apiCombine = [:] }
+				}
+				
+				switch(params?.contentType){
+					case 'text/json':
+					case 'application/json':
+						if(request?.JSON){
+							request?.JSON.each{ k,v ->
+								if(chain && k=='chain'){
+									params.apiChain = [:]
+									params.apiChain = request.JSON.chain
+								}else if(batch && k=='batch'){
+									params.apiBatch = []
+									v.each { it ->
+										params.apiBatch.add(it)
+									}
+									params.apiBatch = params.apiBatch
+									//request.JSON.remove("batch")
+								}else{
+									params[k]=v
+								}
+							}
+							if(request?.JSON?.chain){
+								request.JSON.remove('chain')
+							}
+							if(request?.JSON?.batch){
+								request.JSON.remove('batch')
+							}
+						}
+						break
+					case 'text/xml':
+					case 'application/xml':
+						if(request?.XML){
+							request?.XML.each{ k,v ->
+								if(chain && k=='chain'){
+									params.apiChain = [:]
+									params.apiChain = request.XML.chain
+									//request.XML.remove("chain")
+								}else if(batch && k=='batch'){
+									params.apiBatch = []
+									v.each { it ->
+										params.apiBatch.add(it.value)
+									}
+									params.apiBatch = params.apiBatch.reverse()
+									//request.XML.remove("batch")
+								}else{
+									params[k]=v
+								}
+							}
+							if(request?.XML.chain){
+								request.XML.remove('chain')
+							}
+							if(request?.XML.batch){
+								request.XML.remove('batch')
+							}
+						}
+						break
+				}
+			}
+			
+		}catch(Exception e){
+			throw new Exception("[ApiRequestService :: setApiParams] : Exception - full stack trace follows:"+ e);
+		}
+	}
+	
+	boolean isRequestMatch(String protocol,String method){
+		if(['OPTIONS','TRACE','HEAD'].contains(method)){
+			return true
+		}else{
+			if(protocol == method){
+				return true
+			}else{
+				return false
+			}
+		}
+		return false
+	}
+}
