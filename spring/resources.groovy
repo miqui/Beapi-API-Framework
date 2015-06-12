@@ -3,6 +3,6 @@
 //import net.nosegrind.apiframework.SecurityConfiguration
 
 beans = {
-    webSecurityConfiguration(SecurityConfiguration)
-    userDetailsService(GormUserDetailsService)
+    //webSecurityConfiguration(SecurityConfiguration)
+    //userDetailsService(GormUserDetailsService)
 }

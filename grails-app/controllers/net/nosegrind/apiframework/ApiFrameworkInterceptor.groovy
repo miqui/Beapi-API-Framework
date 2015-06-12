@@ -29,11 +29,11 @@ import javax.servlet.ServletContext
 import grails.core.ApplicationAttributes
 
 import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper
-import org.codehaus.groovy.grails.commons.GrailsApplication
+//import org.codehaus.groovy.grails.commons.GrailsApplication
 
 import javax.servlet.http.HttpServletResponse
 import org.springframework.web.util.WebUtils
-import grails.core.GrailsApplication
+//import grails.core.GrailsApplication
 import net.nosegrind.apitoolkit.*
 
 class ApiFrameworkInterceptor {
@@ -45,7 +45,7 @@ class ApiFrameworkInterceptor {
 	
 	ApiDomainService apiDomainService
 	
-	GrailsApplication grailsApplication
+	//GrailsApplication grailsApplication
 	ApiCacheService apiCacheService
 
 	String apiName = grailsApplication.config.apitoolkit.apiName

@@ -71,6 +71,14 @@ grails:
                 staticparts: none
 
 ---
+hibernate:
+    cache:
+        use_second_level_cache: true
+        use_query_cache: true
+        provider_class: org.hibernate.cache.EhCacheProvider
+        region:
+            factory_class: net.sf.ehcache.hibernate.EhCacheRegionFactory
+
 dataSource:
     pooled: true
     jmxExport: true

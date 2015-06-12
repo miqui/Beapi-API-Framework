@@ -31,14 +31,14 @@ import org.springframework.web.util.WebUtils
 import org.grails.validation.routines.UrlValidator
 
 import org.springframework.cache.Cache
-import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper
+//import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository
 import org.springframework.web.context.request.RequestContextHolder as RCH
 import org.springframework.ui.ModelMap
 
 import org.springframework.ui.ModelMap
 import grails.core.GrailsDomainClass
-
+import javax.servlet.http.HttpServletRequest
 import net.nosegrind.apiframework.*
 
 
@@ -46,7 +46,7 @@ class ApiResponseService extends ApiLayerService{
 
 	static transactional = false
 	
-	boolean handleApiChain(LinkedHashMap cache, SecurityContextHolderAwareRequestWrapper request, HttpServletResponse response, Map model, GrailsParameterMap params){
+	boolean handleApiChain(LinkedHashMap cache, HttpServletRequest request, HttpServletResponse response, Map model, GrailsParameterMap params){
 		try{
 			List uri = [params.controller,params.action,params.id]
 			ApiStatuses errors = new ApiStatuses()
@@ -123,7 +123,7 @@ class ApiResponseService extends ApiLayerService{
 		}
 	}
 	
-	def handleApiResponse(LinkedHashMap cache, SecurityContextHolderAwareRequestWrapper request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
+	def handleApiResponse(LinkedHashMap cache, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
 		try{
 			String type = ''
 			if(cache){
@@ -155,7 +155,7 @@ class ApiResponseService extends ApiLayerService{
 		}
 	}
 	
-	GrailsParameterMap getParams(SecurityContextHolderAwareRequestWrapper request,GrailsParameterMap params){
+	GrailsParameterMap getParams(HttpServletRequest request,GrailsParameterMap params){
 		try{
 			List formats = ['text/json','application/json','text/xml','application/xml']
 			List tempType = getContentType(request.getHeader('Content-Type'))
@@ -181,7 +181,7 @@ class ApiResponseService extends ApiLayerService{
 		}
 	}
 	
-	boolean isChain(SecurityContextHolderAwareRequestWrapper request,GrailsParameterMap params){
+	boolean isChain(HttpServletRequest request,GrailsParameterMap params){
 		try{
 			switch(params.contentType){
 				case 'text/xml':
@@ -204,7 +204,7 @@ class ApiResponseService extends ApiLayerService{
 		}
 	}
 	
-	LinkedHashMap parseURIDefinitions(SecurityContextHolderAwareRequestWrapper request, LinkedHashMap model,LinkedHashMap responseDefinitions){
+	LinkedHashMap parseURIDefinitions(HttpServletRequest request, LinkedHashMap model,LinkedHashMap responseDefinitions){
 		try{
 			ApiStatuses errors = new ApiStatuses()
 			String msg = 'Error. Invalid variables being returned. Please see your administrator'
@@ -505,7 +505,7 @@ class ApiResponseService extends ApiLayerService{
 		}
 	}
 	
-	Map parseResponseMethod(SecurityContextHolderAwareRequestWrapper request, GrailsParameterMap params, Map map, LinkedHashMap returns){
+	Map parseResponseMethod(HttpServletRequest request, GrailsParameterMap params, Map map, LinkedHashMap returns){
 		Map data = [:]
 		switch(request.method) {
 			case 'PURGE':
@@ -545,7 +545,7 @@ class ApiResponseService extends ApiLayerService{
 		return ['apiToolkitContent':data.content,'apiToolkitType':data.contentType,'apiToolkitEncoding':data.encoding]
 	}
 
-	Map parseContentType(SecurityContextHolderAwareRequestWrapper request, GrailsParameterMap params, Map map, LinkedHashMap returns){
+	Map parseContentType(HttpServletRequest request, GrailsParameterMap params, Map map, LinkedHashMap returns){
 		String content
 		String contentType = (params.contentType)?params.contentType:'application/json'
 		String encoding = (params.encoding)?params.encoding:"UTF-8"

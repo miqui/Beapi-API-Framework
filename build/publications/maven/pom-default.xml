@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.grails.plugins</groupId>
-  <artifactId>grails-api-framework</artifactId>
+  <artifactId>api-framework</artifactId>
   <version>0.1-SNAPSHOT</version>
   <dependencies>
     <dependency>
@@ -15,12 +15,6 @@
       <groupId>com.stormpath.sdk</groupId>
       <artifactId>stormpath-sdk-oauth</artifactId>
       <version>1.0.RC3.1</version>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.stormpath.spring.security</groupId>
-      <artifactId>stormpath-spring-security-core</artifactId>
-      <version>0.2.0</version>
       <scope>runtime</scope>
     </dependency>
     <dependency>

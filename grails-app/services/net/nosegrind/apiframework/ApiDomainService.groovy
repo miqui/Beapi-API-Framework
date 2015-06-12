@@ -21,7 +21,7 @@ import grails.web.servlet.mvc.GrailsParameterMap;
 class ApiDomainService{
 
 	GrailsApplication grailsApplication
-	SpringSecurityService springSecurityService
+	//SpringSecurityService springSecurityService
 	ApiLayerService apiLayerService
 
 	static transactional = false

@@ -35,7 +35,7 @@ import net.nosegrind.apiframework.*
 class ApiObjectService{
 
 	GrailsApplication grailsApplication
-	SpringSecurityService springSecurityService
+	//SpringSecurityService springSecurityService
 	ApiLayerService apiLayerService
 	//ApiToolkitService apiToolkitService
 	GrailsCacheManager grailsCacheManager

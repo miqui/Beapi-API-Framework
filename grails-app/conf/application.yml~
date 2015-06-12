@@ -55,9 +55,9 @@ grails:
         encoding: UTF-8
     hibernate:  
         cache:
-	    queries: false
-	    use_second_level_cache: false  
-	    use_query_cache: false  
+            queries: false
+            use_second_level_cache: false  
+            use_query_cache: false  
     views:
         default:
             codec: html
@@ -71,6 +71,13 @@ grails:
                 staticparts: none
 
 ---
+hibernate:
+    cache:
+        use_second_level_cache: true
+        use_query_cache: true
+        provider_class: org.hibernate.cache.EhCacheProvider
+        provider_class: org.hibernate.cache.EhCacheProvider
+
 dataSource:
     pooled: true
     jmxExport: true

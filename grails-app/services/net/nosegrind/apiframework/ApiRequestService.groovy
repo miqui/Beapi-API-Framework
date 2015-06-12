@@ -19,8 +19,8 @@ import javax.servlet.forward.*
 
 import org.grails.groovy.grails.commons.*
 import grails.web.servlet.mvc.GrailsParameterMap
-import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper
-
+//import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper
+import javax.servlet.http.HttpServletRequest
 import net.nosegrind.apiframework.*
 
 
@@ -28,7 +28,7 @@ class ApiRequestService extends ApiLayerService{
 
 	static transactional = false
 	
-	boolean handleApiRequest(LinkedHashMap cache, SecurityContextHolderAwareRequestWrapper request, GrailsParameterMap params, String entryPoint){
+	boolean handleApiRequest(LinkedHashMap cache, HttpServletRequest request, GrailsParameterMap params, String entryPoint){
 		try{
 
 			setEnv()
@@ -111,7 +111,7 @@ class ApiRequestService extends ApiLayerService{
 		}
 	}
 	
-	protected void setApiParams(SecurityContextHolderAwareRequestWrapper request, GrailsParameterMap params){
+	protected void setApiParams(HttpServletRequest request, GrailsParameterMap params){
 		try{
 			if(!params.contentType){
 				List content = getContentType(request.getHeader('Content-Type'))

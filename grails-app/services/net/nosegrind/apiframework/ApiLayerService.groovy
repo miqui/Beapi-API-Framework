@@ -23,6 +23,7 @@ import java.util.regex.Pattern
 import grails.core.GrailsApplication
 
 import javax.servlet.forward.*
+import javax.servlet.http.HttpServletRequest
 
 import java.text.SimpleDateFormat
 
@@ -38,11 +39,10 @@ import org.springframework.web.util.WebUtils
 //import org.codehaus.groovy.grails.validation.routines.UrlValidator
 
 import org.springframework.cache.Cache
-import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper
+//import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper
 import org.springframework.web.context.request.RequestContextHolder as RCH
 //import org.springframework.ui.ModelMap
-
-import net.nosegrind.apiframework.Method
+import org.springframework.web.context.request.ServletRequestAttributes
 import net.nosegrind.apiframework.*
 
 
@@ -51,7 +51,7 @@ class ApiLayerService{
 	static transactional = false
 	
 	GrailsApplication grailsApplication
-	SpringSecurityService springSecurityService
+	//SpringSecurityService springSecurityService
 	ApiCacheService apiCacheService
 
 	boolean chain = true
@@ -66,15 +66,17 @@ class ApiLayerService{
 		this.localauth = grailsApplication.config.apitoolkit.localauth.enabled
 	}
 	
-	private SecurityContextHolderAwareRequestWrapper getRequest(){
-		return RCH.currentRequestAttributes().currentRequest
+	private HttpServletRequest getRequest(){
+		//return RCH.currentRequestAttributes().currentRequest
+		HttpServletRequest request = ((ServletRequestAttributes) RCH.currentRequestAttributes()).getRequest()
+		return request
 	}
 	
 	private GrailsContentBufferingResponse getResponse(){
 		return RCH.currentRequestAttributes().currentResponse
 	}
 	
-	boolean checkAuth(SecurityContextHolderAwareRequestWrapper request, List roles){
+	boolean checkAuth(HttpServletRequest request, List roles){
 		try{
 			boolean hasAuth = false
 			roles.each{
@@ -123,7 +125,7 @@ class ApiLayerService{
 	/*
 	 * TODO: Need to compare multiple authorities
 	 */
-	boolean checkURIDefinitions(SecurityContextHolderAwareRequestWrapper request, LinkedHashMap requestDefinitions){
+	boolean checkURIDefinitions(HttpServletRequest request, LinkedHashMap requestDefinitions){
 		try{
 			List optionalParams = ['action','controller','apiName_v','contentType', 'encoding','apiChain', 'apiBatch', 'apiCombine', 'apiObject','apiObjectVersion', 'chain']
 			List requestList = getApiParams(request, requestDefinitions)
@@ -144,7 +146,7 @@ class ApiLayerService{
 		}
 	}
 	
-	List getApiParams(SecurityContextHolderAwareRequestWrapper request, LinkedHashMap definitions){
+	List getApiParams(HttpServletRequest request, LinkedHashMap definitions){
 		try{
 			List apiList = []
 			definitions.each{ key,val ->
@@ -162,7 +164,7 @@ class ApiLayerService{
 		}
 	}
 	
-	LinkedHashMap getApiObjectParams(SecurityContextHolderAwareRequestWrapper request, LinkedHashMap definitions){
+	LinkedHashMap getApiObjectParams(HttpServletRequest request, LinkedHashMap definitions){
 		try{
 			LinkedHashMap apiList = [:]
 			definitions.each{ key,val ->
@@ -184,7 +186,7 @@ class ApiLayerService{
 		try{
 			boolean isChain = false
 			List optionalParams = ['action','controller','apiName_v','contentType', 'encoding','apiChain', 'apiBatch', 'apiCombine', 'apiObject','apiObjectVersion', 'chain']
-			SecurityContextHolderAwareRequestWrapper request = getRequest()
+			HttpServletRequest request = getRequest()
 			GrailsParameterMap params = RCH.currentRequestAttributes().params
 			Map paramsRequest = params.findAll {
 				if(it.key=='apiChain'){ isChain=true }
@@ -304,7 +306,7 @@ class ApiLayerService{
 	// api call now needs to detect request method and see if it matches anno request method
 	boolean isApiCall(){
 		try{
-			SecurityContextHolderAwareRequestWrapper request = getRequest()
+			HttpServletRequest request = getRequest()
 			GrailsParameterMap params = RCH.currentRequestAttributes().params
 			String uri = request.forwardURI.split('/')[1]
 			String api
@@ -319,7 +321,7 @@ class ApiLayerService{
 		}
 	}
 	
-	protected void setParams(SecurityContextHolderAwareRequestWrapper request,GrailsParameterMap params){
+	protected void setParams(HttpServletRequest request,GrailsParameterMap params){
 		try{
 			List formats = ['text/json','application/json','text/xml','application/xml']
 			List tempType = request.getHeader('Content-Type')?.split(';')
@@ -350,7 +352,7 @@ class ApiLayerService{
 	 * 2 = postchain
 	 * 3 = illegal combination
 	 */
-	protected int checkChainedMethodPosition(LinkedHashMap cache,SecurityContextHolderAwareRequestWrapper request, GrailsParameterMap params, List uri, Map path){
+	protected int checkChainedMethodPosition(LinkedHashMap cache,HttpServletRequest request, GrailsParameterMap params, List uri, Map path){
 		try{
 			boolean preMatch = false
 			boolean postMatch = false
