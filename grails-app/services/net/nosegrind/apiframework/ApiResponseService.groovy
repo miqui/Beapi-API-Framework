@@ -8,43 +8,51 @@ import grails.converters.XML
 import grails.plugin.cache.GrailsCacheManager
 //import grails.plugin.springsecurity.SpringSecurityService
 import grails.spring.BeanBuilder
-import grails.util.Holders as HOLDER
+//import grails.util.Holders as HOLDER
 
 import java.util.ArrayList
 import java.util.HashSet
 import java.util.Map
 import java.util.regex.Matcher
 import java.util.regex.Pattern
-
 import java.lang.reflect.Method
+
 import javax.servlet.forward.*
+
 import java.text.SimpleDateFormat
 
 import org.grails.groovy.grails.commons.*
 import org.grails.web.json.JSONObject
+
 import grails.web.servlet.mvc.GrailsParameterMap
+
 import org.grails.web.util.GrailsApplicationAttributes
 //import org.grails.web.sitemesh.GrailsContentBufferingResponse
+
 import javax.servlet.http.HttpServletResponse
 
 import org.springframework.web.util.WebUtils
 import org.grails.validation.routines.UrlValidator
-
 import org.springframework.cache.Cache
 //import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository
+//import org.springframework.security.web.context.HttpSessionSecurityContextRepository
 import org.springframework.web.context.request.RequestContextHolder as RCH
 import org.springframework.ui.ModelMap
 
 import org.springframework.ui.ModelMap
+
 import grails.core.GrailsDomainClass
+import grails.core.GrailsApplication
 import javax.servlet.http.HttpServletRequest
+
 import net.nosegrind.apiframework.*
 
 
 class ApiResponseService extends ApiLayerService{
 
 	static transactional = false
+	
+	GrailsApplication grailsApplication
 	
 	boolean handleApiChain(LinkedHashMap cache, HttpServletRequest request, HttpServletResponse response, Map model, GrailsParameterMap params){
 		try{
@@ -262,7 +270,8 @@ class ApiResponseService extends ApiLayerService{
 	}
 	
 	List getRedirectParams(){
-		def uri = HOLDER.getServletContext().getControllerActionUri(request)
+		def uri = grailsApplication.mainContext.servletContext.getControllerActionUri(request)
+		//def uri = HOLDER.getServletContext().getControllerActionUri(request)
 		return uri[1..(uri.size()-1)].split('/')
 	}
 	

@@ -13,8 +13,9 @@ import java.util.Map;
 import grails.plugin.cache.CacheEvict
 import grails.plugin.cache.Cacheable
 import grails.plugin.cache.CachePut
-import grails.plugin.cache.GrailsValueWrapper
-import grails.plugin.cache.GrailsCacheManager
+//import grails.plugin.cache.GrailsValueWrapper
+//import grails.plugin.cache.GrailsCacheManager
+import org.springframework.cache.CacheManager
 //import grails.plugin.springsecurity.SpringSecurityService
 
 import org.springframework.cache.Cache
@@ -33,7 +34,8 @@ class ApiCacheService{
 	//SpringSecurityService springSecurityService
 	ApiLayerService apiLayerService
 	//ApiToolkitService apiToolkitService
-	GrailsCacheManager grailsCacheManager
+	//GrailsCacheManager grailsCacheManager
+	CacheManager cacheManager
 	
 	
 	/*
@@ -147,7 +149,7 @@ class ApiCacheService{
 	
 	LinkedHashMap getApiCache(String controllername){
 		try{
-			def cache = grailsCacheManager.getCache('ApiCache').get(controllername)
+			def cache = cacheManager.getCache('ApiCache').get(controllername)
 
 			if(cache){
 				return cache.get() as LinkedHashMap
@@ -159,7 +161,7 @@ class ApiCacheService{
 	}
 	
 	List getCacheNames(){
-		List cacheNames = grailsCacheManager.getCache('ApiCache').getAllKeys() as List
+		List cacheNames = cacheManager.getCache('ApiCache').getAllKeys() as List
 		// List cacheNames = temp.collect{ if(!['hook','iostate'].contains(it)){ it }}
 		return cacheNames
 	}

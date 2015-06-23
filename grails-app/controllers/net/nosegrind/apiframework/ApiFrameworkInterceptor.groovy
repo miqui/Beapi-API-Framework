@@ -28,13 +28,13 @@ import javax.servlet.ServletContext
 //import org.codehaus.groovy.grails.web.servlet.GrailsApplicationAttributes
 import grails.core.ApplicationAttributes
 
-import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper
+//import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper
 //import org.codehaus.groovy.grails.commons.GrailsApplication
 
 import javax.servlet.http.HttpServletResponse
 import org.springframework.web.util.WebUtils
-//import grails.core.GrailsApplication
-import net.nosegrind.apitoolkit.*
+import net.nosegrind.apiframework.*
+import grails.util.Environment
 
 class ApiFrameworkInterceptor {
 	
@@ -44,12 +44,11 @@ class ApiFrameworkInterceptor {
 	ApiResponseService apiResponseService
 	
 	ApiDomainService apiDomainService
-	
-	//GrailsApplication grailsApplication
+
 	ApiCacheService apiCacheService
 
-	String apiName = grailsApplication.config.apitoolkit.apiName
-	String apiVersion = grailsApplication.metadata['app.version']
+	String apiName = grails.util.Holders.getGrailsApplication().config.apitoolkit.apiName
+	String apiVersion = grails.util.Holders.getGrailsApplication().metadata['app.version']
 	String apinameEntrypoint = "${apiName}_v${apiVersion}"
 	String versionEntrypoint = "v${apiVersion}"
 	String entryPoint = (apiName)?apinameEntrypoint:versionEntrypoint

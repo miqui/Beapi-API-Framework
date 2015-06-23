@@ -10,7 +10,20 @@ description( "Initialize API Framework" ) {
 String templateDir = "$apiToolkitPluginDir/src/templates/"
 String appDir = "$basedir/grails-app"
 
-model = args[0]
+
+// create IO State Objects
+render  template:"/templates/iostate/Hook.json",destination: file("grails-app/src/iostate/Hook.json"),model: model
+render  template:"/templates/iostate/IOState.json",destination: file("grails-app/src/iostate/IOState.json"),model: model
+
+// create domains
+render  template:"/templates/domains/Hook.groovy",destination: file("grails-app/domain/Hook.groovy"),model: model
+render  template:"/templates/domains/HookRole",destination: file("grails-app/domain/HookRole.groovy"),model: model
+render  template:"/templates/domains/Role",destination: file("grails-app/domain/Role.groovy"),model: model
+
+// create controllers
+render  template:"/templates/controllers/HookController.groovy",destination: file("grails-app/controllers/HookController.groovy"),model: model
+render  template:"/templates/controllers/IostateController.groovy",destination: file("grails-app/controllers/IostateController.groovy"),model: model
+
 copyControllersAndViews()
 switch(args[0]){
 	case 'master':

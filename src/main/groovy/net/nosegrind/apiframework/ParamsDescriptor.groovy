@@ -3,7 +3,7 @@
  *****************************************************************************/
 package net.nosegrind.apiframework;
 
-import grails.util.Holders
+
 import grails.validation.Validateable
 //import grails.compiler.GrailsCompileStatic
 //import groovy.transform.TypeCheckingMode

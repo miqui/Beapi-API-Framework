@@ -9,6 +9,7 @@ class ApiBootStrap {
 	def apiCacheService
 
 	def init = { servletContext ->
+		/*
 		Person user = Person.findByUsername("${grailsApplication.config.root.login}")
 		boolean hasAuthority = false
 		Set authorities = user.getAuthorities()
@@ -39,8 +40,8 @@ class ApiBootStrap {
 			
 			status.isCompleted()
 		}
-		
-		apiObjectService.initialize()
+		*/
+		//apiObjectService.initialize()
 	}
 	
 	def destroy = {}

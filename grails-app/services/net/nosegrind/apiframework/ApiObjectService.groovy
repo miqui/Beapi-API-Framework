@@ -10,18 +10,23 @@ import java.lang.reflect.Method
 import org.grails.core.DefaultGrailsControllerClass
 import grails.core.GrailsApplication
 
-import grails.util.Holders
+//import grails.util.Holders
 import grails.converters.JSON
 import grails.converters.XML
 import groovy.util.ConfigObject
 import grails.util.Environment
-
+import grails.util.BuildSettings
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import grails.plugin.cache.GrailsCacheManager
+import org.codehaus.groovy.grails.plugins.GrailsPluginInfo
+import grails.plugins.GrailsPluginManager
+import grails.plugins.GrailsPlugin
+
+//import grails.plugin.cache.GrailsCacheManager
+//import org.springframework.cache.CacheManager
 //import grails.plugin.springsecurity.SpringSecurityService
 
 import org.springframework.cache.Cache
@@ -31,14 +36,14 @@ import org.springframework.web.context.request.RequestContextHolder as RCH
 
 import net.nosegrind.apiframework.*
 
-
 class ApiObjectService{
 
 	GrailsApplication grailsApplication
 	//SpringSecurityService springSecurityService
 	ApiLayerService apiLayerService
 	//ApiToolkitService apiToolkitService
-	GrailsCacheManager grailsCacheManager
+	//GrailsCacheManager grailsCacheManager
+	//CacheManager cacheManager
 	ApiCacheService apiCacheService
 	def grailsResourceLocator
 	
@@ -46,12 +51,15 @@ class ApiObjectService{
 	static transactional = false
 	
 	public initialize(){
-		println('Configuring API Toolkit ...')
+		//Object version = 0.1
+		//GrailsPlugin plugin = GrailsPluginManager.getGrailsPlugin("api-framework")
+		
 		try {
 			if(grailsApplication.config.apitoolkit.serverType=='master'){
 				String ioPath
 				if(grailsApplication.isWarDeployed()){
-					ioPath = Holders.servletContext.getRealPath('/')
+					//ioPath = Holders.servletContext.getRealPath('/')
+					ioPath = grailsApplication.mainContext.servletContext.getRealPath('/')
 					if(Environment.current == Environment.DEVELOPMENT || Environment.current == Environment.TEST){
 						ioPath += 'WEB-INF/classes/iostate'
 					}else{
@@ -59,22 +67,24 @@ class ApiObjectService{
 						ioPath += 'WEB-INF/classes/iostate'
 					}
 				}else{
-					ioPath = grails.util.BuildSettingsHolder.settings?.resourcesDir?.path
-					println("63:"+ioPath)
+					//ioPath = (String) BuildSettings.BASE_DIR?.path
+					//ioPath = System.getProperty(BuildSettings.PROJECT_RESOURCES_DIR)
+					ioPath = plugin.PLUGINS_PATH
 					if(Environment.current == Environment.DEVELOPMENT || Environment.current == Environment.TEST){
-						ioPath += '/iostate'
+						//ioPath = grailsApplication.mainContext.getResources("conf/iostate").path
+						ioPath += '/grails-app/iostate'
 					}else{
 						// test in Environment.PRODUCTION
-						ioPath += '/iostate'
+						//ioPath = grailsApplication.mainContext.getResources("conf/iostate").path
+						ioPath += '/grails-app/iostate'
 					}
 					
 				}
-				println("72:"+ioPath)
 				parseFiles(ioPath)
 			}
 			
 			String apiObjectSrc = grailsApplication.config.apitoolkit.iostate.preloadDir
-			parseFiles(apiObjectSrc)
+			parseFiles(apiObjectSrc.toString())
 			
 			
 		} catch (Exception e) {
@@ -89,7 +99,6 @@ class ApiObjectService{
 	}
 	
 	private parseFiles(String path){
-		println(path)
 		new File(path).eachFile() { file ->
 			def tmp = file.name.toString().split('\\.')
 			if(tmp[1]=='json'){

@@ -3,13 +3,16 @@
  *****************************************************************************/
 package net.nosegrind.apiframework
 
+import javax.servlet.http.HttpServletRequest;
+
 import net.nosegrind.apiframework.ErrorCodeDescriptor;
 
 import org.springframework.web.context.request.RequestContextHolder as RCH
-import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper
+//import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper
 import org.grails.web.sitemesh.GrailsContentBufferingResponse
 import org.springframework.web.context.request.RequestAttributes
 import org.springframework.web.context.request.ServletRequestAttributes
+import javax.servlet.http.HttpServletRequest
 
 //@GrailsCompileStatic
 class ApiStatuses{
@@ -28,21 +31,18 @@ class ApiStatuses{
 	private ApiStatuses() {}
 	public static final String RESPONSE_NAME_AT_ATTRIBUTES = ServletRequestAttributes.class.getName() + ".ATTRIBUTE_NAME";
 	
-	SecurityContextHolderAwareRequestWrapper getRequest(){
-		return RCH.currentRequestAttributes()?.currentRequest
+	private HttpServletRequest getRequest(){
+		//return RCH.currentRequestAttributes().currentRequest
+		HttpServletRequest request = ((ServletRequestAttributes) RCH.currentRequestAttributes()).getRequest()
+		return request
 	}
 	
-	SecurityContextHolderAwareRequestWrapper getResponse(){
-      RequestAttributes requestAttributes = RCH.getRequestAttributes();
-      ServletRequestAttributes servletRequestAttributes = (ServletRequestAttributes) requestAttributes;
-      SecurityContextHolderAwareRequestWrapper response = (SecurityContextHolderAwareRequestWrapper) servletRequestAttributes.getAttribute(RESPONSE_NAME_AT_ATTRIBUTES, RequestAttributes.SCOPE_REQUEST);
-      return response;
-		
-		//return RCH.currentRequestAttributes()?.currentResponse
+	GrailsContentBufferingResponse getResponse(){
+      return RCH.currentRequestAttributes()?.currentResponse
 	}
 
 	String getContentType(){
-		SecurityContextHolderAwareRequestWrapper request = getRequest()
+		HttpServletRequest request = getRequest()
 		def tempType = request.getHeader('Content-Type')?.split(';')
 		def type = (tempType)?tempType[0]:request.getHeader('Content-Type')
 		return type

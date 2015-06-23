@@ -3,8 +3,13 @@ package grails.api.framework
 import grails.plugins.*
 import grails.util.GrailsNameUtils
 import grails.util.Metadata
+import grails.util.BuildSettings
 
-class GrailsApiFrameworkGrailsPlugin extends Plugin {
+import java.util.jar.JarFile
+import java.util.jar.JarException
+import java.util.jar.JarEntry
+
+class GrailsApiFrameworkGrailsPlugin extends Plugin{
 	def version = "0.1"
     def grailsVersion = "3.0.1 > *"
     def title = "Grails Api Framework" // Headline display name of the plugin
@@ -16,7 +21,9 @@ class GrailsApiFrameworkGrailsPlugin extends Plugin {
 	def issueManagement = [system: 'GitHub', url: 'https://github.com/orubel/grails-api-toolkit-docs/issues']
 	def scm = [url: 'https://github.com/orubel/grails-api-toolkit']
 	
-
+	def dependsOn = [cache: "* > 3.0"]
+	def loadAfter = ['cache']
+	
     def pluginExcludes = [
         "grails-app/views/error.gsp"
     ]
@@ -31,56 +38,43 @@ class GrailsApiFrameworkGrailsPlugin extends Plugin {
         } 
     }
 
-    void doWithDynamicMethods() {
-        // TODO Implement registering dynamic methods to classes (optional)
-    }
-
+	def doWithDynamicMethods = {
+	}
+	
     void doWithApplicationContext() {
-		ant.mkdir(dir: "${basedir}/src/apiObject")
+		String basedir = BuildSettings.BASE_DIR
+		def ant = new AntBuilder()
+		ant.mkdir(dir: "${basedir}/src/iostate")
 		ant.mkdir(dir: "${System.properties.'user.home'}/.iostate")
-		
-		def configFile = new File("${basedir}/grails-app", 'conf/Config.groovy')
-		if (configFile.exists()) {
-			configFile.withWriterAppend {
-				it.writeLine """
-		###Added by the Api Toolkit plugin
-		apitoolkit.apiName = 'api'
-		apitoolkit.apichain.limit=3
-		apitoolkit.rest.postcrement=false
-		apitoolkit.attempts = 5
-		apitoolkit.chaining.enabled=true
-		apitoolkit.batching.enabled=true
-		apitoolkit.roles = ['ROLE_USER','ROLE_ROOT','ROLE_ADMIN','ROLE_ARCH']
-		apitoolkit.user.roles = ['ROLE_USER']
-		apitoolkit.admin.roles = ['ROLE_ROOT','ROLE_ADMIN','ROLE_ARCH']
-		
-		apitoolkit.apiobject.type = [
-			"PKEY":["type":"Long","references":"self","description":"Primary Key","mockData":"1"],
-			"FKEY":["type":"Long","description":"","mockData":"1"],
-			"INDEX":["type":"String","references":"self","description":"Foreign Key","mockData":"1"],
-			"String":["type":"String","description":"String","mockData":"mockString"],
-			"Date":["type":"String","description":"String","mockData":"1970-01-01 00:00:01"],
-			"Long":["type":"Long","description":"Long","mockData":"1234"],
-			"Boolean":["type":"Boolean","description":"Boolean","mockData":"true"],
-			"Float":["type":"Float","description":"Floating Point","mockData":"0.01"],
-			"BigDecimal":["type":"BigDecimal","description":"Big Decimal","mockData":"1234567890"],
-			"URL":["type":"URL","description":"URL","mockData":"www.mockdata.com"],
-			"Email":["type":"Email","description":"Email","mockData":"test@mockdata.com"],
-			"Array":["type":"Array","description":"Array","mockData":["this","is","mockdata"]],
-			"Composite":["type":"Composite","description":"Composite","mockData":["type":"Composite","description":"this is a composite","List":[1,2,3,4,5]]]
-		]
-				"""
-				
-			}
-			
-			println """
-			************************************************************
-			* SUCCESS! You have successfully installed the API Toolkit *
-			************************************************************
-		"""
-		}
+		doInitApiFrameworkInstall(applicationContext)
     }
 
+	void doInitApiFrameworkInstall(applicationContext) {
+		//String basedir = applicationContext.getResource("../../..").getFile().path
+		String basedir = BuildSettings.BASE_DIR.getAbsolutePath()
+		basedir = basedir.substring(0,basedir.length()-2)
+		
+		String pluginDir = new File(getClass().protectionDomain.codeSource.location.path).path
+		def plugin = new File(pluginDir)
+		if (plugin.isFile() && plugin.name.endsWith("jar")){
+			JarFile jar = new JarFile(plugin)
+			
+			try{
+				writeFile("templates/iostate/Hook.json.template","${basedir}/src/iostate/Hook.json")
+				writeFile("templates/iostate/IOState.json.template","${basedir}/src/iostate/IOState.json")
+				
+				writeFile("templates/controllers/HookController.groovy.template","${basedir}/grails-app/controllers/HookController.groovy")
+				writeFile("templates/controllers/IostateController.groovy.template","${basedir}/grails-app/controllers/IostateController.groovy")
+				
+				writeFile("templates/domains/Hook.groovy.template","${basedir}/grails-app/domain/Hook.groovy")
+				writeFile("templates/domains/HookRole.groovy.template","${basedir}/grails-app/domain/HookRole.groovy")
+				writeFile("templates/domains/Role.groovy.template","${basedir}/grails-app/domain/Role.groovy")
+			}catch (JarException jarEx){
+			   println "Unable to open file : ${plugin.name}"
+			}
+		}
+	}
+	
     void onChange(Map<String, Object> event) {
         // TODO Implement code that is executed when any artefact that this plugin is
         // watching is modified and reloaded. The event contains: event.source,
@@ -95,4 +89,22 @@ class GrailsApiFrameworkGrailsPlugin extends Plugin {
     void onShutdown(Map<String, Object> event) {
         // TODO Implement code that is executed when the application shuts down (optional)
     }
+	
+	void writeFile(String inPath, String outPath){
+		String pluginDir = new File(getClass().protectionDomain.codeSource.location.path).path
+		def plugin = new File(pluginDir)
+		if (plugin.isFile() && plugin.name.endsWith("jar")){
+			JarFile jar = new JarFile(plugin)
+			
+			JarEntry entry = jar.getEntry(inPath)
+			InputStream inStream= jar.getInputStream(entry);
+			OutputStream out = new FileOutputStream(outPath);
+			int c;
+			while ((c = inStream.read()) != -1){
+				out.write(c);
+			}
+			inStream.close();
+			out.close();
+		}
+	}
 }
