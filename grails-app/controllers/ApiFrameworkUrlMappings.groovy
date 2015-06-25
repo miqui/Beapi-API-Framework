@@ -1,5 +1,3 @@
-package net.nosegrind.apiframework
-
 /* ****************************************************************************
  * Copyright 2014 Owen Rubel
  *
@@ -17,12 +15,16 @@ package net.nosegrind.apiframework
  *****************************************************************************/
 
 import org.springframework.web.context.request.RequestContextHolder as RCH
- 
-class ApiFrameworktUrlMappings {
+import grails.core.GrailsApplication
 
+class ApiFrameworkUrlMappings {
+
+	//GrailsApplication grailsApplication
+	
 	static mappings = {
 		String apiName = grails.util.Holders.getGrailsApplication().config.apitoolkit.apiName
-		String apiVersion = grails.util.Holders.getGrailsApplication().metadata['app.version']
+		String apiVersion = grails.util.Holders.getGrailsApplication().config.info.app.version
+		
 		"/apidoc/show" (controller:'apidoc',action:'show', parseRequest: true)
 		/*
 		"/hook/$action" {
@@ -31,17 +33,9 @@ class ApiFrameworktUrlMappings {
 			parseRequest= true
 		}
 		*/
-		"/login/$action" {
-			controller = 'login'
-			action = action
-			parseRequest= true
-		}
-		"/logout?/$action" {
-			controller = 'logout'
-			action = action
-			parseRequest= true
-		}
+
 		if(apiName){
+			
 			"/${apiName}_v${apiVersion}-$apiObjectVersion/$controller/$action/$id**" {
 				controller = controller
 				action = action

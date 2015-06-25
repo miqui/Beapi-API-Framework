@@ -54,25 +54,16 @@ class GrailsApiFrameworkGrailsPlugin extends Plugin{
 		String basedir = BuildSettings.BASE_DIR.getAbsolutePath()
 		basedir = basedir.substring(0,basedir.length()-2)
 		
-		String pluginDir = new File(getClass().protectionDomain.codeSource.location.path).path
-		def plugin = new File(pluginDir)
-		if (plugin.isFile() && plugin.name.endsWith("jar")){
-			JarFile jar = new JarFile(plugin)
-			
-			try{
-				writeFile("templates/iostate/Hook.json.template","${basedir}/src/iostate/Hook.json")
-				writeFile("templates/iostate/IOState.json.template","${basedir}/src/iostate/IOState.json")
-				
-				writeFile("templates/controllers/HookController.groovy.template","${basedir}/grails-app/controllers/HookController.groovy")
-				writeFile("templates/controllers/IostateController.groovy.template","${basedir}/grails-app/controllers/IostateController.groovy")
-				
-				writeFile("templates/domains/Hook.groovy.template","${basedir}/grails-app/domain/Hook.groovy")
-				writeFile("templates/domains/HookRole.groovy.template","${basedir}/grails-app/domain/HookRole.groovy")
-				writeFile("templates/domains/Role.groovy.template","${basedir}/grails-app/domain/Role.groovy")
-			}catch (JarException jarEx){
-			   println "Unable to open file : ${plugin.name}"
-			}
-		}
+		writeFile("templates/iostate/Hook.json.template","${basedir}/src/iostate/Hook.json")
+		writeFile("templates/iostate/IOState.json.template","${basedir}/src/iostate/IOState.json")
+		
+		writeFile("templates/controllers/HookController.groovy.template","${basedir}/grails-app/controllers/HookController.groovy")
+		writeFile("templates/controllers/IostateController.groovy.template","${basedir}/grails-app/controllers/IostateController.groovy")
+		
+		writeFile("templates/domains/Hook.groovy.template","${basedir}/grails-app/domain/Hook.groovy")
+		writeFile("templates/domains/HookRole.groovy.template","${basedir}/grails-app/domain/HookRole.groovy")
+		writeFile("templates/domains/Role.groovy.template","${basedir}/grails-app/domain/Role.groovy")
+
 	}
 	
     void onChange(Map<String, Object> event) {
@@ -105,6 +96,8 @@ class GrailsApiFrameworkGrailsPlugin extends Plugin{
 			}
 			inStream.close();
 			out.close();
+			
+			jar.close();
 		}
 	}
 }

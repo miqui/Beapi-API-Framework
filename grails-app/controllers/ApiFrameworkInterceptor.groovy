@@ -1,5 +1,3 @@
-package net.nosegrind.apiframework
-
 /* ****************************************************************************
  * Copyright 2014 Owen Rubel
  *
@@ -54,8 +52,8 @@ class ApiFrameworkInterceptor {
 	String entryPoint = (apiName)?apinameEntrypoint:versionEntrypoint
 		
 	ApiFrameworkInterceptor() {
-		//String apiRegex = "/${entryPoint}-[0-9]?[0-9]?(\\.[0-9][0-9]?)?/**".toString()
-		match(uri:"/${entryPoint}/.*") // using regex
+		match(uri:/^([a-zA-Z+.-]+):\/\/localhost:8080(\/api_v0.1\/*(.+))$/)
+		match(uri:/^(\/api_v0.1\/*(.+))$/)
 	}
 
 	boolean before(){
