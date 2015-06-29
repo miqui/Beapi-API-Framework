@@ -1,7 +1,10 @@
+package net.nosegrind.apiframework
+
 /* ****************************************************************************
  * Copyright 2014 Owen Rubel
- *****************************************************************************/
-package net.nosegrind.apiframework
+ ****************************************************************************
+*/
+
 
 import grails.converters.JSON
 import grails.converters.XML

@@ -1,7 +1,9 @@
+package net.nosegrind.apiframework
+
 /* ****************************************************************************
  * Copyright 2014 Owen Rubel
  *****************************************************************************/
-package net.nosegrind.apiframework
+
 
 import grails.converters.JSON
 import grails.converters.XML
@@ -148,15 +150,17 @@ class ApiCacheService{
 	}
 	
 	LinkedHashMap getApiCache(String controllername){
+		println("[ApiCacheService - getApiCache(${controllername})]")
 		try{
 			def cache = cacheManager.getCache('ApiCache').get(controllername)
-
+			println(cache)
 			if(cache){
 				return cache.get() as LinkedHashMap
 			}
 
 		}catch(Exception e){
-			throw new Exception("[ApiCacheService :: getApiCache] : Exception - full stack trace follows:",e)
+			//throw new Exception("[ApiCacheService :: getApiCache] : Exception - full stack trace follows:",e)
+			println("[ApiCacheService :: getApiCache] : Exception - full stack trace follows: "+e)
 		}
 	}
 	

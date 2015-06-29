@@ -59,9 +59,11 @@ dependencies {
 
 
 	//Stormpath user mgmt
-	compile 'com.stormpath.sdk:stormpath-sdk-api:1.0.RC3.1'
-	runtime 'com.stormpath.sdk:stormpath-sdk-httpclient:1.0.RC3.1'
-	runtime 'com.stormpath.sdk:stormpath-sdk-oauth:1.0.RC3.1'
+	compile 'com.stormpath.sdk:stormpath-servlet-plugin:1.0.RC4.3'
+	//compile 'com.stormpath.sdk:stormpath-sdk-api:1.0.RC3.1'
+	//runtime 'com.stormpath.sdk:stormpath-sdk-impl:1.0.RC3.1'
+	//runtime 'com.stormpath.sdk:stormpath-sdk-httpclient:1.0.RC3.1'
+	//runtime 'com.stormpath.sdk:stormpath-sdk-oauth:1.0.RC3.1'
 	
 	//runtime 'com.stormpath.spring.security:stormpath-spring-security-core:0.2.0'
 
@@ -69,7 +71,7 @@ dependencies {
     //provided "org.springframework.boot:spring-boot-starter-actuator"
     provided 'org.springframework.boot:spring-boot-autoconfigure'
     provided 'org.springframework.boot:spring-boot-starter-tomcat'
-	//compile 'org.springframework.boot:spring-boot-starter-security'
+	compile 'org.springframework.boot:spring-boot-starter-security'
     provided 'org.grails:grails-web-boot'
     provided 'org.grails:grails-dependencies'
     //provided 'javax.servlet:javax.servlet-api:3.1.0'

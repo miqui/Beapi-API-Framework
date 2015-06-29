@@ -34,30 +34,33 @@ import grails.core.ApplicationAttributes
 import javax.servlet.http.HttpServletResponse
 import org.springframework.web.util.WebUtils
 import net.nosegrind.apiframework.*
+import net.nosegrind.apiframework.ApiCacheService
 import grails.util.Environment
+//import grails.core.GrailsApplication
 
 class ApiFrameworkInterceptor {
 	
 	int order = HIGHEST_PRECEDENCE + 999
 	
+	//GrailsApplication grailsApplication
 	ApiRequestService apiRequestService
 	ApiResponseService apiResponseService
 	
 	ApiDomainService apiDomainService
 
 	ApiCacheService apiCacheService
-
+	
 	String apiName = grails.util.Holders.getGrailsApplication().config.apitoolkit.apiName
-	String apiVersion = grails.util.Holders.getGrailsApplication().metadata['app.version']
+	String apiVersion = grails.util.Holders.getGrailsApplication().config.info.app.version
+	
 	String apinameEntrypoint = "${apiName}_v${apiVersion}"
 	String versionEntrypoint = "v${apiVersion}"
 	String entryPoint = (apiName)?apinameEntrypoint:versionEntrypoint
 		
 	ApiFrameworkInterceptor() {
-		//String apiRegex = "/${entryPoint}-[0-9]?[0-9]?(\\.[0-9][0-9]?)?/**".toString()
-		match(uri:"/${entryPoint}/.*") // using regex
+		match(uri:/^(\/${entryPoint}\/*(.+))$/)
 	}
-
+	
 	boolean before(){
 		println("##### FILTER (BEFORE)")
 		
@@ -70,10 +73,11 @@ class ApiFrameworkInterceptor {
 				
 		def methods = ['get':'show','put':'update','post':'create','delete':'delete']
 		try{
-			
-			if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
+			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
+				println(params.controller)
 				def cache = (params.controller)?apiCacheService.getApiCache(params.controller):[:]
 				if(cache){
+					println("has cache")
 					params.apiObject = (params.apiObjectVersion)?params.apiObjectVersion:cache['currentStable']['value']
 					if(!params.action){ 
 						String methodAction = methods[request.method.toLowerCase()]
@@ -156,7 +160,7 @@ class ApiFrameworkInterceptor {
 						return result
 					}
 				}
-			}
+			//}
 			
 			return false
 

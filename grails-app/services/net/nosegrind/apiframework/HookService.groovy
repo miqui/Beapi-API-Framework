@@ -1,4 +1,4 @@
-package net.nosegrind.hook
+package net.nosegrind.apiframework
 
 import grails.converters.JSON
 import grails.converters.XML
