@@ -30,6 +30,7 @@ import grails.core.ApplicationAttributes
 
 //import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper
 //import org.codehaus.groovy.grails.commons.GrailsApplication
+import org.springframework.ui.Model
 
 import javax.servlet.http.HttpServletResponse
 import org.springframework.web.util.WebUtils
@@ -43,11 +44,13 @@ class ApiFrameworkInterceptor {
 	int order = HIGHEST_PRECEDENCE + 999
 	
 	//GrailsApplication grailsApplication
+	@Autowired
 	ApiRequestService apiRequestService
+	@Autowired
 	ApiResponseService apiResponseService
-	
+	@Autowired
 	ApiDomainService apiDomainService
-
+	@Autowired
 	ApiCacheService apiCacheService
 	
 	String apiName = grails.util.Holders.getGrailsApplication().config.apitoolkit.apiName
@@ -62,7 +65,7 @@ class ApiFrameworkInterceptor {
 	}
 	
 	boolean before(){
-		println("##### FILTER (BEFORE)")
+		//println("##### FILTER (BEFORE)")
 		
 		/*
 		 * FIRST DETERMINE
@@ -74,10 +77,8 @@ class ApiFrameworkInterceptor {
 		def methods = ['get':'show','put':'update','post':'create','delete':'delete']
 		try{
 			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
-				println(params.controller)
 				def cache = (params.controller)?apiCacheService.getApiCache(params.controller):[:]
 				if(cache){
-					println("has cache")
 					params.apiObject = (params.apiObjectVersion)?params.apiObjectVersion:cache['currentStable']['value']
 					if(!params.action){ 
 						String methodAction = methods[request.method.toLowerCase()]
@@ -172,8 +173,8 @@ class ApiFrameworkInterceptor {
 	}
 			
 	// model is automapped??
-	boolean after(){
-		println("##### FILTER (AFTER)")
+	boolean after(Model model){
+		//println("##### FILTER (AFTER)")
 		try{
 			if(!model){
 				render(status:HttpServletResponse.SC_BAD_REQUEST)
@@ -183,8 +184,9 @@ class ApiFrameworkInterceptor {
 			if(params?.apiCombine==true){
 				model = params.apiCombine
 			}
-			
+
 			def newModel = (model)?apiResponseService.convertModel(model):model
+
 			def cache = (params.controller)?apiCacheService.getApiCache(params.controller):[:]
 			LinkedHashMap content
 			

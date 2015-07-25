@@ -41,9 +41,12 @@ class ApiRequestService extends ApiLayerService{
 			if(cache[params.apiObject][params.action]){
 				// CHECK ACCESS TO METHOD
 				List roles = cache[params.apiObject][params.action]['roles']?.toList()
+				
+				/*
 				if(!checkAuth(request,roles)){
 					return false
 				}
+				*/
 
 				// CHECK VERSION DEPRECATION DATE
 				if(cache[params.apiObject][params.action]['deprecated']?.get(0)){
@@ -57,7 +60,7 @@ class ApiRequestService extends ApiLayerService{
 						return false
 					}
 				}
-				
+
 				// CHECK METHOD FOR API CHAINING. DOES METHOD MATCH?
 				def method = cache[params.apiObject][params.action]['method']?.trim()
 
@@ -65,7 +68,7 @@ class ApiRequestService extends ApiLayerService{
 				// DOES api.methods.contains(request.method)
 				if(!isRequestMatch(method,request.method.toString())){
 					// check for apichain
-					
+
 					// TEST FOR CHAIN PATHS
 					if(chain && params?.apiChain){
 						List uri = [params.controller,params.action,params.id]
@@ -92,24 +95,28 @@ class ApiRequestService extends ApiLayerService{
 					}
 					
 					List batchRoles = cache[params.apiObject][params.action]['batchRoles']?.toList()
+					/*
 					if(!checkAuth(request,batchRoles)){
 						return false
 					}else{
 						return true
 					}
+					*/
 
 					if(!checkURIDefinitions(request,cache[params.apiObject][params.action]['receives'])){
-						String msg = 'Expected request variables do not match sent variables'
-						error._400_BAD_REQUEST(msg)?.send()
+
+						//String msg = 'Expected request variables do not match sent variables'
+						//error._400_BAD_REQUEST(msg)?.send()
 						return false
 					}else{
+
 						return true
 					}
 				}
-
 			}
 		}catch(Exception e){
-			throw new Exception("[ApiRequestService :: handleApiRequest] : Exception - full stack trace follows:",e)
+			//throw new Exception("[ApiRequestService :: handleApiRequest] : Exception - full stack trace follows:",e)
+			println("[ApiRequestService :: handleApiRequest] : Exception - full stack trace follows:"+e)
 		}
 	}
 	

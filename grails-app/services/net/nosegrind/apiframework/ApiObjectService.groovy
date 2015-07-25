@@ -23,7 +23,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.codehaus.groovy.grails.plugins.GrailsPluginInfo
+import net.nosegrind.apiframework.ApiDescriptor
+import net.nosegrind.apiframework.ApiStatuses
+
+import grails.plugins.GrailsPluginInfo
 import grails.plugins.GrailsPluginManager
 import grails.plugins.GrailsPlugin
 
@@ -54,8 +57,7 @@ class ApiObjectService{
 	
 	public initialize(){
 		//Object version = 0.1
-		//GrailsPlugin plugin = GrailsPluginManager.getGrailsPlugin("api-framework")
-		
+
 		try {
 			if(grailsApplication.config.apitoolkit.serverType=='master'){
 				String ioPath
@@ -71,14 +73,15 @@ class ApiObjectService{
 				}else{
 					//ioPath = (String) BuildSettings.BASE_DIR?.path
 					//ioPath = System.getProperty(BuildSettings.PROJECT_RESOURCES_DIR)
-					ioPath = plugin.PLUGINS_PATH
+					//GrailsPluginManager pluginMngr = grailsApplication.getMainContext().getBean('pluginManager')
+					//ioPath = pluginMngr.getGrailsPlugin("grailsApiFramework").getPluginPath()
 					if(Environment.current == Environment.DEVELOPMENT || Environment.current == Environment.TEST){
 						//ioPath = grailsApplication.mainContext.getResources("conf/iostate").path
-						ioPath += '/grails-app/iostate'
+						ioPath = 'src/iostate'
 					}else{
 						// test in Environment.PRODUCTION
 						//ioPath = grailsApplication.mainContext.getResources("conf/iostate").path
-						ioPath += '/grails-app/iostate'
+						ioPath += 'src/iostate'
 					}
 					
 				}
@@ -92,7 +95,6 @@ class ApiObjectService{
 		} catch (Exception e) {
 			throw new Exception("[ApiObjectService :: initialize] : Exception - full stack trace follows:",e)
 		}
-		println('... finished configuring API Toolkit')
 	}
 	
 	private Map parseFile(JSONObject json){
@@ -104,7 +106,6 @@ class ApiObjectService{
 		new File(path).eachFile() { file ->
 			def tmp = file.name.toString().split('\\.')
 			if(tmp[1]=='json'){
-				println("... parsing iostate for file : "+file.name)
 				try{
 					JSONObject json = JSON.parse(file.text)
 					parseJson(json.NAME.toString(),json)
@@ -216,13 +217,15 @@ class ApiObjectService{
 	}
 	
 	Boolean parseJson(String apiName,JSONObject json){
-		Map methods = [:]
+		LinkedHashMap methods = [:]
 		json.VERSION.each() { vers ->
+			def versKey = vers.key
 			String defaultAction = (vers.value.DEFAULTACTION)?vers.value.DEFAULTACTION:'index'
 			List deprecated = (vers.value.DEPRECATED)?vers.value.DEPRECATED:[]
 			String domainPackage = (vers.value.DOMAINPACKAGE!=null || vers.value.DOMAINPACKAGE?.size()>0)?vers.value.DOMAINPACKAGE:null
+
 			vers.value.URI.each() { it ->
-				def cache = apiCacheService.getApiCache(apiName)
+				def cache = (apiCacheService?.getApiCache(apiName))?apiCacheService.getApiCache(apiName):[:]
 				methods['cacheversion'] = (!cache?.cacheversion)? 1 : cache['cacheversion']+1
 				
 				JSONObject apiVersion = json.VERSION[vers.key]
@@ -282,7 +285,10 @@ class ApiObjectService{
 				}
 
 			}
+			
 		}
+		
+
 	}
 
 }

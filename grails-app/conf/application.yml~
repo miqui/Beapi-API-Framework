@@ -69,78 +69,14 @@ grails:
                 scriptlets: html
                 taglib: none
                 staticparts: none
-
----
-hibernate:
     cache:
-        use_second_level_cache: true
-        use_query_cache: true
-        provider_class: org.hibernate.cache.EhCacheProvider
-        region:
-            factory_class: net.sf.ehcache.hibernate.EhCacheRegionFactory
+        enabled: true
+        clearAtStartup: true
+        config:
+            cache:
+                name: 'ApiCache'
+                eternal: true
+                overflowToDisk: true
+                maxElementsInMemory: 10000
+                maxElementsOnDisk: 10000000
 
-dataSource:
-    pooled: true
-    jmxExport: true
-    driverClassName: com.mysql.jdbc.Driver
-    username: root
-    password: Ch335eB0y
-
-environments:
-    development:
-        dataSource:
-            dbCreate: create-drop
-            url: jdbc:mysql://localhost:3306/testdb
-        dataSource_user:
-            dbCreate: create-drop
-            url: jdbc:mysql://localhost:3306/testuser
-    test:
-        dataSource:
-            dbCreate: update
-            url: jdbc:mysql://localhost:3306/testdb
-        dataSource_user:
-            dbCreate: update
-            url: jdbc:mysql://localhost:3306/testuser
-    production:
-        dataSource:
-            dbCreate: update
-            url: jdbc:mysql://localhost:3306/testdb
-            properties:
-                jmxEnabled: true
-                initialSize: 5
-                maxActive: 50
-                minIdle: 5
-                maxIdle: 25
-                maxWait: 10000
-                maxAge: 600000
-                timeBetweenEvictionRunsMillis: 5000
-                minEvictableIdleTimeMillis: 60000
-                validationQuery: SELECT 1
-                validationQueryTimeout: 3
-                validationInterval: 15000
-                testOnBorrow: true
-                testWhileIdle: true
-                testOnReturn: false
-                jdbcInterceptors: ConnectionState
-                defaultTransactionIsolation: 2 # TRANSACTION_READ_COMMITTED
-        dataSource_user:
-            dbCreate: update
-            url: jdbc:mysql://localhost:3306/testuser
-            properties:
-                jmxEnabled: true
-                initialSize: 5
-                maxActive: 50
-                minIdle: 5
-                maxIdle: 25
-                maxWait: 10000
-                maxAge: 600000
-                timeBetweenEvictionRunsMillis: 5000
-                minEvictableIdleTimeMillis: 60000
-                validationQuery: SELECT 1
-                validationQueryTimeout: 3
-                validationInterval: 15000
-                testOnBorrow: true
-                testWhileIdle: true
-                testOnReturn: false
-                jdbcInterceptors: ConnectionState
-                defaultTransactionIsolation: 2 # TRANSACTION_READ_COMMITTED

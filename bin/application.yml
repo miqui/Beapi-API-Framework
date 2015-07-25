@@ -69,5 +69,11 @@ grails:
                 scriptlets: html
                 taglib: none
                 staticparts: none
-
+config:
+    cache:
+        name: 'ApiCache'
+        eternal: false
+        overflowToDisk: true
+        maxElementsInMemory: 10000
+        maxElementsOnDisk: 10000000
 

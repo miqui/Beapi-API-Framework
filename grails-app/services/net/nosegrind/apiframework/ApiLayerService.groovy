@@ -36,7 +36,7 @@ import org.grails.web.util.GrailsApplicationAttributes
 
 import org.grails.web.sitemesh.GrailsContentBufferingResponse
 
-import org.springframework.web.util.WebUtils
+import org.grails.web.util.WebUtils
 //import org.codehaus.groovy.grails.validation.routines.UrlValidator
 
 import org.springframework.cache.Cache
@@ -143,7 +143,8 @@ class ApiLayerService{
 			}
 			return false
 		}catch(Exception e) {
-			throw new Exception("[ApiLayerService :: checkURIDefinitions] : Exception - full stack trace follows:",e)
+			//throw new Exception("[ApiLayerService :: checkURIDefinitions] : Exception - full stack trace follows:",e)
+			println("[ApiLayerService :: checkURIDefinitions] : Exception - full stack trace follows:"+e)
 		}
 	}
 	
@@ -208,7 +209,8 @@ class ApiLayerService{
 			}
 			return ['get':paramsGet,'post':paramsPost]
 		}catch(Exception e){
-			throw new Exception("[ApiLayerService :: getMethodParams] : Exception - full stack trace follows:",e)
+			//throw new Exception("[ApiLayerService :: getMethodParams] : Exception - full stack trace follows:",e)
+			println("[ApiLayerService :: getMethodParams] : Exception - full stack trace follows:"+e)
 		}
 	}
 	

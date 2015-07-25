@@ -11,20 +11,20 @@ import grails.converters.XML
 import java.lang.reflect.Method
 import java.util.HashSet;
 import java.util.Map;
+import javax.lang.model.element.Element
 
 import grails.plugin.cache.CacheEvict
 import grails.plugin.cache.Cacheable
 import grails.plugin.cache.CachePut
-//import grails.plugin.cache.GrailsValueWrapper
-//import grails.plugin.cache.GrailsCacheManager
-import org.springframework.cache.CacheManager
-//import grails.plugin.springsecurity.SpringSecurityService
+import grails.plugin.cache.GrailsValueWrapper
+import grails.plugin.cache.GrailsCacheManager
 
-import org.springframework.cache.Cache
 import org.grails.groovy.grails.commons.*
 import org.grails.validation.routines.UrlValidator
 import org.springframework.web.context.request.RequestContextHolder as RCH
 import grails.core.GrailsApplication
+
+import net.nosegrind.apiframework.ApiDescriptor
 
 import net.nosegrind.apiframework.*
 
@@ -34,11 +34,11 @@ class ApiCacheService{
 	
 	GrailsApplication grailsApplication
 	//SpringSecurityService springSecurityService
-	ApiLayerService apiLayerService
-	//ApiToolkitService apiToolkitService
-	//GrailsCacheManager grailsCacheManager
-	CacheManager cacheManager
 	
+	def apiLayerService
+	//ApiToolkitService apiToolkitService
+	GrailsCacheManager grailsCacheManager
+	//CacheManager cacheManager
 	
 	/*
 	 * Only flush on RESTART.
@@ -68,7 +68,7 @@ class ApiCacheService{
 	*/
 	
 	@CachePut(value="ApiCache",key="#controllername")
-	Map setApiCache(String controllername,Map apidesc){
+	LinkedHashMap setApiCache(String controllername,LinkedHashMap apidesc){
 		return apidesc
 	}
 	
@@ -150,12 +150,12 @@ class ApiCacheService{
 	}
 	
 	LinkedHashMap getApiCache(String controllername){
-		println("[ApiCacheService - getApiCache(${controllername})]")
 		try{
-			def cache = cacheManager.getCache('ApiCache').get(controllername)
-			println(cache)
-			if(cache){
+			def cache = grailsCacheManager?.getCache('ApiCache')?.get(controllername)
+			if(cache?.get()){
 				return cache.get() as LinkedHashMap
+			}else{ 
+				return [:] 
 			}
 
 		}catch(Exception e){
@@ -165,8 +165,9 @@ class ApiCacheService{
 	}
 	
 	List getCacheNames(){
-		List cacheNames = cacheManager.getCache('ApiCache').getAllKeys() as List
-		// List cacheNames = temp.collect{ if(!['hook','iostate'].contains(it)){ it }}
+		List cacheNames = []
+		cacheNames = grailsCacheManager?.getCache('ApiCache')?.getAllKeys() as List
 		return cacheNames
+
 	}
 }
