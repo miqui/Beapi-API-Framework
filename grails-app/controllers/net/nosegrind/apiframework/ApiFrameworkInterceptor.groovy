@@ -23,7 +23,7 @@ import java.util.Map
 
 //import grails.util.Holders as HOLDER
 
-import javax.servlet.ServletContext
+//import javax.servlet.ServletContext
 
 //import org.codehaus.groovy.grails.web.servlet.GrailsApplicationAttributes
 import grails.core.ApplicationAttributes
@@ -65,7 +65,7 @@ class ApiFrameworkInterceptor {
 	}
 	
 	boolean before(){
-		//println("##### FILTER (BEFORE)")
+		println("##### FILTER (BEFORE)")
 		
 		/*
 		 * FIRST DETERMINE
@@ -174,7 +174,7 @@ class ApiFrameworkInterceptor {
 			
 	// model is automapped??
 	boolean after(Model model){
-		//println("##### FILTER (AFTER)")
+		println("##### FILTER (AFTER)")
 		try{
 			if(!model){
 				render(status:HttpServletResponse.SC_BAD_REQUEST)

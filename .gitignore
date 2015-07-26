@@ -1,0 +1,8 @@
+.project
+*.zip
+*.log
+.settings
+._.DS_Store
+.DS_Store
+.gradle
+build

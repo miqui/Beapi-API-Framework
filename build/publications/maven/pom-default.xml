@@ -4,12 +4,5 @@
   <groupId>org.grails.plugins</groupId>
   <artifactId>api-framework</artifactId>
   <version>0.1-SNAPSHOT</version>
-  <dependencies>
-    <dependency>
-      <groupId>com.stormpath.sdk</groupId>
-      <artifactId>stormpath-servlet-plugin</artifactId>
-      <version>1.0.RC4.3</version>
-      <scope>runtime</scope>
-    </dependency>
-  </dependencies>
+  <dependencies/>
 </project>
