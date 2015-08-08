@@ -21,6 +21,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map
 
+import grails.core.support.GrailsConfigurationAware
+import grails.config.Config
+
 //import grails.util.Holders as HOLDER
 
 //import javax.servlet.ServletContext
@@ -30,18 +33,20 @@ import grails.core.ApplicationAttributes
 
 //import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper
 //import org.codehaus.groovy.grails.commons.GrailsApplication
+
 import org.springframework.ui.Model
 
 import javax.servlet.http.HttpServletResponse
+
 import org.springframework.web.util.WebUtils
+
 import net.nosegrind.apiframework.*
-import net.nosegrind.apiframework.ApiCacheService
 import grails.util.Environment
 //import grails.core.GrailsApplication
 
-class ApiFrameworkInterceptor {
+class ApiFrameworkInterceptor implements GrailsConfigurationAware {
 	
-	int order = HIGHEST_PRECEDENCE + 999
+	//int order = HIGHEST_PRECEDENCE + 999
 	
 	//GrailsApplication grailsApplication
 	@Autowired
@@ -53,19 +58,29 @@ class ApiFrameworkInterceptor {
 	@Autowired
 	ApiCacheService apiCacheService
 	
-	String apiName = grails.util.Holders.getGrailsApplication().config.apitoolkit.apiName
-	String apiVersion = grails.util.Holders.getGrailsApplication().config.info.app.version
-	
-	String apinameEntrypoint = "${apiName}_v${apiVersion}"
-	String versionEntrypoint = "v${apiVersion}"
-	String entryPoint = (apiName)?apinameEntrypoint:versionEntrypoint
+	String apiName
+	String apiVersion
+	String entryPoint
+
+	void setConfiguration(Config cfg) {
+		this.apiName = cfg.apitoolkit.apiName
+		this.apiVersion = cfg.info.app.version
 		
-	ApiFrameworkInterceptor() {
+		String apinameEntrypoint = "${this.apiName}_v${this.apiVersion}"
+		String versionEntrypoint = "v${this.apiVersion}"
+		this.entryPoint = (this.apiName)?apinameEntrypoint:versionEntrypoint
+		
 		match(uri:/^(\/${entryPoint}\/*(.+))$/)
 	}
 	
+	/*
+	ApiFrameworkInterceptor() {
+		match(uri:/^(\/${entryPoint}\/*(.+))$/)
+	}
+	*/
+	
 	boolean before(){
-		println("##### FILTER (BEFORE)")
+		//println("##### FILTER (BEFORE)")
 		
 		/*
 		 * FIRST DETERMINE

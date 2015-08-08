@@ -11,6 +11,7 @@ appender('STDOUT', ConsoleAppender) {
 
 root(ERROR, ['STDOUT'])
 logger 'grails.artefact.Interceptor', DEBUG, ['STDOUT'], false
+logger 'grails.artefact.Interceptor', ERROR, ['STDOUT'], false
 logger("StackTrace", ERROR, ['FULL_STACKTRACE'],false)
 
 if(Environment.current == Environment.DEVELOPMENT) {

@@ -81,7 +81,7 @@ class ApiObjectService{
 					}else{
 						// test in Environment.PRODUCTION
 						//ioPath = grailsApplication.mainContext.getResources("conf/iostate").path
-						ioPath += 'src/iostate'
+						ioPath = 'src/iostate'
 					}
 					
 				}

@@ -1,5 +1,4 @@
 package net.nosegrind.apiframework
-
 /* ****************************************************************************
  * Copyright 2014 Owen Rubel
  *
@@ -16,17 +15,24 @@ package net.nosegrind.apiframework
  * limitations under the License.
  *****************************************************************************/
 
-import org.springframework.web.context.request.RequestContextHolder as RCH
+import grails.core.support.GrailsConfigurationAware
+import grails.config.Config
 
-//import grails.core.GrailsApplication
+class ApiFrameworkUrlMappings  implements GrailsConfigurationAware {
 
-class ApiFrameworkUrlMappings {
+	def grailsApplication
+	String apiName = grailsApplication.config.getProperty('${apitoolkit.apiName}')
+	String apiVersion = grailsApplication.config.getProperty('${info.app.version}')
 
-	static String apiName = grails.util.Holders.getGrailsApplication().config.apitoolkit.apiName
-	static String apiVersion = grails.util.Holders.getGrailsApplication().config.info.app.version
-	
+    void setConfiguration(Config cfg) {
+        this.apiName = cfg.apitoolkit.apiName
+        this.apiVersion = cfg.info.app.version
+    }
+
 	static mappings = {
 
+		
+		println("ApiFrameworkURLMappings")
 		
 		"/apidoc/show" (controller:'apidoc',action:'show', parseRequest: true)
 		/*
@@ -38,8 +44,9 @@ class ApiFrameworkUrlMappings {
 		*/
 
 		if(apiName){
-			
+			println("has api name")
 			"/${apiName}_v${apiVersion}-$apiObjectVersion/$controller/$action/$id**" {
+				println("/${apiName}_v${apiVersion}-$apiObjectVersion/$controller/$action/$id")
 				controller = controller
 				action = action
 				parseRequest = true
@@ -80,6 +87,8 @@ class ApiFrameworkUrlMappings {
 			}
 			
 		}else{
+			println("no api name")
+			println("/v$apiVersion-$apiObjectVersion/$controller/$action/$id")
 			"/v$apiVersion-$apiObjectVersion/$controller/$action/$id**" {
 				controller = controller
 				action = action
