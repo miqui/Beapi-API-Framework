@@ -15,139 +15,135 @@ package net.nosegrind.apiframework
  * limitations under the License.
  *****************************************************************************/
 
-import grails.core.support.GrailsConfigurationAware
-import grails.config.Config
 
-class ApiFrameworkUrlMappings  implements GrailsConfigurationAware {
 
-	def grailsApplication
-	String apiName = grailsApplication.config.getProperty('${apitoolkit.apiName}')
-	String apiVersion = grailsApplication.config.getProperty('${info.app.version}')
+import org.springframework.beans.factory.annotation.Value
 
-    void setConfiguration(Config cfg) {
-        this.apiName = cfg.apitoolkit.apiName
-        this.apiVersion = cfg.info.app.version
-    }
+class ApiFrameworkUrlMappings {
+
+
+    @Value('${apitoolkit.apiName}')
+    String apiName
+    @Value('${info.app.version}')
+    String apiVersion
+
+    String apiEntrypoint = (apiName)?"${this.apiName}_v${this.apiVersion}":"v${this.apiVersion}"
 
 	static mappings = {
 
-		
-		println("ApiFrameworkURLMappings")
-		
-		"/apidoc/show" (controller:'apidoc',action:'show', parseRequest: true)
-		/*
-		"/hook/$action" {
-			controller = 'hook'
-			action = action
-			parseRequest= true
-		}
-		*/
+        /*
+		"/apidoc/show" {
+            controller = 'apidoc'
+            action = 'show'
+            parseRequest: true
+        }
+        */
 
-		if(apiName){
-			println("has api name")
-			"/${apiName}_v${apiVersion}-$apiObjectVersion/$controller/$action/$id**" {
-				println("/${apiName}_v${apiVersion}-$apiObjectVersion/$controller/$action/$id")
-				controller = controller
-				action = action
-				parseRequest = true
-				constraints {
-					apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
-				}
-			}
-			
-			"/${apiName}_v${apiVersion}/$controller/$action/$id**" {
-				controller = controller
-				action = action
-				parseRequest = true
-			}
-			
-			"/${apiName}_v${apiVersion}-$apiObjectVersion/$controller/$action" {
-				controller = controller
-				if(action?.toInteger()==action && action!=null){
-					id=action
-					action = null
-				}else{
-					action=action
-				}
-				parseRequest = true
-				constraints {
-					apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
-				}
-			}
-			
-			"/${apiName}_v${apiVersion}/$controller/$action" {
-				controller = controller
-				if(action?.toInteger()==action && action!=null){
-					id=action
-					action = null
-				}else{
-					action=action
-				}
-				parseRequest = true
-			}
-			
-		}else{
-			println("no api name")
-			println("/v$apiVersion-$apiObjectVersion/$controller/$action/$id")
-			"/v$apiVersion-$apiObjectVersion/$controller/$action/$id**" {
-				controller = controller
-				action = action
-				parseRequest = true
-				constraints {
-					apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
-				}
-			}
-			
-			"/v$apiVersion/$controller/$action?/$id**" {
-				controller = controller
-				action = action
-				parseRequest = true
-			}
-			
-			"/v$apiVersion-$apiObjectVersion/$controller/$action" {
-				controller = controller
-				action = action
-				parseRequest = true
-				constraints {
-					apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
-				}
-			}
-			
-			"/v$apiVersion/$controller/$action" {
-				controller = controller
-				action = action
-				parseRequest = true
-			}
+        if(apiName){
+            println("has api name")
+            "/${apiName}_v${apiVersion}-$apiObjectVersion/$controller/$action/$id**" {
+                println("/${apiName}_v${apiVersion}-$apiObjectVersion/$controller/$action/$id")
+                controller = controller
+                action = action
+                parseRequest = true
+                constraints {
+                    apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
+                }
+            }
 
-			"/v$apiVersion/$controller?/$id" {
-				controller = controller
-				parseRequest = true
-			}
-			
-			"/v$apiVersion-$apiObjectVersion/$controller?/$id" {
-				controller = controller
-				parseRequest = true
-				constraints {
-					apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
-				}
-			}
-		}
-		
-		"403" {
-			controller = "errors"
-			parseRequest = true
-		}
-		"404" {
-			controller = "errors"
-			parseRequest = true
-		}
-		"405" {
-			controller = "errors"
-			parseRequest = true
-		}
-		"500" {
-			controller = "errors"
-			parseRequest = true
-		}
-	}
+            "/${apiName}_v${apiVersion}/$controller/$action/$id**" {
+                controller = controller
+                action = action
+                parseRequest = true
+            }
+
+            "/${apiName}_v${apiVersion}-$apiObjectVersion/$controller/$action" {
+                controller = controller
+                if(action?.toInteger()==action && action!=null){
+                    id=action
+                    action = null
+                }else{
+                    action=action
+                }
+                parseRequest = true
+                constraints {
+                    apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
+                }
+            }
+
+            "/${apiName}_v${apiVersion}/$controller/$action" {
+                controller = controller
+                if(action?.toInteger()==action && action!=null){
+                    id=action
+                    action = null
+                }else{
+                    action=action
+                }
+                parseRequest = true
+            }
+
+        }else{
+            println("no api name")
+            println("/v$apiVersion-$apiObjectVersion/$controller/$action/$id")
+            "/v$apiVersion-$apiObjectVersion/$controller/$action/$id**" {
+                controller = controller
+                action = action
+                parseRequest = true
+                constraints {
+                    apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
+                }
+            }
+
+            "/v$apiVersion/$controller/$action?/$id**" {
+                controller = controller
+                action = action
+                parseRequest = true
+            }
+
+            "/v$apiVersion-$apiObjectVersion/$controller/$action" {
+                controller = controller
+                action = action
+                parseRequest = true
+                constraints {
+                    apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
+                }
+            }
+
+            "/v$apiVersion/$controller/$action" {
+                controller = controller
+                action = action
+                parseRequest = true
+            }
+
+            "/v$apiVersion/$controller?/$id" {
+                controller = controller
+                parseRequest = true
+            }
+
+            "/v$apiVersion-$apiObjectVersion/$controller?/$id" {
+                controller = controller
+                parseRequest = true
+                constraints {
+                    apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
+                }
+            }
+        }
+
+        "403" {
+            controller = "errors"
+            parseRequest = true
+        }
+        "404" {
+            controller = "errors"
+            parseRequest = true
+        }
+        "405" {
+            controller = "errors"
+            parseRequest = true
+        }
+        "500" {
+            controller = "errors"
+            parseRequest = true
+        }
+    }
 }
