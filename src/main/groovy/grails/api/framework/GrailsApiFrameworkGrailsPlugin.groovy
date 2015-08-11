@@ -63,7 +63,6 @@ class GrailsApiFrameworkGrailsPlugin extends Plugin{
 		writeFile("templates/domains/Hook.groovy.template","${basedir}/grails-app/domain/Hook.groovy")
 		writeFile("templates/domains/HookRole.groovy.template","${basedir}/grails-app/domain/HookRole.groovy")
 		writeFile("templates/domains/Role.groovy.template","${basedir}/grails-app/domain/Role.groovy")
-
 	}
 	
     void onChange(Map<String, Object> event) {

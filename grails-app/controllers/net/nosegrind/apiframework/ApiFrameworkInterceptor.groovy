@@ -1,5 +1,11 @@
 package net.nosegrind.apiframework
 
+import grails.config.Config
+import grails.core.support.GrailsConfigurationAware
+
+import javax.servlet.http.HttpServletResponse
+import javax.servlet.ServletOutputStream
+
 /* ****************************************************************************
  * Copyright 2014 Owen Rubel
  *
@@ -15,33 +21,13 @@ package net.nosegrind.apiframework
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *****************************************************************************/
-
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map
-
-import grails.core.support.GrailsConfigurationAware
-import grails.config.Config
-
 //import grails.util.Holders as HOLDER
 
 //import javax.servlet.ServletContext
 
 //import org.codehaus.groovy.grails.web.servlet.GrailsApplicationAttributes
-import grails.core.ApplicationAttributes
-
 //import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper
 //import org.codehaus.groovy.grails.commons.GrailsApplication
-
-import org.springframework.ui.Model
-
-import javax.servlet.http.HttpServletResponse
-
-import org.springframework.web.util.WebUtils
-
-import net.nosegrind.apiframework.*
-import grails.util.Environment
 //import grails.core.GrailsApplication
 
 class ApiFrameworkInterceptor implements GrailsConfigurationAware {
@@ -72,12 +58,10 @@ class ApiFrameworkInterceptor implements GrailsConfigurationAware {
 		
 		match(uri:/^(\/${entryPoint}\/*(.+))$/)
 	}
-	
-	/*
-	ApiFrameworkInterceptor() {
-		match(uri:/^(\/${entryPoint}\/*(.+))$/)
-	}
-	*/
+
+
+	ApiFrameworkInterceptor() {}
+
 	
 	boolean before(){
 		//println("##### FILTER (BEFORE)")
@@ -181,15 +165,15 @@ class ApiFrameworkInterceptor implements GrailsConfigurationAware {
 			return false
 
 		}catch(Exception e){
-			//log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e);
-			println("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:"+e);
+			log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e);
 			return false
 		}
 	}
 			
 	// model is automapped??
-	boolean after(Model model){
-		println("##### FILTER (AFTER)")
+    @Override
+	boolean after(){
+		//println("##### FILTER (AFTER)")
 		try{
 			if(!model){
 				render(status:HttpServletResponse.SC_BAD_REQUEST)
@@ -203,8 +187,8 @@ class ApiFrameworkInterceptor implements GrailsConfigurationAware {
 			def newModel = (model)?apiResponseService.convertModel(model):model
 
 			def cache = (params.controller)?apiCacheService.getApiCache(params.controller):[:]
+
 			LinkedHashMap content
-			
 			if(apiResponseService.chain && params?.apiChain?.order){
 				boolean result = apiResponseService.handleApiChain(cache, request,response,newModel,params)
 				forward(controller:params.controller,action:params.action,id:params.id)
@@ -217,10 +201,20 @@ class ApiFrameworkInterceptor implements GrailsConfigurationAware {
 			}
 				
 			if(content){
-				render(text:content.apiToolkitContent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)
-				return false
+				//render(text:content.apiToolkitContent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)
+
+                java.io.PrintWriter writer = response.getWriter()
+                response.setContentType("text/json");
+                try {
+                    writer.print(content.apiToolkitContent)
+                    writer.close()
+                }catch(java.io.IOException e){
+                    println("[ApiToolkitFilters :: apitoolkit.after] : PrintWriter Exception - full stack trace follows:"+e);
+                }
+
+                return false
 			}
-			return null
+			return false
 	   }catch(Exception e){
 		   log.error("[ApiToolkitFilters :: apitoolkit.after] : Exception - full stack trace follows:", e);
 		   return false

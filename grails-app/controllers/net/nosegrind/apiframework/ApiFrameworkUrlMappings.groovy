@@ -40,9 +40,7 @@ class ApiFrameworkUrlMappings {
         */
 
         if(apiName){
-            println("has api name")
             "/${apiName}_v${apiVersion}-$apiObjectVersion/$controller/$action/$id**" {
-                println("/${apiName}_v${apiVersion}-$apiObjectVersion/$controller/$action/$id")
                 controller = controller
                 action = action
                 parseRequest = true
@@ -83,8 +81,6 @@ class ApiFrameworkUrlMappings {
             }
 
         }else{
-            println("no api name")
-            println("/v$apiVersion-$apiObjectVersion/$controller/$action/$id")
             "/v$apiVersion-$apiObjectVersion/$controller/$action/$id**" {
                 controller = controller
                 action = action
