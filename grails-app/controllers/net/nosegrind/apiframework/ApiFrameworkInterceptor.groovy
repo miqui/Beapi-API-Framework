@@ -173,7 +173,8 @@ class ApiFrameworkInterceptor implements GrailsConfigurationAware {
 	// model is automapped??
     @Override
 	boolean after(){
-		//println("##### FILTER (AFTER)")
+		println("##### FILTER (AFTER)")
+        println(model.getClass())
 		try{
 			if(!model){
 				render(status:HttpServletResponse.SC_BAD_REQUEST)

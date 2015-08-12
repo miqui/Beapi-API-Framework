@@ -470,6 +470,10 @@ class ApiResponseService extends ApiLayerService{
 		return ['validation.customRuntimeMessage', 'ApiCommandObject does not validate. Check that your data validates or that requesting user has access to api method and all fields in api command object.']
 	}
 
+    void respond(){
+        return ResponseEntity<String>(HttpStatus.BAD_REQUEST);
+    }
+
 	Map convertModel(Map map){
 		try{
 			Map newMap = [:]
