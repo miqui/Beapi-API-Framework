@@ -51,9 +51,9 @@ class GrailsApiFrameworkGrailsPlugin extends Plugin{
 
 	void doInitApiFrameworkInstall(applicationContext) {
 		//String basedir = applicationContext.getResource("../../..").getFile().path
-		String basedir = BuildSettings.BASE_DIR.getAbsolutePath()
-		basedir = basedir.substring(0,basedir.length()-2)
-		
+		String basedir = BuildSettings.BASE_DIR
+		//basedir = basedir.substring(0,basedir.length())
+
 		writeFile("templates/iostate/Hook.json.template","${basedir}/src/iostate/Hook.json")
 		writeFile("templates/iostate/IOState.json.template","${basedir}/src/iostate/IOState.json")
 		
@@ -83,20 +83,24 @@ class GrailsApiFrameworkGrailsPlugin extends Plugin{
 	void writeFile(String inPath, String outPath){
 		String pluginDir = new File(getClass().protectionDomain.codeSource.location.path).path
 		def plugin = new File(pluginDir)
-		if (plugin.isFile() && plugin.name.endsWith("jar")){
-			JarFile jar = new JarFile(plugin)
-			
-			JarEntry entry = jar.getEntry(inPath)
-			InputStream inStream= jar.getInputStream(entry);
-			OutputStream out = new FileOutputStream(outPath);
-			int c;
-			while ((c = inStream.read()) != -1){
-				out.write(c);
-			}
-			inStream.close();
-			out.close();
-			
-			jar.close();
-		}
+        try {
+            if (plugin.isFile() && plugin.name.endsWith("jar")) {
+                JarFile jar = new JarFile(plugin)
+
+                JarEntry entry = jar.getEntry(inPath)
+                InputStream inStream = jar.getInputStream(entry);
+                OutputStream out = new FileOutputStream(outPath);
+                int c;
+                while ((c = inStream.read()) != -1) {
+                    out.write(c);
+                }
+                inStream.close();
+                out.close();
+
+                jar.close();
+            }
+        }catch(Exception e){
+            println(e)
+        }
 	}
 }

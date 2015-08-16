@@ -10,6 +10,8 @@ import grails.converters.XML
 import grails.plugin.cache.GrailsCacheManager
 //import grails.plugin.springsecurity.SpringSecurityService
 import grails.spring.BeanBuilder
+import grails.web.http.HttpHeaders
+
 //import grails.util.Holders as HOLDER
 
 import java.util.ArrayList
@@ -20,6 +22,7 @@ import java.util.regex.Pattern
 import java.lang.reflect.Method
 
 import javax.servlet.forward.*
+import org.springframework.http.ResponseEntity
 
 import java.text.SimpleDateFormat
 
@@ -470,8 +473,12 @@ class ApiResponseService extends ApiLayerService{
 		return ['validation.customRuntimeMessage', 'ApiCommandObject does not validate. Check that your data validates or that requesting user has access to api method and all fields in api command object.']
 	}
 
-    void respond(){
-        return ResponseEntity<String>(HttpStatus.BAD_REQUEST);
+    public ResponseEntity<LinkedHashMap> respond(LinkedHashMap model){
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.setLocation(location);
+        responseHeaders.set("MyResponseHeader", "MyValue");
+        return new ResponseEntity<String>("Hello World", responseHeaders, HttpStatus.CREATED);
+        return ResponseEntity(model,HttpStatus.BAD_REQUEST);
     }
 
 	Map convertModel(Map map){

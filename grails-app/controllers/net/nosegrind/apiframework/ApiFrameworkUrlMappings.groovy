@@ -1,4 +1,4 @@
-package net.nosegrind.apiframework
+//package net.nosegrind.apiframework
 /* ****************************************************************************
  * Copyright 2014 Owen Rubel
  *
@@ -17,113 +17,38 @@ package net.nosegrind.apiframework
 
 
 
-import org.springframework.beans.factory.annotation.Value
 
 class ApiFrameworkUrlMappings {
 
 
-    @Value('${apitoolkit.apiName}')
-    String apiName
-    @Value('${info.app.version}')
-    String apiVersion
-
-    String apiEntrypoint = (apiName)?"${this.apiName}_v${this.apiVersion}":"v${this.apiVersion}"
-
 	static mappings = {
 
-        /*
+/*
 		"/apidoc/show" {
             controller = 'apidoc'
             action = 'show'
             parseRequest: true
         }
-        */
+*/
 
-        if(apiName){
-            "/${apiName}_v${apiVersion}-$apiObjectVersion/$controller/$action/$id**" {
-                controller = controller
-                action = action
-                parseRequest = true
-                constraints {
-                    apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
-                }
-            }
-
-            "/${apiName}_v${apiVersion}/$controller/$action/$id**" {
-                controller = controller
-                action = action
-                parseRequest = true
-            }
-
-            "/${apiName}_v${apiVersion}-$apiObjectVersion/$controller/$action" {
-                controller = controller
-                if(action?.toInteger()==action && action!=null){
-                    id=action
-                    action = null
-                }else{
-                    action=action
-                }
-                parseRequest = true
-                constraints {
-                    apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
-                }
-            }
-
-            "/${apiName}_v${apiVersion}/$controller/$action" {
-                controller = controller
-                if(action?.toInteger()==action && action!=null){
-                    id=action
-                    action = null
-                }else{
-                    action=action
-                }
-                parseRequest = true
-            }
-
-        }else{
-            "/v$apiVersion-$apiObjectVersion/$controller/$action/$id**" {
-                controller = controller
-                action = action
-                parseRequest = true
-                constraints {
-                    apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
-                }
-            }
-
-            "/v$apiVersion/$controller/$action?/$id**" {
-                controller = controller
-                action = action
-                parseRequest = true
-            }
-
-            "/v$apiVersion-$apiObjectVersion/$controller/$action" {
-                controller = controller
-                action = action
-                parseRequest = true
-                constraints {
-                    apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
-                }
-            }
-
-            "/v$apiVersion/$controller/$action" {
-                controller = controller
-                action = action
-                parseRequest = true
-            }
-
-            "/v$apiVersion/$controller?/$id" {
-                controller = controller
-                parseRequest = true
-            }
-
-            "/v$apiVersion-$apiObjectVersion/$controller?/$id" {
-                controller = controller
-                parseRequest = true
-                constraints {
-                    apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
-                }
-            }
+        "/*/$controller/$action/$id**" {
+            controller = controller
+            action = action
+            parseRequest = true
         }
+
+
+        "/*/$controller/$action" {
+            controller = controller
+            if(action?.toInteger()==action && action!=null){
+                id=action
+                action = null
+            }else{
+                action=action
+            }
+            parseRequest = true
+        }
+
 
         "403" {
             controller = "errors"
@@ -142,4 +67,5 @@ class ApiFrameworkUrlMappings {
             parseRequest = true
         }
     }
+
 }

@@ -2,8 +2,12 @@ package net.nosegrind.apiframework
 
 import grails.config.Config
 import grails.core.support.GrailsConfigurationAware
-
+import org.grails.web.servlet.mvc.GrailsWebRequest
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.web.context.request.RequestContextHolder
 import javax.servlet.http.HttpServletResponse
+import org.springframework.ui.ModelMap
+import org.springframework.beans.factory.annotation.Autowired
 import javax.servlet.ServletOutputStream
 
 /* ****************************************************************************
@@ -21,20 +25,14 @@ import javax.servlet.ServletOutputStream
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *****************************************************************************/
-//import grails.util.Holders as HOLDER
 
-//import javax.servlet.ServletContext
-
-//import org.codehaus.groovy.grails.web.servlet.GrailsApplicationAttributes
-//import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper
-//import org.codehaus.groovy.grails.commons.GrailsApplication
-//import grails.core.GrailsApplication
 
 class ApiFrameworkInterceptor implements GrailsConfigurationAware {
 	
 	//int order = HIGHEST_PRECEDENCE + 999
 	
-	//GrailsApplication grailsApplication
+	//def grailsApplication
+
 	@Autowired
 	ApiRequestService apiRequestService
 	@Autowired
@@ -43,28 +41,29 @@ class ApiFrameworkInterceptor implements GrailsConfigurationAware {
 	ApiDomainService apiDomainService
 	@Autowired
 	ApiCacheService apiCacheService
-	
+
+
+
 	String apiName
 	String apiVersion
-	String entryPoint
 
-	void setConfiguration(Config cfg) {
-		this.apiName = cfg.apitoolkit.apiName
-		this.apiVersion = cfg.info.app.version
-		
-		String apinameEntrypoint = "${this.apiName}_v${this.apiVersion}"
-		String versionEntrypoint = "v${this.apiVersion}"
-		this.entryPoint = (this.apiName)?apinameEntrypoint:versionEntrypoint
-		
-		match(uri:/^(\/${entryPoint}\/*(.+))$/)
-	}
+    String apinameEntrypoint
+    String versionEntrypoint
+    String entryPoint
 
+    void setConfiguration(Config cfg) {
+        this.apiName = cfg.apitoolkit.apiName
+        this.apiVersion = cfg.info.app.version
 
-	ApiFrameworkInterceptor() {}
+        this.apinameEntrypoint = "${this.apiName}_v${this.apiVersion}"
+        this.versionEntrypoint = "v${this.apiVersion}"
+        this.entryPoint = (this.apiName)?"${this.apiName}_v${this.apiVersion}":v"v${this.apiVersion}"
 
+        match(uri:"/${entryPoint}/**")
+    }
 	
 	boolean before(){
-		//println("##### FILTER (BEFORE)")
+		println("##### FILTER (BEFORE)")
 		
 		/*
 		 * FIRST DETERMINE
@@ -171,10 +170,9 @@ class ApiFrameworkInterceptor implements GrailsConfigurationAware {
 	}
 			
 	// model is automapped??
-    @Override
+
 	boolean after(){
 		println("##### FILTER (AFTER)")
-        println(model.getClass())
 		try{
 			if(!model){
 				render(status:HttpServletResponse.SC_BAD_REQUEST)
@@ -182,6 +180,7 @@ class ApiFrameworkInterceptor implements GrailsConfigurationAware {
 			}
 
 			if(params?.apiCombine==true){
+                println("#### NO MODEL")
 				model = params.apiCombine
 			}
 
@@ -202,24 +201,17 @@ class ApiFrameworkInterceptor implements GrailsConfigurationAware {
 			}
 				
 			if(content){
-				//render(text:content.apiToolkitContent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)
-
-                java.io.PrintWriter writer = response.getWriter()
-                response.setContentType("text/json");
-                try {
-                    writer.print(content.apiToolkitContent)
-                    writer.close()
-                }catch(java.io.IOException e){
-                    println("[ApiToolkitFilters :: apitoolkit.after] : PrintWriter Exception - full stack trace follows:"+e);
-                }
-
+                println("### HAS CONTENT")
+                render(text:content.apiToolkitContent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)
                 return false
 			}
+
 			return false
 	   }catch(Exception e){
 		   log.error("[ApiToolkitFilters :: apitoolkit.after] : Exception - full stack trace follows:", e);
 		   return false
 	   }
+
 	   return false
 	}
 }

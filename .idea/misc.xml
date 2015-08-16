@@ -34,8 +34,12 @@
   <component name="GradleLocalSettings">
     <option name="modificationStamps">
       <map>
-        <entry key="$PROJECT_DIR$" value="1439079343308" />
+        <entry key="$PROJECT_DIR$" value="1439651623156" />
+        <entry key="$PROJECT_DIR$/../api-framework-example" value="1439584529872" />
         <entry key="$PROJECT_DIR$/../api-framework-example2" value="1439046650328" />
+        <entry key="$PROJECT_DIR$/../grails-core" value="77733782339620" />
+        <entry key="$PROJECT_DIR$/../testapp" value="1439522081124" />
+        <entry key="$PROJECT_DIR$/../testapp2" value="1439437255467" />
       </map>
     </option>
   </component>

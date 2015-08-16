@@ -1,7 +1,8 @@
 
 buildscript {
     ext {
-        grailsVersion = project.grailsVersion
+        grailsVersion = '3.0.5.BUILD-SNAPSHOT'
+        //grailsVersion = project.grailsVersion
     }
     repositories {
         mavenLocal()
@@ -31,7 +32,8 @@ apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/m
 apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/master/profiles/plugin/templates/bintrayPublishing.gradle'
 
 ext {
-    grailsVersion = project.grailsVersion
+    grailsVersion = '3.0.5.BUILD-SNAPSHOT'
+    //grailsVersion = project.grailsVersion
     gradleWrapperVersion = project.gradleWrapperVersion
 }
 
@@ -71,7 +73,7 @@ dependencies {
     //compile 'org.springframework.boot:spring-boot-starter-security'
     compile 'org.grails:grails-web-boot'
     compile 'org.grails:grails-dependencies'
-    compile 'javax.servlet:javax.servlet-api:3.1.0'
+    //compile 'javax.servlet:javax.servlet-api:3.1.0'
 
     testCompile 'org.grails:grails-plugin-testing'
 
@@ -80,6 +82,18 @@ dependencies {
 
 task wrapper(type: Wrapper) {
     gradleVersion = gradleWrapperVersion
+}
+
+//tasks.withType(org.springframework.boot.gradle.run.BootRunTask) {
+//    systemProperty('netflix.environment', 'test')
+//}
+
+run {
+    systemProperties = System.properties
+}
+
+test {
+    systemProperties = System.properties
 }
 
 //compileGroovy {
