@@ -134,6 +134,7 @@ class ApiLayerService{
 			
 			//GrailsParameterMap params = RCH.currentRequestAttributes().params
 			List paramsList = (request.method=='GET')?params.get.keySet() as List:params.post.keySet() as List
+
 			paramsList.removeAll(optionalParams)
 			if(paramsList.containsAll(requestList)){
 				paramsList.removeAll(requestList)
@@ -187,7 +188,7 @@ class ApiLayerService{
 	HashMap getMethodParams(){
 		try{
 			boolean isChain = false
-			List optionalParams = ['action','controller','apiName_v','contentType', 'encoding','apiChain', 'apiBatch', 'apiCombine', 'apiObject','apiObjectVersion', 'chain']
+			List optionalParams = ['action','controller','v','contentType', 'encoding','apiChain', 'apiBatch', 'apiCombine', 'apiObject','apiObjectVersion', 'chain']
 			HttpServletRequest request = getRequest()
 			GrailsParameterMap params = RCH.currentRequestAttributes().params
 			Map paramsRequest = params.findAll {
@@ -314,9 +315,9 @@ class ApiLayerService{
 			String uri = request.forwardURI.split('/')[1]
 			String api
 			if(params.apiObject){
-				api = (apiName)?"${params.apiName}_v${params.apiVersion}-${params.apiObject}" as String:"v${params.apiVersion}-${params.apiObject}" as String
+				api = (apiName)?"v${params.apiVersion}-${params.apiObject}" as String:"v${params.apiVersion}-${params.apiObject}" as String
 			}else{
-				api = (apiName)?"${params.apiName}_v${params.apiVersion}" as String:"v${params.apiVersion}" as String
+				api = (apiName)?"v${params.apiVersion}" as String:"v${params.apiVersion}" as String
 			}
 			return uri==api
 		}catch(Exception e){

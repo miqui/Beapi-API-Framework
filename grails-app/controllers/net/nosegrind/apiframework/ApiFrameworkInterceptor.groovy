@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletResponse
 import org.springframework.ui.ModelMap
 import org.springframework.beans.factory.annotation.Autowired
 import javax.servlet.ServletOutputStream
+import grails.util.Metadata
 
 /* ****************************************************************************
  * Copyright 2014 Owen Rubel
@@ -27,21 +28,20 @@ import javax.servlet.ServletOutputStream
  *****************************************************************************/
 
 
-class ApiFrameworkInterceptor implements GrailsConfigurationAware {
-	
-	//int order = HIGHEST_PRECEDENCE + 999
+class ApiFrameworkInterceptor {
+
+    //int order = HIGHEST_PRECEDENCE + 999
 	
 	//def grailsApplication
 
 	@Autowired
 	ApiRequestService apiRequestService
-	@Autowired
+    @Autowired
 	ApiResponseService apiResponseService
-	@Autowired
+    @Autowired
 	ApiDomainService apiDomainService
-	@Autowired
+    @Autowired
 	ApiCacheService apiCacheService
-
 
 
 	String apiName
@@ -51,27 +51,22 @@ class ApiFrameworkInterceptor implements GrailsConfigurationAware {
     String versionEntrypoint
     String entryPoint
 
-    void setConfiguration(Config cfg) {
-        this.apiName = cfg.apitoolkit.apiName
-        this.apiVersion = cfg.info.app.version
+    ApiFrameworkInterceptor(){
+        //this.apiName = cfg.apitoolkit.apiName
+        //this.apiVersion = cfg.info.app.version
+        String apiVersion = Metadata.current.getApplicationVersion()
+        //String apiVersion = getGrailsApplication().config.getProperty('info.app.version')
 
-        this.apinameEntrypoint = "${this.apiName}_v${this.apiVersion}"
-        this.versionEntrypoint = "v${this.apiVersion}"
-        this.entryPoint = (this.apiName)?"${this.apiName}_v${this.apiVersion}":v"v${this.apiVersion}"
+        //this.apinameEntrypoint = "${this.apiName}_v${this.apiVersion}"
+        //this.versionEntrypoint = "v${this.apiVersion}"
+        String entryPoint = "v${apiVersion}"
 
         match(uri:"/${entryPoint}/**")
     }
 	
 	boolean before(){
-		println("##### FILTER (BEFORE)")
-		
-		/*
-		 * FIRST DETERMINE
-		 *  - HOW ENDPOINT IS BEING CALLED, THEN...
-		 *  - WHAT RESOURCE IS BEING CALLED (CONTROLLER/SERVICE/DOMAIN/ETC)
-		 *  - FINALLY, RESOLVE ENDPOINT
-		 */
-				
+		//println("##### FILTER (BEFORE)")
+
 		def methods = ['get':'show','put':'update','post':'create','delete':'delete']
 		try{
 			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
@@ -119,7 +114,9 @@ class ApiFrameworkInterceptor implements GrailsConfigurationAware {
 									break
 								case 'delete':
 									model = apiDomainService.deleteInstance(cache,params)
-									model = [:]
+                                    if(!model) {
+                                        model = [:]
+                                    }
 									break
 							}
 
@@ -172,7 +169,8 @@ class ApiFrameworkInterceptor implements GrailsConfigurationAware {
 	// model is automapped??
 
 	boolean after(){
-		println("##### FILTER (AFTER)")
+		//println("##### FILTER (AFTER)")
+
 		try{
 			if(!model){
 				render(status:HttpServletResponse.SC_BAD_REQUEST)
@@ -180,28 +178,25 @@ class ApiFrameworkInterceptor implements GrailsConfigurationAware {
 			}
 
 			if(params?.apiCombine==true){
-                println("#### NO MODEL")
 				model = params.apiCombine
 			}
 
 			def newModel = (model)?apiResponseService.convertModel(model):model
-
 			def cache = (params.controller)?apiCacheService.getApiCache(params.controller):[:]
 
 			LinkedHashMap content
 			if(apiResponseService.chain && params?.apiChain?.order){
 				boolean result = apiResponseService.handleApiChain(cache, request,response,newModel,params)
-				forward(controller:params.controller,action:params.action,id:params.id)
-				return false
+				forward(controller:params.controller,action:params.action,params: params)
+                return false
 			}else if(apiResponseService.batch && params?.apiBatch){
-				forward(controller:params.controller,action:params.action,params:params)
-				return false
-			}else{
-				content = apiResponseService.handleApiResponse(cache,request,response,newModel,params)
+				forward(controller:params.controller, action:params.action,params:params)
+                return false
 			}
+
+            content = apiResponseService.handleApiResponse(cache,request,response,newModel,params)
 				
 			if(content){
-                println("### HAS CONTENT")
                 render(text:content.apiToolkitContent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)
                 return false
 			}
@@ -212,7 +207,6 @@ class ApiFrameworkInterceptor implements GrailsConfigurationAware {
 		   return false
 	   }
 
-	   return false
 	}
 }
 

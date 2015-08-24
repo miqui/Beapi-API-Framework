@@ -57,6 +57,7 @@ class ApiRequestService extends ApiLayerService{
 						// replace msg with config deprecation message
 						String msg = "[ERROR] ${depMsg}"
 						error._400_BAD_REQUEST(msg)?.send()
+
 						return false
 					}
 				}
@@ -66,7 +67,7 @@ class ApiRequestService extends ApiLayerService{
 
 				
 				// DOES api.methods.contains(request.method)
-				if(!isRequestMatch(method,request.method.toString())){
+				if(!isRequestMatch(method,request.method.toString()) && !params.apiBatch){
 					// check for apichain
 
 					// TEST FOR CHAIN PATHS
@@ -87,7 +88,7 @@ class ApiRequestService extends ApiLayerService{
 					// (NON-CHAIN) CHECK WHAT TO EXPECT; CLEAN REMAINING DATA
 					// RUN THIS CHECK AFTER MODELMAP FOR CHAINS
 
-					if(batch && params.apiBatch){
+					if(this.batch && params.apiBatch){
 						def temp = params.apiBatch.remove(0)
 						temp.each{ k,v ->
 							params[k] = v
@@ -104,9 +105,9 @@ class ApiRequestService extends ApiLayerService{
 					*/
 
 					if(!checkURIDefinitions(request,cache[params.apiObject][params.action]['receives'])){
-
-						//String msg = 'Expected request variables do not match sent variables'
-						//error._400_BAD_REQUEST(msg)?.send()
+                        // return bad status
+						String msg = 'Expected request variables do not match sent variables'
+						error._400_BAD_REQUEST(msg)?.send()
 						return false
 					}else{
 
@@ -122,71 +123,51 @@ class ApiRequestService extends ApiLayerService{
 	
 	protected void setApiParams(HttpServletRequest request, GrailsParameterMap params){
 		try{
+            String contentType
 			if(!params.contentType){
 				List content = getContentType(request.getHeader('Content-Type'))
 				params.contentType = content[0]
 				params.encoding = (content.size()>1)?content[1]:null
 				
-				if(chain && params?.apiChain?.combine=='true'){
-					if(!params.apiCombine){ params.apiCombine = [:] }
-				}
-				
+				if(chain && params?.apiChain?.combine=='true' && !params.apiCombine){ params.apiCombine = [:] }
+
 				switch(params?.contentType){
 					case 'text/json':
 					case 'application/json':
-						if(request?.JSON){
-							request?.JSON.each{ k,v ->
-								if(chain && k=='chain'){
-									params.apiChain = [:]
-									params.apiChain = request.JSON.chain
-								}else if(batch && k=='batch'){
-									params.apiBatch = []
-									v.each { it ->
-										params.apiBatch.add(it)
-									}
-									params.apiBatch = params.apiBatch
-									//request.JSON.remove("batch")
-								}else{
-									params[k]=v
-								}
-							}
-							if(request?.JSON?.chain){
-								request.JSON.remove('chain')
-							}
-							if(request?.JSON?.batch){
-								request.JSON.remove('batch')
-							}
-						}
+                        contentType = 'JSON'
 						break
 					case 'text/xml':
 					case 'application/xml':
-						if(request?.XML){
-							request?.XML.each{ k,v ->
-								if(chain && k=='chain'){
-									params.apiChain = [:]
-									params.apiChain = request.XML.chain
-									//request.XML.remove("chain")
-								}else if(batch && k=='batch'){
-									params.apiBatch = []
-									v.each { it ->
-										params.apiBatch.add(it.value)
-									}
-									params.apiBatch = params.apiBatch.reverse()
-									//request.XML.remove("batch")
-								}else{
-									params[k]=v
-								}
-							}
-							if(request?.XML.chain){
-								request.XML.remove('chain')
-							}
-							if(request?.XML.batch){
-								request.XML.remove('batch')
-							}
-						}
+                        contentType = 'XML'
 						break
+                    default:
+                        contentType = 'JSON'
 				}
 			}
+
+            if(request?."${contentType}"){
+                request?.JSON.each{ k,v ->
+                    if(chain && k=='chain'){
+                        params.apiChain = [:]
+                        params.apiChain = request."${contentType}".chain
+                    }else if(batch && k=='batch'){
+                        params.apiBatch = []
+                        v.each { it ->
+                            params.apiBatch.add(it)
+                        }
+                        params.apiBatch = params.apiBatch
+                        //request.JSON.remove("batch")
+                    }else{
+                        params[k]=v
+                    }
+                }
+                if(request?."${contentType}"?.chain){
+                    request."${contentType}".remove('chain')
+                }
+                if(request?."${contentType}"?.batch){
+                    request."${contentType}".remove('batch')
+                }
+            }
 			
 		}catch(Exception e){
 			throw new Exception("[ApiRequestService :: setApiParams] : Exception - full stack trace follows:"+ e);

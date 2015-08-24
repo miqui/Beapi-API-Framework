@@ -1,4 +1,5 @@
-//package net.nosegrind.apiframework
+package net.nosegrind.apiframework
+
 /* ****************************************************************************
  * Copyright 2014 Owen Rubel
  *
@@ -15,40 +16,68 @@
  * limitations under the License.
  *****************************************************************************/
 
+import grails.util.Metadata
 
 
 
 class ApiFrameworkUrlMappings {
 
-
 	static mappings = {
+
+        String apiVersion = getGrailsApplication().config.getProperty('info.app.version')
+        String entrypoint = "v${apiVersion}"
+
+        "/$entrypoint/$controller/$action?/$id?(.$format)?"{
+            parseRequest = true
+        }
 
 /*
 		"/apidoc/show" {
-            controller = 'apidoc'
-            action = 'show'
             parseRequest: true
         }
 */
 
-        "/*/$controller/$action/$id**" {
-            controller = controller
-            action = action
+        "/$entrypoint/$controller/$action/$id**" {
             parseRequest = true
         }
 
+        "/${entrypoint}-$apiObjectVersion/$controller/$action/$id**" {
+            parseRequest = true
+            constraints {
+                apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
+            }
+        }
 
-        "/*/$controller/$action" {
-            controller = controller
+        "/$entrypoint/$controller/$action" {
             if(action?.toInteger()==action && action!=null){
                 id=action
                 action = null
-            }else{
-                action=action
             }
             parseRequest = true
         }
 
+        "/${entrypoint}-$apiObjectVersion/$controller/$action" {
+            controller = controller
+            if(action?.toInteger()==action && action!=null){
+                id=action
+                action = null
+            }
+            parseRequest = true
+            constraints {
+                apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
+            }
+        }
+
+        "/$entrypoint/$controller?/$id" {
+            parseRequest = true
+        }
+
+        "/${entrypoint}-$apiObjectVersion/$controller?/$id" {
+            parseRequest = true
+            constraints {
+                apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
+            }
+        }
 
         "403" {
             controller = "errors"
