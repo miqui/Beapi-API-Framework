@@ -18,18 +18,10 @@ import org.springframework.http.ResponseEntity
 
 import javax.servlet.forward.*
 
-//import grails.util.Holders as HOLDER
-
-//import java.util.ArrayList
-//import java.util.HashSet
-//import java.util.Map
-//import java.util.regex.Matcher
-//import java.util.regex.Pattern
-//import java.lang.reflect.Method
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
+import net.nosegrind.apiframework.*
 
-//import org.grails.web.sitemesh.GrailsContentBufferingResponse
 class ApiChainResponseService extends ApiLayerService{
 	
 	GrailsApplication grailsApplication

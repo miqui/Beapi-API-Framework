@@ -36,6 +36,7 @@ import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.HttpServletRequest
 
 import grails.core.GrailsApplication
+import net.nosegrind.apiframework.*
 
 class ApiResponseService extends ApiLayerService{
 	

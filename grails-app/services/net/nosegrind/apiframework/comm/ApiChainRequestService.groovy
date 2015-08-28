@@ -9,8 +9,8 @@ import javax.servlet.forward.*
  * Copyright 2014 Owen Rubel
  *****************************************************************************/
 import javax.servlet.http.HttpServletRequest
+import net.nosegrind.apiframework.*
 
-//import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper
 class ApiChainRequestService extends ApiLayerService{
 
 	static transactional = false

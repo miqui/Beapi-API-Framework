@@ -28,8 +28,8 @@ import javax.servlet.forward.*
 //import java.lang.reflect.Method
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
+import net.nosegrind.apiframework.*
 
-//import org.grails.web.sitemesh.GrailsContentBufferingResponse
 class ApiBatchResponseService extends ApiLayerService{
 	
 	GrailsApplication grailsApplication

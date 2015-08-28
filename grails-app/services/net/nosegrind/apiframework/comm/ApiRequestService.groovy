@@ -13,6 +13,7 @@ import org.grails.groovy.grails.commons.*
 import grails.web.servlet.mvc.GrailsParameterMap
 //import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper
 import javax.servlet.http.HttpServletRequest
+import net.nosegrind.apiframework.*
 
 class ApiRequestService extends ApiLayerService{
 
