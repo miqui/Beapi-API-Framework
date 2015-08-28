@@ -77,16 +77,12 @@ dependencies {
 
     testCompile 'org.grails:grails-plugin-testing'
 
-    console "org.grails:grails-console"
+    //console "org.grails:grails-console"
 }
 
 task wrapper(type: Wrapper) {
     gradleVersion = gradleWrapperVersion
 }
-
-//tasks.withType(org.springframework.boot.gradle.run.BootRunTask) {
-//    systemProperty('netflix.environment', 'test')
-//}
 
 run {
     systemProperties = System.properties

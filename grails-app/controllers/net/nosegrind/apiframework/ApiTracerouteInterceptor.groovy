@@ -4,12 +4,9 @@ import grails.config.Config
 import grails.core.support.GrailsConfigurationAware
 import net.nosegrind.apiframework.comm.ApiRequestService
 import net.nosegrind.apiframework.comm.ApiResponseService
-
-import javax.servlet.http.HttpServletResponse
-
 import org.springframework.beans.factory.annotation.Autowired
 
-
+import javax.servlet.http.HttpServletResponse
 
 /* ****************************************************************************
  * Copyright 2014 Owen Rubel
@@ -28,7 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired
  *****************************************************************************/
 
 
-class ApiFrameworkInterceptor implements GrailsConfigurationAware{
+class ApiTracerouteInterceptor implements GrailsConfigurationAware{
 
     int order = HIGHEST_PRECEDENCE + 999
 
@@ -47,7 +44,7 @@ class ApiFrameworkInterceptor implements GrailsConfigurationAware{
 
 	void setConfiguration(Config cfg) {
 		String apiVersion = cfg.info.app.version
-		this.entryPoint = "v${apiVersion}"
+		this.entryPoint = "t${apiVersion}"
 
 
 		match(uri:"/${this.entryPoint}/**")

@@ -24,18 +24,22 @@ class ApiFrameworkUrlMappings {
 
 	static mappings = {
 
-        String apiVersion = getGrailsApplication().config.getProperty('info.app.version')
+        //String apiVersion = getGrailsApplication().config.getProperty('info.app.version')
+        String apiVersion = getGrailsApplication().metadata['info.app.version']
         String entrypoint = "v${apiVersion}"
-
-        "/$entrypoint/$controller/$action?/$id?(.$format)?"{
-            parseRequest = true
-        }
+        String batchentrypoint = "b${apiVersion}"
+        String chainentrypoint = "c${apiVersion}"
 
 /*
 		"/apidoc/show" {
             parseRequest: true
         }
 */
+
+        // REGULAR API ENDPOINTS
+        "/$entrypoint/$controller/$action?/$id?(.$format)?"{
+            parseRequest = true
+        }
 
         "/$entrypoint/$controller/$action/$id**" {
             parseRequest = true
@@ -68,16 +72,83 @@ class ApiFrameworkUrlMappings {
             }
         }
 
-        "/$entrypoint/$controller?/$id" {
+
+
+        // BATCH API ENDPOINTS
+        "/$batchentrypoint/$controller/$action?/$id?(.$format)?"{
             parseRequest = true
         }
 
-        "/${entrypoint}-$apiObjectVersion/$controller?/$id" {
+        "/$batchentrypoint/$controller/$action/$id**" {
+            parseRequest = true
+        }
+
+        "/${batchentrypoint}-$apiObjectVersion/$controller/$action/$id**" {
             parseRequest = true
             constraints {
                 apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
             }
         }
+
+        "/$batchentrypoint/$controller/$action" {
+            if(action?.toInteger()==action && action!=null){
+                id=action
+                action = null
+            }
+            parseRequest = true
+        }
+
+        "/${batchentrypoint}-$apiObjectVersion/$controller/$action" {
+            controller = controller
+            if(action?.toInteger()==action && action!=null){
+                id=action
+                action = null
+            }
+            parseRequest = true
+            constraints {
+                apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
+            }
+        }
+
+
+
+        // CHAIN API ENDPOINTS
+        "/$chainentrypoint/$controller/$action?/$id?(.$format)?"{
+            parseRequest = true
+        }
+
+        "/$chainentrypoint/$controller/$action/$id**" {
+            parseRequest = true
+        }
+
+        "/${chainentrypoint}-$apiObjectVersion/$controller/$action/$id**" {
+            parseRequest = true
+            constraints {
+                apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
+            }
+        }
+
+        "/$chainentrypoint/$controller/$action" {
+            if(action?.toInteger()==action && action!=null){
+                id=action
+                action = null
+            }
+            parseRequest = true
+        }
+
+        "/${chainentrypoint}-$apiObjectVersion/$controller/$action" {
+            controller = controller
+            if(action?.toInteger()==action && action!=null){
+                id=action
+                action = null
+            }
+            parseRequest = true
+            constraints {
+                apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
+            }
+        }
+
+
 
         "403" {
             controller = "errors"

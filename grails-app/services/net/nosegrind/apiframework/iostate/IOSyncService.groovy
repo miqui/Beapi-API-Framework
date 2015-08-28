@@ -1,4 +1,4 @@
-package net.nosegrind.apiframework
+package net.nosegrind.apiframework.iostate
 
 /* ****************************************************************************
  * Copyright 2014 Owen Rubel

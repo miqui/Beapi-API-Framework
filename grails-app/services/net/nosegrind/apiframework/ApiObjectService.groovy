@@ -1,45 +1,25 @@
 package net.nosegrind.apiframework
 
+import net.nosegrind.apiframework.comm.ApiLayerService
+
 /* ****************************************************************************
  * Copyright 2014 Owen Rubel
  *****************************************************************************/
 
 
 import org.grails.web.json.JSONObject
-
-import java.lang.reflect.Method
-
-import org.grails.core.DefaultGrailsControllerClass
 import grails.core.GrailsApplication
 
 //import grails.util.Holders
 import grails.converters.JSON
-import grails.converters.XML
-import groovy.util.ConfigObject
 import grails.util.Environment
-import grails.util.BuildSettings
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 import net.nosegrind.apiframework.ApiDescriptor
 import net.nosegrind.apiframework.ApiStatuses
-
-import grails.plugins.GrailsPluginInfo
-import grails.plugins.GrailsPluginManager
-import grails.plugins.GrailsPlugin
 
 //import grails.plugin.cache.GrailsCacheManager
 //import org.springframework.cache.CacheManager
 //import grails.plugin.springsecurity.SpringSecurityService
-
-import org.springframework.cache.Cache
 import org.grails.groovy.grails.commons.*
-import org.grails.validation.routines.UrlValidator
-import org.springframework.web.context.request.RequestContextHolder as RCH
-
-import net.nosegrind.apiframework.*
 
 class ApiObjectService{
 

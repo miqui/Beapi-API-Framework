@@ -1,4 +1,4 @@
-package net.nosegrind.apiframework
+package net.nosegrind.apiframework.comm
 
 /* ****************************************************************************
  * Copyright 2014 Owen Rubel
@@ -8,17 +8,9 @@ package net.nosegrind.apiframework
 
 import grails.converters.JSON
 import grails.converters.XML
+import org.springframework.web.context.request.RequestAttributes
 
-
-
-import java.util.ArrayList
-import java.util.HashMap
-import java.util.HashSet
-import java.util.LinkedHashMap
-import java.util.List
-import java.util.Map
-import java.util.regex.Matcher
-import java.util.regex.Pattern
+import javax.servlet.http.HttpServletResponse
 
 //import java.lang.reflect.Method
 import grails.core.GrailsApplication
@@ -29,20 +21,15 @@ import javax.servlet.http.HttpServletRequest
 import java.text.SimpleDateFormat
 
 import org.grails.groovy.grails.commons.*
-import org.grails.web.json.JSONObject
+
 import grails.web.servlet.mvc.GrailsParameterMap
-import org.grails.web.util.GrailsApplicationAttributes
 
 
-import org.grails.web.sitemesh.GrailsContentBufferingResponse
 
 import org.grails.web.util.WebUtils
-//import org.codehaus.groovy.grails.validation.routines.UrlValidator
 
-import org.springframework.cache.Cache
-//import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper
 import org.springframework.web.context.request.RequestContextHolder as RCH
-//import org.springframework.ui.ModelMap
+
 import org.springframework.web.context.request.ServletRequestAttributes
 import net.nosegrind.apiframework.*
 
@@ -73,10 +60,23 @@ class ApiLayerService{
 		return request
 	}
 	
-	private GrailsContentBufferingResponse getResponse(){
-		return RCH.currentRequestAttributes().currentResponse
+	private HttpServletResponse getResponse(){
+		HttpServletResponse response = ((ServletRequestAttributes) RCH.getRequestAttributes()).getAttribute(RESPONSE_NAME_AT_ATTRIBUTES, RequestAttributes.SCOPE_REQUEST)
+		return response
 	}
-	
+
+	GrailsParameterMap getParams(HttpServletRequest request,GrailsParameterMap params){
+		try{
+			String type = params.format
+			request."${type}"?.each() { key,value ->
+				params.put(key,value)
+			}
+			return params
+		}catch(Exception e){
+			throw new Exception("[ApiResponseService :: getParams] : Exception - full stack trace follows:",e)
+		}
+	}
+
 	boolean checkAuth(HttpServletRequest request, List roles){
 		try{
 			boolean hasAuth = false
@@ -90,20 +90,7 @@ class ApiLayerService{
 			throw new Exception("[ApiLayerService :: checkAuth] : Exception - full stack trace follows:",e)
 		}
 	}
-	
-	List getContentType(String contentType){
-		try{
-			List tempType = contentType?.split(';')
-			if(tempType){
-				return tempType
-			}else{
-				return ['application/json']
-			}
-		}catch(Exception e) {
-			throw new Exception("[ApiLayerService :: getContentType] : Exception - full stack trace follows:",e)
-		}
-	}
-	
+
 	// set version,controller,action / controller,action
 	List parseUri(String uri, String entrypoint){
 		if(uri[0]=='/'){ uri=uri[1..-1] }
@@ -210,8 +197,7 @@ class ApiLayerService{
 			}
 			return ['get':paramsGet,'post':paramsPost]
 		}catch(Exception e){
-			//throw new Exception("[ApiLayerService :: getMethodParams] : Exception - full stack trace follows:",e)
-			println("[ApiLayerService :: getMethodParams] : Exception - full stack trace follows:"+e)
+			throw new Exception("[ApiLayerService :: getMethodParams] : Exception - full stack trace follows:",e)
 		}
 	}
 	
@@ -251,41 +237,43 @@ class ApiLayerService{
 	 * TODO: Need to compare multiple authorities
 	 */
 	private String processJson(LinkedHashMap returns){
+
 		try{
-			def json = [:]
+			LinkedHashMap json = [:]
 			returns.each{ p ->
 					p.value.each{ it ->
-						if(it){
+						if(it) {
 							ParamsDescriptor paramDesc = it
-						
-							def j = [:]
-							if(paramDesc?.values){
-								j["$paramDesc.name"]=[]
-							}else{
-								String dataName=(['PKEY','FKEY','INDEX'].contains(paramDesc?.paramType?.toString()))?'ID':paramDesc.paramType
-								j = (paramDesc?.mockData?.trim())?["$paramDesc.name":"$paramDesc.mockData"]:["$paramDesc.name":"$dataName"]
+
+							LinkedHashMap j = [:]
+							if (paramDesc?.values) {
+								j["$paramDesc.name"] = []
+							} else {
+								String dataName = (['PKEY', 'FKEY', 'INDEX'].contains(paramDesc?.paramType?.toString())) ? 'ID' : paramDesc.paramType
+								j = (paramDesc?.mockData?.trim()) ? ["$paramDesc.name": "$paramDesc.mockData"] : ["$paramDesc.name": "$dataName"]
 							}
-							j.each(){ key,val ->
-								if(val instanceof List){
+							j.each() { key, val ->
+								if (val instanceof List) {
 									def child = [:]
-									val.each(){ it2 ->
-										it2.each(){ key2,val2 ->
+									val.each() { it2 ->
+										it2.each() { key2, val2 ->
 											child[key2] = val2
 										}
 									}
 									json[key] = child
-								}else{
-									json[key]=val
+								} else {
+									json[key] = val
 								}
 							}
-							}
+						}
 					}
 			}
-	
+
+			String jsonReturn
 			if(json){
-				json = json as JSON
+				jsonReturn = json as JSON
 			}
-			return json
+			return jsonReturn
 		}catch(Exception e){
 			throw new Exception("[ApiLayerService :: processJson] : Exception - full stack trace follows:",e)
 		}
@@ -327,22 +315,9 @@ class ApiLayerService{
 	
 	protected void setParams(HttpServletRequest request,GrailsParameterMap params){
 		try{
-			List formats = ['text/json','application/json','text/xml','application/xml']
-			List tempType = request.getHeader('Content-Type')?.split(';')
-			String type = (tempType)?tempType[0]:request.getHeader('Content-Type')
-			type = (request.getHeader('Content-Type'))?formats.findAll{ type.startsWith(it) }[0].toString():null
-			
-			switch(type){
-				case 'application/json':
-					request.JSON?.each() { key,value ->
-						params.put(key,value)
-					}
-					break
-				case 'application/xml':
-					request.XML?.each() { key,value ->
-						params.put(key,value)
-					}
-					break
+			String type = params.format
+			request."$type"?.each() { key,value ->
+				params.put(key,value)
 			}
 		}catch(Exception e){
 			throw new Exception("[ApiLayerService :: setParams] : Exception - full stack trace follows:",e)

@@ -1,4 +1,4 @@
-package net.nosegrind.apiframework
+package net.nosegrind.apiframework.comm
 
 /* ****************************************************************************
  * Copyright 2014 Owen Rubel
@@ -7,134 +7,39 @@ package net.nosegrind.apiframework
 
 import grails.converters.JSON
 import grails.converters.XML
-import grails.plugin.cache.GrailsCacheManager
+
 //import grails.plugin.springsecurity.SpringSecurityService
-import grails.spring.BeanBuilder
+
 import grails.web.http.HttpHeaders
+import net.nosegrind.apiframework.comm.ApiLayerService
 
 //import grails.util.Holders as HOLDER
 
-import java.util.ArrayList
-import java.util.HashSet
-import java.util.Map
-import java.util.regex.Matcher
-import java.util.regex.Pattern
-import java.lang.reflect.Method
+//import java.util.ArrayList
+//import java.util.HashSet
+//import java.util.Map
+//import java.util.regex.Matcher
+//import java.util.regex.Pattern
+//import java.lang.reflect.Method
 
 import javax.servlet.forward.*
 import org.springframework.http.ResponseEntity
 
-import java.text.SimpleDateFormat
-
-import org.grails.groovy.grails.commons.*
-import org.grails.web.json.JSONObject
-
 import grails.web.servlet.mvc.GrailsParameterMap
 
+import org.grails.groovy.grails.commons.*
+import org.grails.validation.routines.UrlValidator
 import org.grails.web.util.GrailsApplicationAttributes
 //import org.grails.web.sitemesh.GrailsContentBufferingResponse
 
 import javax.servlet.http.HttpServletResponse
-
-import org.springframework.web.util.WebUtils
-import org.grails.validation.routines.UrlValidator
-import org.springframework.cache.Cache
-//import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper
-//import org.springframework.security.web.context.HttpSessionSecurityContextRepository
-import org.springframework.web.context.request.RequestContextHolder as RCH
-import org.springframework.ui.ModelMap
-
-import org.springframework.ui.ModelMap
-
-import grails.core.GrailsDomainClass
-import grails.core.GrailsApplication
 import javax.servlet.http.HttpServletRequest
 
-import net.nosegrind.apiframework.*
-
+import grails.core.GrailsApplication
 
 class ApiResponseService extends ApiLayerService{
-
-	static transactional = false
 	
 	GrailsApplication grailsApplication
-	
-	boolean handleApiChain(LinkedHashMap cache, HttpServletRequest request, HttpServletResponse response, Map model, GrailsParameterMap params){
-		try{
-			List uri = [params.controller,params.action,params.id]
-			ApiStatuses errors = new ApiStatuses()
-			List keys = []
-			String controller
-			String action
-			List uri2 = []
-			
-			if(params?.apiChain?.order!='null'){
-				keys = params?.apiChain?.order.keySet() as List
-				uri2 = keys.last().split('/')
-				controller = uri2[0]
-				action = uri2[1]
-			}
-			
-			Long id = model.id
-
-			
-			//if(keys.last() && (params?.apiChain?.order["${keys.last()}"]!='null' && params?.apiChain?.order["${keys.last()}"]!='return')){
-			if(keys.last()){
-				int pos = checkChainedMethodPosition(cache,request,params,uri,params?.apiChain?.order as Map)
-				if(pos==3){
-					String msg = '[ERROR] Bad combination of unsafe METHODS in api chain.'
-					errors._403_FORBIDDEN(msg).send()
-					return false
-				}else{
-					if(!uri2){
-						String msg = 'Path was unable to be parsed. Check your path variables and try again.'
-						errors._404_NOT_FOUND(msg).send()
-						return false
-					}
-					
-					def currentPath = "${controller}/${action}"
-					List roles = cache[params.apiObject][params.action]['roles'].toArray() as List
-					if(checkAuth(request,roles)){
-						/*
-						if(params?.apiChain.combine=='true'){
-							params.apiCombine["${params.controller}/${params.action}"] = parseURIDefinitions(model,cache[params.action][params.apiObject]['returns'])
-						}
-						*/
-						params.controller = controller
-						params.action = action
-
-						if(params.apiChain.key){
-							params.id = model[params.apiChain.key]
-							params.apiChain.remove('key')
-						}else{
-							params.id = model.id
-						}
-
-						if(params?.apiChain.combine=='true'){
-							params.apiCombine[currentPath] = parseURIDefinitions(request,model,cache[params.apiObject][params.action]['returns'])
-						}
-						
-						if(keys.last() && (params?.apiChain?.order["${keys.last()}"]=='null' && params?.apiChain?.order["${keys.last()}"]=='return')){
-							params.remove('apiChain')
-						}
-						params?.apiChain?.order.remove("$currentPath")
-						return true
-					}else{
-						String msg = "User does not have access."
-						errors._403_FORBIDDEN(msg).send()
-						return false
-					}
-				}
-			}
-			//}else{
-			//	params.remove("apiChain")
-			//}
-
-			return false
-		}catch(Exception e){
-			throw new Exception("[ApiResponseService :: handleApiChain] : Exception - full stack trace follows:",e)
-		}
-	}
 	
 	def handleApiResponse(LinkedHashMap cache, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
 		try{
@@ -147,11 +52,7 @@ class ApiResponseService extends ApiLayerService{
 					//if(type){
 							response.setHeader('Authorization', cache[params.apiObject][params.action]['roles'].join(', '))
 							LinkedHashMap result = parseURIDefinitions(request,model,cache[params.apiObject][params.action]['returns'])
-							if(params?.apiChain?.combine=='true'){
-								if(!params.apiCombine){ params.apiCombine = [:] }
-								String currentPath = "${params.controller}/${params.action}"
-								params.apiCombine[currentPath] = result
-							}
+
 							Map content = parseResponseMethod(request, params, result,cache[params.apiObject][params.action]['returns'])
 							return content
 					//}else{
@@ -167,55 +68,7 @@ class ApiResponseService extends ApiLayerService{
 			throw new Exception("[ApiResponseService :: handleApiResponse] : Exception - full stack trace follows:",e)
 		}
 	}
-	
-	GrailsParameterMap getParams(HttpServletRequest request,GrailsParameterMap params){
-		try{
-			List formats = ['text/json','application/json','text/xml','application/xml']
-			List tempType = getContentType(request.getHeader('Content-Type'))
-			String type = (tempType)?tempType[0]:request.getHeader('Content-Type')
-			type = (request.getHeader('Content-Type'))?formats.findAll{ type.startsWith(it) }[0].toString():null
-			switch(type){
-				case 'text/json':
-				case 'application/json':
-					request.JSON?.each() { key,value ->
-						params.put(key,value)
-					}
-					break
-				case 'text/xml':
-				case 'application/xml':
-					request.XML?.each() { key,value ->
-						params.put(key,value)
-					}
-					break
-			}
-			return params
-		}catch(Exception e){
-			throw new Exception("[ApiResponseService :: getParams] : Exception - full stack trace follows:",e)
-		}
-	}
-	
-	boolean isChain(HttpServletRequest request,GrailsParameterMap params){
-		try{
-			switch(params.contentType){
-				case 'text/xml':
-				case 'application/xml':
-					if(request.XML?.chain){
-						return true
-					}
-					break
-				case 'text/json':
-				case 'application/json':
-				default:
-					if(request.JSON?.chain){
-						return true
-					}
-					break
-			}
-			return false
-		}catch(Exception e){
-			throw new Exception("[ApiResponseService :: isChain] : Exception - full stack trace follows:",e)
-		}
-	}
+
 	
 	LinkedHashMap parseURIDefinitions(HttpServletRequest request, LinkedHashMap model,LinkedHashMap responseDefinitions){
 		try{
@@ -489,36 +342,12 @@ class ApiResponseService extends ApiLayerService{
 				if(grailsApplication.isDomainClass(map[k].getClass())){
 					newMap = formatDomainObject(map[k])
 					return newMap
-				}else{
-					switch(map[k].getClass()){
-						case 'class java.util.LinkedList':
-						case 'class java.util.ArrayList':
-							map[k].eachWithIndex(){ val, key ->
-								if(val){
-									if(grailsApplication.isDomainClass(val.getClass())){
-										newMap[key]=formatDomainObject(val)
-									}else{
-										newMap[key] = ((val in java.util.ArrayList || val in java.util.List) || val in java.util.Map)?val:val.toString()
-									}
-								}
-							}
-							return newMap
-							break
-						case 'class java.util.Map':
-						case 'class java.util.LinkedHashMap':
-						default:
-							map[k].each(){ key, val ->
-								if(val){
-									if(grailsApplication.isDomainClass(val.getClass())){
-										newMap[key]=formatDomainObject(val)
-									}else{
-										newMap[key] = ((val in java.util.ArrayList || val in java.util.List) || val in java.util.Map)?val:val.toString()
-									}
-								}
-							}
-							return newMap
-							break
-					}
+				}else if(['class java.util.LinkedList','class java.util.ArrayList'].contains(map[k].getClass())) {
+						newMap = formatList(map[k])
+						return newMap
+				}else if(['class java.util.Map','class java.util.LinkedHashMap'].contains(map[k].getClass())) {
+					newMap = formatMap(map[k])
+					return newMap
 				}
 			}
 			return newMap
@@ -526,12 +355,42 @@ class ApiResponseService extends ApiLayerService{
 			throw new Exception("[ApiResponseService :: convertModel] : Exception - full stack trace follows:",e)
 		}
 	}
-	
+
+	Map formatList(List list){
+		Map newMap = [:]
+		list.eachWithIndex(){ val, key ->
+			if(val){
+				if(grailsApplication.isDomainClass(val.getClass())){
+					newMap[key]=formatDomainObject(val)
+				}else{
+					newMap[key] = ((val in java.util.ArrayList || val in java.util.List) || val in java.util.Map)?val:val.toString()
+				}
+			}
+		}
+		return newMap
+	}
+
+	Map formatMap(Map map) {
+		Map newMap = [:]
+		map.each(){ key, val ->
+			if(val){
+				if(grailsApplication.isDomainClass(val.getClass())){
+					newMap[key]=formatDomainObject(val)
+				}else{
+					newMap[key] = ((val in java.util.ArrayList || val in java.util.List) || val in java.util.Map)?val:val.toString()
+				}
+			}
+		}
+		return newMap
+	}
+
 	Map parseResponseMethod(HttpServletRequest request, GrailsParameterMap params, Map map, LinkedHashMap returns){
 		Map data = [:]
 		switch(request.method) {
 			case 'PURGE':
-				// cleans cache
+				// cleans cache; disabled for now
+				break;
+			case 'TRACERT':
 				break;
 			case 'TRACE':
 				break;
@@ -569,21 +428,19 @@ class ApiResponseService extends ApiLayerService{
 
 	Map parseContentType(HttpServletRequest request, GrailsParameterMap params, Map map, LinkedHashMap returns){
 		String content
-		String contentType = (params.contentType)?params.contentType:'application/json'
+		String type = params.format
+		String contentType = "application/${params.format.toLowerCase()}"
 		String encoding = (params.encoding)?params.encoding:"UTF-8"
-		switch(contentType){
-			case 'text/xml':
-			case 'application/xml':
-				LinkedHashMap result2 = parseURIDefinitions(request,map,returns)
-				content = result2 as XML
+		LinkedHashMap result = parseURIDefinitions(request,map,returns)
+		switch(type){
+			case 'XML':
+				content = result as XML
 				break
-			case 'text/json':
-			case 'application/json':
+			case 'JSON':
 			default:
-				LinkedHashMap result2 = parseURIDefinitions(request,map,returns)
-				content = result2 as JSON
-				break
+				content = result as JSON
 		}
+
 		return ['content':content,'type':contentType,'encoding':encoding]
 	}
 }

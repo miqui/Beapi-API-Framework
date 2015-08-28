@@ -1,23 +1,14 @@
 package net.nosegrind.apiframework
 
+import net.nosegrind.apiframework.comm.ApiLayerService
+
 /* ****************************************************************************
  * Copyright 2014 Owen Rubel
  *****************************************************************************/
-
-
-
-import java.util.LinkedHashMap;
-
 import grails.core.GrailsApplication
 
-import grails.plugin.cache.GrailsCacheManager
 //import grails.plugin.springsecurity.SpringSecurityService
-
-import org.springframework.cache.Cache
 import org.grails.groovy.grails.commons.*
-
-import net.nosegrind.apiframework.*
-
 import grails.web.servlet.mvc.GrailsParameterMap;
 
 class ApiDomainService{

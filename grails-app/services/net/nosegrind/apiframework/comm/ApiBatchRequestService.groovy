@@ -1,38 +1,22 @@
-package net.nosegrind.apiframework
+package net.nosegrind.apiframework.comm
+
+import grails.web.servlet.mvc.GrailsParameterMap
+import org.grails.groovy.grails.commons.*
+
+import javax.servlet.forward.*
 
 /* ****************************************************************************
  * Copyright 2014 Owen Rubel
  *****************************************************************************/
-
-
-import grails.converters.JSON
-import grails.converters.XML
-import grails.plugin.cache.GrailsCacheManager
-//import grails.plugin.springsecurity.SpringSecurityService
-
-import java.util.ArrayList
-import java.util.HashSet
-import java.util.List
-import java.util.Map
-import java.util.regex.Matcher
-import java.util.regex.Pattern
-
-import javax.servlet.forward.*
-
-import org.grails.groovy.grails.commons.*
-import grails.web.servlet.mvc.GrailsParameterMap
-//import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper
 import javax.servlet.http.HttpServletRequest
-import net.nosegrind.apiframework.*
 
-
-class ApiRequestService extends ApiLayerService{
+//import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper
+class ApiBatchRequestService extends ApiLayerService{
 
 	static transactional = false
 	
 	boolean handleApiRequest(LinkedHashMap cache, HttpServletRequest request, GrailsParameterMap params, String entryPoint){
 		try{
-
 			setEnv()
 			
 			ApiStatuses error = new ApiStatuses()
@@ -110,43 +94,21 @@ class ApiRequestService extends ApiLayerService{
 						error._400_BAD_REQUEST(msg)?.send()
 						return false
 					}else{
-
 						return true
 					}
 				}
 			}
 		}catch(Exception e){
-			//throw new Exception("[ApiRequestService :: handleApiRequest] : Exception - full stack trace follows:",e)
-			println("[ApiRequestService :: handleApiRequest] : Exception - full stack trace follows:"+e)
+			throw new Exception("[ApiRequestService :: handleApiRequest] : Exception - full stack trace follows:",e)
 		}
 	}
 	
 	protected void setApiParams(HttpServletRequest request, GrailsParameterMap params){
 		try{
-            String contentType
-			if(!params.contentType){
-				List content = getContentType(request.getHeader('Content-Type'))
-				params.contentType = content[0]
-				params.encoding = (content.size()>1)?content[1]:null
-				
-				if(chain && params?.apiChain?.combine=='true' && !params.apiCombine){ params.apiCombine = [:] }
-
-				switch(params?.contentType){
-					case 'text/json':
-					case 'application/json':
-                        contentType = 'JSON'
-						break
-					case 'text/xml':
-					case 'application/xml':
-                        contentType = 'XML'
-						break
-                    default:
-                        contentType = 'JSON'
-				}
-			}
+            String contentType = params.format
 
             if(request?."${contentType}"){
-                request?.JSON.each{ k,v ->
+                request?."${contentType}".each{ k,v ->
                     if(chain && k=='chain'){
                         params.apiChain = [:]
                         params.apiChain = request."${contentType}".chain
@@ -175,7 +137,7 @@ class ApiRequestService extends ApiLayerService{
 	}
 	
 	boolean isRequestMatch(String protocol,String method){
-		if(['OPTIONS','TRACE','HEAD'].contains(method)){
+		if(['TRACERT','OPTIONS','TRACE','HEAD'].contains(method)){
 			return true
 		}else{
 			if(protocol == method){

@@ -9,10 +9,11 @@ import net.nosegrind.apiframework.ErrorCodeDescriptor;
 
 import org.springframework.web.context.request.RequestContextHolder as RCH
 //import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper
-import org.grails.web.sitemesh.GrailsContentBufferingResponse
+//import org.grails.web.sitemesh.GrailsContentBufferingResponse
 import org.springframework.web.context.request.RequestAttributes
 import org.springframework.web.context.request.ServletRequestAttributes
 import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
 
 //@GrailsCompileStatic
 class ApiStatuses{
@@ -32,13 +33,13 @@ class ApiStatuses{
 	public static final String RESPONSE_NAME_AT_ATTRIBUTES = ServletRequestAttributes.class.getName() + ".ATTRIBUTE_NAME";
 	
 	private HttpServletRequest getRequest(){
-		//return RCH.currentRequestAttributes().currentRequest
 		HttpServletRequest request = ((ServletRequestAttributes) RCH.currentRequestAttributes()).getRequest()
 		return request
 	}
-	
-	GrailsContentBufferingResponse getResponse(){
-      return RCH.currentRequestAttributes()?.currentResponse
+
+	private HttpServletResponse getResponse(){
+		HttpServletResponse response = ((ServletRequestAttributes) RCH.getRequestAttributes()).getAttribute(RESPONSE_NAME_AT_ATTRIBUTES, RequestAttributes.SCOPE_REQUEST)
+		return response
 	}
 
 	String getContentType(){
