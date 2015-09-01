@@ -25,49 +25,27 @@ import javax.servlet.http.HttpServletResponse
  *****************************************************************************/
 
 
-class ApiTracerouteInterceptor implements GrailsConfigurationAware{
+class TracerouteInterceptor implements GrailsConfigurationAware{
 
     int order = HIGHEST_PRECEDENCE + 999
 
-	@Autowired
 	ApiRequestService apiRequestService
-    @Autowired
 	ApiResponseService apiResponseService
-    @Autowired
 	ApiDomainService apiDomainService
-    @Autowired
 	ApiCacheService apiCacheService
+	TimerService timerService
 
-
-	String apiName
-    String entryPoint
 
 	void setConfiguration(Config cfg) {
-		String apiVersion = cfg.info.app.version
-		this.entryPoint = "t${apiVersion}"
-
-
-		match(uri:"/${this.entryPoint}/**")
+		//String apiVersion =
+		String entryPoint = "t${cfg.info.app.version}"
+		match(uri:"/${entryPoint}/**")
 	}
-
-	/*
-    ApiFrameworkInterceptor(){
-        //this.apiName = cfg.apitoolkit.apiName
-        //this.apiVersion = cfg.info.app.version
-        String apiVersion = Metadata.current.getApplicationVersion()
-		//String apiVersion = grailsApplication.metadata['info.app.version']
-        //String apiVersion = getGrailsApplication().config.getProperty('info.app.version')
-
-        //this.apinameEntrypoint = "${this.apiName}_v${this.apiVersion}"
-        //this.versionEntrypoint = "v${this.apiVersion}"
-        this.entryPoint = "v${apiVersion}"
-
-        match(uri:"/${entryPoint}/**")
-    }
-	*/
 
 	boolean before(){
 		//println("##### FILTER (BEFORE)")
+		timerService.clearTimer()
+		timerService.startTime('TracerouteInterceptor','before')
 
 		params.format = request.format.toUpperCase()
 
@@ -81,7 +59,7 @@ class ApiTracerouteInterceptor implements GrailsConfigurationAware{
 					if(!params.action){ 
 						String methodAction = methods[request.method.toLowerCase()]
 						if(!cache[params.apiObject][methodAction]){
-							params.action = cache[params.apiObject]['defaultAction'].split('/')[1] 
+							params.action = cache[params.apiObject]['defaultAction']
 						}else{
 							params.action = methods[request.method.toLowerCase()]
 							
@@ -89,13 +67,14 @@ class ApiTracerouteInterceptor implements GrailsConfigurationAware{
 							List tempUri = request.getRequestURI().split("/")
 							if(tempUri[2].contains('dispatch') && "${params.controller}.dispatch" == tempUri[2] && !cache[params.apiObject]['domainPackage']){
 								forward(controller:params.controller,action:params.action,params:params)
+								timerService.endTime('TracerouteInterceptor','before')
 								return false
 							}
 						}
 					}
 							
 					// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
-					boolean result = apiRequestService.handleApiRequest(cache,request,params,this.entryPoint)
+					boolean result = apiRequestService.handleApiRequest(cache,request,params)
 
 					//HANDLE DOMAIN RESOLUTION
 					if(cache[params.apiObject]['domainPackage']){
@@ -122,6 +101,7 @@ class ApiTracerouteInterceptor implements GrailsConfigurationAware{
 
 							if(!model && request.method.toLowerCase()!='delete'){
 								render(status:HttpServletResponse.SC_BAD_REQUEST)
+								timerService.endTime('TracerouteInterceptor','before')
 								return false
 							}
 
@@ -130,33 +110,39 @@ class ApiTracerouteInterceptor implements GrailsConfigurationAware{
 
 							if(request.method.toLowerCase()=='delete' && content.apiToolkitContent==null){
 								render(status:HttpServletResponse.SC_OK)
+								timerService.endTime('TracerouteInterceptor','before')
 								return false
 							}else{
 								render(text:content.apiToolkitContent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)
+								timerService.endTime('TracerouteInterceptor','before')
 								return false
 							}
 						}
 						//return result
 					}else{
+						timerService.endTime('TracerouteInterceptor','before')
 						return result
 					}
 				}
 			//}
-			
+			timerService.endTime('TracerouteInterceptor','before')
 			return false
 
 		}catch(Exception e){
 			log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e);
+			timerService.endTime('TracerouteInterceptor','before')
 			return false
 		}
 	}
-			
 
 	boolean after(){
 		//println("##### FILTER (AFTER)")
+		timerService.startTime('TracerouteInterceptor','after')
 		try{
 			if(!model){
 				render(status:HttpServletResponse.SC_BAD_REQUEST)
+				timerService.endTime('TracerouteInterceptor','after')
+				render(text:timerService.getTimer())
 				return false
 			}
 
@@ -167,13 +153,18 @@ class ApiTracerouteInterceptor implements GrailsConfigurationAware{
 				
 			if(content){
                 render(text:content.apiToolkitContent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)
-                return false
+				timerService.endTime('TracerouteInterceptor','after')
+				render(text:timerService.getTimer())
+				return false
 			}
-
+			timerService.endTime('TracerouteInterceptor','after')
+			render(text:timerService.getTimer())
 			return false
 	   }catch(Exception e){
-		   log.error("[ApiToolkitFilters :: apitoolkit.after] : Exception - full stack trace follows:", e);
-		   return false
+			log.error("[ApiToolkitFilters :: apitoolkit.after] : Exception - full stack trace follows:", e);
+			timerService.endTime('TracerouteInterceptor','after')
+			render(text:timerService.getTimer())
+			return false
 	   }
 
 	}

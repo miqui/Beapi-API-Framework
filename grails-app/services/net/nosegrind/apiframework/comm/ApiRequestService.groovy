@@ -19,7 +19,7 @@ class ApiRequestService extends ApiLayerService{
 
 	static transactional = false
 	
-	boolean handleApiRequest(LinkedHashMap cache, HttpServletRequest request, GrailsParameterMap params, String entryPoint){
+	boolean handleApiRequest(LinkedHashMap cache, HttpServletRequest request, GrailsParameterMap params){
 		try{
 			setEnv()
 			

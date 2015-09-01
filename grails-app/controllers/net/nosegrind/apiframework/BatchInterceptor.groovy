@@ -2,8 +2,8 @@ package net.nosegrind.apiframework
 
 import grails.config.Config
 import grails.core.support.GrailsConfigurationAware
-import net.nosegrind.apiframework.comm.ApiChainRequestService
-import net.nosegrind.apiframework.comm.ApiChainResponseService
+import net.nosegrind.apiframework.comm.BatchRequestService
+import net.nosegrind.apiframework.comm.BatchResponseService
 import org.springframework.beans.factory.annotation.Autowired
 
 import javax.servlet.http.HttpServletResponse
@@ -25,47 +25,27 @@ import javax.servlet.http.HttpServletResponse
  *****************************************************************************/
 
 
-class ApiChainInterceptor implements GrailsConfigurationAware{
+class BatchInterceptor implements GrailsConfigurationAware{
 
     int order = HIGHEST_PRECEDENCE + 999
-	
-	//def grailsApplication
 
 	@Autowired
-	ApiChainRequestService apiChainRequestService
+	BatchRequestService apiBatchRequestService
     @Autowired
-	ApiChainResponseService apiChainResponseService
+	BatchResponseService apiBatchResponseService
     @Autowired
 	ApiDomainService apiDomainService
     @Autowired
 	ApiCacheService apiCacheService
 
-
-	String apiName
     String entryPoint
 
 	void setConfiguration(Config cfg) {
 		String apiVersion = cfg.info.app.version
-		this.entryPoint = "c${apiVersion}"
+		this.entryPoint = "b${apiVersion}"
 
 		match(uri:"/${this.entryPoint}/**")
 	}
-
-	/*
-    ApiFrameworkInterceptor(){
-        //this.apiName = cfg.apitoolkit.apiName
-        //this.apiVersion = cfg.info.app.version
-        String apiVersion = Metadata.current.getApplicationVersion()
-		//String apiVersion = grailsApplication.metadata['info.app.version']
-        //String apiVersion = getGrailsApplication().config.getProperty('info.app.version')
-
-        //this.apinameEntrypoint = "${this.apiName}_v${this.apiVersion}"
-        //this.versionEntrypoint = "v${this.apiVersion}"
-        this.entryPoint = "v${apiVersion}"
-
-        match(uri:"/${entryPoint}/**")
-    }
-	*/
 
 	boolean before(){
 		//println("##### FILTER (BEFORE)")
@@ -81,7 +61,7 @@ class ApiChainInterceptor implements GrailsConfigurationAware{
 					if(!params.action){ 
 						String methodAction = methods[request.method.toLowerCase()]
 						if(!cache[params.apiObject][methodAction]){
-							params.action = cache[params.apiObject]['defaultAction'].split('/')[1] 
+							params.action = cache[params.apiObject]['defaultAction']
 						}else{
 							params.action = methods[request.method.toLowerCase()]
 							
@@ -95,7 +75,7 @@ class ApiChainInterceptor implements GrailsConfigurationAware{
 					}
 							
 					// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
-					boolean result = apiChainRequestService.handleApiRequest(cache,request,params,this.entryPoint)
+					boolean result = apiBatchRequestService.handleApiRequest(cache,request,params,this.entryPoint)
 					
 					
 					//HANDLE DOMAIN RESOLUTION
@@ -130,18 +110,18 @@ class ApiChainInterceptor implements GrailsConfigurationAware{
 							if(params?.apiCombine==true){
 								model = params.apiCombine
 							}
-							def newModel = apiChainResponseService.formatDomainObject(model)
+							def newModel = apiResponseService.formatDomainObject(model)
 							
 							LinkedHashMap content
-							if(apiChainRequestService.chain && params?.apiChain?.order){
-								boolean result2 = apiChainResponseService.handleApiChain(cache, request,response ,newModel,params)
+							if(apiBatchRequestService.chain && params?.apiChain?.order){
+								boolean result2 = apiResponseService.handleApiChain(cache, request,response ,newModel,params)
 								forward(controller:params.controller,action:params.action,id:params.id)
 								return false
-							}else if(apiChainRequestService.batch && params?.apiBatch){
+							}else if(apiBatchRequestService.batch && params?.apiBatch){
 								forward(controller:params.controller,action:params.action,params:params)
 								return false
 							}else{
-								content = apiChainResponseService.handleApiResponse(cache,request,response,newModel,params)
+								content = apiResponseService.handleApiResponse(cache,request,response,newModel,params)
 							}
 									
 							if(request.method.toLowerCase()=='delete' && content.apiToolkitContent==null){
@@ -182,20 +162,20 @@ class ApiChainInterceptor implements GrailsConfigurationAware{
 				model = params.apiCombine
 			}
 
-			def newModel = (model)?apiChainResponseService.convertModel(model):model
+			def newModel = (model)?apiResponseService.convertModel(model):model
 			def cache = (params.controller)?apiCacheService.getApiCache(params.controller):[:]
 
 			LinkedHashMap content
-			if(apiChainResponseService.chain && params?.apiChain?.order){
-				boolean result = apiChainResponseService.handleApiChain(cache, request,response,newModel,params)
+			if(apiResponseService.chain && params?.apiChain?.order){
+				boolean result = apiResponseService.handleApiChain(cache, request,response,newModel,params)
 				forward(controller:params.controller,action:params.action,params: params)
                 return false
-			}else if(apiChainResponseService.batch && params?.apiBatch){
+			}else if(apiResponseService.batch && params?.apiBatch){
 				forward(controller:params.controller, action:params.action,params:params)
                 return false
 			}
 
-            content = apiChainResponseService.handleApiResponse(cache,request,response,newModel,params)
+            content = apiResponseService.handleApiResponse(cache,request,response,newModel,params)
 				
 			if(content){
                 render(text:content.apiToolkitContent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)

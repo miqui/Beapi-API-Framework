@@ -30,7 +30,7 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import net.nosegrind.apiframework.*
 
-class ApiBatchResponseService extends ApiLayerService{
+class BatchResponseService extends ApiLayerService{
 	
 	GrailsApplication grailsApplication
 	

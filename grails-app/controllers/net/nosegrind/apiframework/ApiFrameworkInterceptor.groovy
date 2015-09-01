@@ -7,7 +7,6 @@ import net.nosegrind.apiframework.comm.ApiResponseService
 
 import javax.servlet.http.HttpServletResponse
 
-import org.springframework.beans.factory.annotation.Autowired
 
 
 
@@ -32,61 +31,36 @@ class ApiFrameworkInterceptor implements GrailsConfigurationAware{
 
     int order = HIGHEST_PRECEDENCE + 999
 
-	@Autowired
+
 	ApiRequestService apiRequestService
-    @Autowired
 	ApiResponseService apiResponseService
-    @Autowired
-	ApiDomainService apiDomainService
-    @Autowired
 	ApiCacheService apiCacheService
 
-
-	String apiName
-    String entryPoint
-
 	void setConfiguration(Config cfg) {
-		String apiVersion = cfg.info.app.version
-		this.entryPoint = "v${apiVersion}"
-
-
-		match(uri:"/${this.entryPoint}/**")
+		//String apiVersion = cfg.info.app.version
+		String entryPoint = "v${cfg.info.app.version}"
+		match(uri:"/${entryPoint}/**")
 	}
-
-	/*
-    ApiFrameworkInterceptor(){
-        //this.apiName = cfg.apitoolkit.apiName
-        //this.apiVersion = cfg.info.app.version
-        String apiVersion = Metadata.current.getApplicationVersion()
-		//String apiVersion = grailsApplication.metadata['info.app.version']
-        //String apiVersion = getGrailsApplication().config.getProperty('info.app.version')
-
-        //this.apinameEntrypoint = "${this.apiName}_v${this.apiVersion}"
-        //this.versionEntrypoint = "v${this.apiVersion}"
-        this.entryPoint = "v${apiVersion}"
-
-        match(uri:"/${entryPoint}/**")
-    }
-	*/
 
 	boolean before(){
 		//println("##### FILTER (BEFORE)")
 
 		params.format = request.format.toUpperCase()
 
-		Map methods = ['get':'show','put':'update','post':'create','delete':'delete']
+		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 		try{
 			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
+
 				LinkedHashMap cache = (params.controller)?apiCacheService.getApiCache(params.controller):[:]
 
 				if(cache){
 					params.apiObject = (params.apiObjectVersion)?params.apiObjectVersion:cache['currentStable']['value']
 					if(!params.action){ 
-						String methodAction = methods[request.method.toLowerCase()]
+						String methodAction = methods[request.method]
 						if(!cache[params.apiObject][methodAction]){
-							params.action = cache[params.apiObject]['defaultAction'].split('/')[1] 
+							params.action = cache[params.apiObject]['defaultAction']
 						}else{
-							params.action = methods[request.method.toLowerCase()]
+							params.action = methods[request.method]
 							
 							// FORWARD FOR REST DEFAULTS WITH NO ACTION
 							List tempUri = request.getRequestURI().split("/")
@@ -98,51 +72,8 @@ class ApiFrameworkInterceptor implements GrailsConfigurationAware{
 					}
 							
 					// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
-					boolean result = apiRequestService.handleApiRequest(cache,request,params,this.entryPoint)
-
-					//HANDLE DOMAIN RESOLUTION
-					if(cache[params.apiObject]['domainPackage']){
-						// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
-						if(result){
-							def model
-							switch(methods[request.method.toLowerCase()]){
-								case 'show':
-									model = apiDomainService.showInstance(cache,params)
-									break
-								case 'update':
-									model = apiDomainService.updateInstance(cache,params)
-									break
-								case 'create':
-									model = apiDomainService.createInstance(cache,params)
-									break
-								case 'delete':
-									model = apiDomainService.deleteInstance(cache,params)
-                                    if(!model) {
-                                        model = [:]
-                                    }
-									break
-							}
-
-							if(!model && request.method.toLowerCase()!='delete'){
-								render(status:HttpServletResponse.SC_BAD_REQUEST)
-								return false
-							}
-
-							def newModel = apiResponseService.formatDomainObject(model)
-							LinkedHashMap content = apiResponseService.handleApiResponse(cache,request,response,newModel,params)
-
-							if(request.method.toLowerCase()=='delete' && content.apiToolkitContent==null){
-								render(status:HttpServletResponse.SC_OK)
-								return false
-							}else{
-								render(text:content.apiToolkitContent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)
-								return false
-							}
-						}
-						//return result
-					}else{
-						return result
-					}
+					boolean result = apiRequestService.handleApiRequest(cache,request,params)
+					return result
 				}
 			//}
 			
@@ -153,7 +84,6 @@ class ApiFrameworkInterceptor implements GrailsConfigurationAware{
 			return false
 		}
 	}
-			
 
 	boolean after(){
 		//println("##### FILTER (AFTER)")
@@ -165,7 +95,6 @@ class ApiFrameworkInterceptor implements GrailsConfigurationAware{
 
 			Map newModel = (model)?apiResponseService.convertModel(model):model
 			LinkedHashMap cache = (params.controller)?apiCacheService.getApiCache(params.controller):[:]
-
 			LinkedHashMap content = apiResponseService.handleApiResponse(cache,request,response,newModel,params)
 				
 			if(content){

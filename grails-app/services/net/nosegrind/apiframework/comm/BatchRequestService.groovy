@@ -13,7 +13,7 @@ import net.nosegrind.apiframework.*
 import javax.servlet.http.HttpServletRequest
 
 //import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper
-class ApiBatchRequestService extends ApiLayerService{
+class BatchRequestService extends ApiLayerService{
 
 	static transactional = false
 	
