@@ -52,7 +52,9 @@ class TracerouteInterceptor implements GrailsConfigurationAware{
 		Map methods = ['get':'show','put':'update','post':'create','delete':'delete']
 		try{
 			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
+				timerService.startTime('ApiCacheService','getApiCache')
 				LinkedHashMap cache = (params.controller)?apiCacheService.getApiCache(params.controller):[:]
+				timerService.endTime()
 
 				if(cache){
 					params.apiObject = (params.apiObjectVersion)?params.apiObjectVersion:cache['currentStable']['value']
@@ -74,7 +76,9 @@ class TracerouteInterceptor implements GrailsConfigurationAware{
 					}
 							
 					// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
+					timerService.startTime('ApiRequestService','handleApiRequest')
 					boolean result = apiRequestService.handleApiRequest(cache,request,params)
+					timerService.endTime()
 
 					//HANDLE DOMAIN RESOLUTION
 					if(cache[params.apiObject]['domainPackage']){
@@ -83,16 +87,24 @@ class TracerouteInterceptor implements GrailsConfigurationAware{
 							def model
 							switch(methods[request.method.toLowerCase()]){
 								case 'show':
+									timerService.startTime('ApiDomainService','showInstance')
 									model = apiDomainService.showInstance(cache,params)
+									timerService.endTime()
 									break
 								case 'update':
+									timerService.startTime('ApiDomainService','updateInstance')
 									model = apiDomainService.updateInstance(cache,params)
+									timerService.endTime()
 									break
 								case 'create':
+									timerService.startTime('ApiDomainService','createInstance')
 									model = apiDomainService.createInstance(cache,params)
+									timerService.endTime()
 									break
 								case 'delete':
+									timerService.startTime('ApiDomainService','deleteInstance')
 									model = apiDomainService.deleteInstance(cache,params)
+									timerService.endTime()
                                     if(!model) {
                                         model = [:]
                                     }
@@ -105,8 +117,13 @@ class TracerouteInterceptor implements GrailsConfigurationAware{
 								return false
 							}
 
+							timerService.startTime('ApiResponseService','formatDomainObject')
 							def newModel = apiResponseService.formatDomainObject(model)
+							timerService.endTime()
+
+							timerService.startTime('ApiResponseService','handleApiResponse')
 							LinkedHashMap content = apiResponseService.handleApiResponse(cache,request,response,newModel,params)
+							timerService.endTime()
 
 							if(request.method.toLowerCase()=='delete' && content.apiToolkitContent==null){
 								render(status:HttpServletResponse.SC_OK)
@@ -146,8 +163,13 @@ class TracerouteInterceptor implements GrailsConfigurationAware{
 				return false
 			}
 
+			timerService.startTime('ApiResponseService','convertModel')
 			Map newModel = (model)?apiResponseService.convertModel(model):model
+			timerService.endTime()
+
+			timerService.startTime('after:ApiCacheService','getApiCache')
 			LinkedHashMap cache = (params.controller)?apiCacheService.getApiCache(params.controller):[:]
+			timerService.endTime()
 
 			LinkedHashMap content = apiResponseService.handleApiResponse(cache,request,response,newModel,params)
 				

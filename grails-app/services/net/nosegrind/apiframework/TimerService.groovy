@@ -8,15 +8,15 @@ import net.nosegrind.apiframework.comm.ApiLayerService
 import org.grails.groovy.grails.commons.*
 import javax.servlet.forward.*
 
-class TimerService extends ApiLayerService{
+class TimerService extends ApiLayerService {
 
 	List currentTimer = []
 
-	void clearTimer(){
+	void clearTimer() {
 		currentTimer = []
 	}
 
-	List getTimer(){
+	List getTimer() {
 		return currentTimer
 	}
 
@@ -28,21 +28,34 @@ class TimerService extends ApiLayerService{
 		currentTimer.add(log)
 	}
 
-	void endTime(String classname, String methodname){
+	void endTime(String classname, String methodname) {
 		String key = "${classname}/${methodname}"
+		def lastIndex = currentTimer.findIndexOf { it.keySet()[0] == key }
+
 		Long end = System.currentTimeMillis()
 
-		def lastIndex = currentTimer.indexOf(currentTimer.get(currentTimer.size()-1))
-		LinkedHashMap newMap = currentTimer[lastIndex]
+		//def lastIndex = currentTimer.indexOf(currentTimer.get(currentTimer.size()-1))
+		LinkedHashMap newMap = currentTimer.get(lastIndex)
 
-		if(newMap.keySet()[0] == key){
+		if (newMap.keySet()[0] == key) {
 			String index = newMap.keySet()[0]
 			Long finalTime = newMap["${index}"]
-			newMap[key] = end-finalTime
-			currentTimer[lastIndex] = newMap
-		} else{
+			newMap["${key}"] = end - finalTime
+			currentTimer.set(lastIndex, newMap)
+		} else {
 			println("#### FAIL - tried to end parent time in secondary loop ####")
 		}
+	}
 
+	void endTime() {
+		Long end = System.currentTimeMillis()
+
+		def lastIndex = currentTimer.indexOf(currentTimer.get(currentTimer.size() - 1))
+		LinkedHashMap newMap = currentTimer.get(lastIndex)
+
+		String index = newMap.keySet()[0]
+		Long finalTime = newMap["${index}"]
+		newMap["${index}"] = end - finalTime
+		currentTimer.set(lastIndex, newMap)
 	}
 }
