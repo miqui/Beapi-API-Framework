@@ -391,8 +391,6 @@ class ApiResponseService extends ApiLayerService{
 			case 'PURGE':
 				// cleans cache; disabled for now
 				break;
-			case 'TRACERT':
-				break;
 			case 'TRACE':
 				break;
 			case 'HEAD':

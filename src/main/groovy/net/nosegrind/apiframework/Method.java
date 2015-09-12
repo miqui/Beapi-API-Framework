@@ -24,8 +24,7 @@ public enum Method {
 	PUT("PUT"),
 	DELETE("DELETE"),
 	PATCH("PATCH"),
-	TRACE("TRACE"),
-    TRACERT("TRACERT");
+	TRACE("TRACE");
 
     private String value;
 

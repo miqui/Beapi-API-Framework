@@ -159,7 +159,8 @@ class TracerouteInterceptor implements GrailsConfigurationAware{
 			if(!model){
 				render(status:HttpServletResponse.SC_BAD_REQUEST)
 				timerService.endTime('TracerouteInterceptor','after')
-				render(text:timerService.getTimer())
+				LinkedHashMap timerResponse = timerService.getTimer(params)
+				render(text:timerResponse.apiToolkitContent, contentType:"${timerResponse.apiToolkitType}", encoding:timerResponse.apiToolkitEncoding)
 				return false
 			}
 
@@ -176,16 +177,19 @@ class TracerouteInterceptor implements GrailsConfigurationAware{
 			if(content){
                 render(text:content.apiToolkitContent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)
 				timerService.endTime('TracerouteInterceptor','after')
-				render(text:timerService.getTimer())
+				LinkedHashMap timerResponse = timerService.getTimer(params)
+				render(text:timerResponse.apiToolkitContent, contentType:"${timerResponse.apiToolkitType}", encoding:timerResponse.apiToolkitEncoding)
 				return false
 			}
 			timerService.endTime('TracerouteInterceptor','after')
-			render(text:timerService.getTimer())
+			LinkedHashMap timerResponse = timerService.getTimer(params)
+			render(text:timerResponse.apiToolkitContent, contentType:"${timerResponse.apiToolkitType}", encoding:timerResponse.apiToolkitEncoding)
 			return false
 	   }catch(Exception e){
 			log.error("[ApiToolkitFilters :: apitoolkit.after] : Exception - full stack trace follows:", e);
 			timerService.endTime('TracerouteInterceptor','after')
-			render(text:timerService.getTimer())
+			LinkedHashMap timerResponse = timerService.getTimer(params)
+			render(text:timerResponse.apiToolkitContent, contentType:"${timerResponse.apiToolkitType}", encoding:timerResponse.apiToolkitEncoding)
 			return false
 	   }
 
