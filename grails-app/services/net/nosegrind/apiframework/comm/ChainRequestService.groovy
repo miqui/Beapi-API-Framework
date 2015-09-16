@@ -23,6 +23,7 @@ class ChainRequestService extends ApiLayerService{
 			setApiParams(request, params)
 			// CHECK IF URI HAS CACHE
 			if(cache[params.apiObject][params.action]){
+
 				// CHECK ACCESS TO METHOD
 				List roles = cache[params.apiObject][params.action]['roles']?.toList()
 				
@@ -49,55 +50,23 @@ class ChainRequestService extends ApiLayerService{
 				// CHECK METHOD FOR API CHAINING. DOES METHOD MATCH?
 				def method = cache[params.apiObject][params.action]['method']?.trim()
 
-				
-				// DOES api.methods.contains(request.method)
-				if(!isRequestMatch(method,request.method.toString()) && !params.apiBatch){
-					// check for apichain
-
-					// TEST FOR CHAIN PATHS
-					if(chain && params?.apiChain){
-						List uri = [params.controller,params.action,params.id]
-						int pos = checkChainedMethodPosition(cache,request, params,uri,params?.apiChain?.order as Map)
-						if(pos==3){
-							String msg = "[ERROR] Bad combination of unsafe METHODS in api chain."
-							error._400_BAD_REQUEST(msg)?.send()
-							return false
-						}else{
-							return true
-						}
-					}else{
-						return true
-					}
-				}else{
-					// (NON-CHAIN) CHECK WHAT TO EXPECT; CLEAN REMAINING DATA
-					// RUN THIS CHECK AFTER MODELMAP FOR CHAINS
-
-					if(this.batch && params.apiBatch){
-						def temp = params.apiBatch.remove(0)
-						temp.each{ k,v ->
-							params[k] = v
-						}
-					}
-					
-					List batchRoles = cache[params.apiObject][params.action]['batchRoles']?.toList()
-					/*
-					if(!checkAuth(request,batchRoles)){
-						return false
-					}else{
-						return true
-					}
-					*/
-
-					if(!checkURIDefinitions(request,cache[params.apiObject][params.action]['receives'])){
-                        // return bad status
-						String msg = 'Expected request variables do not match sent variables'
+				// TEST FOR CHAIN PATHS
+				if(chain && params?.chain){
+					List uri = [params.controller,params.action,params.id]
+					int pos = checkChainedMethodPosition(cache,request, params,uri,params?.chain?.order as Map)
+					if(pos==3){
+						String msg = "[ERROR] Bad combination of unsafe METHODS in api chain."
 						error._400_BAD_REQUEST(msg)?.send()
 						return false
 					}else{
 						return true
 					}
+				}else{
+					return true
 				}
+
 			}
+			return false
 		}catch(Exception e){
 			throw new Exception("[ApiRequestService :: handleApiRequest] : Exception - full stack trace follows:",e)
 		}

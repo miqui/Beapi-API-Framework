@@ -50,15 +50,17 @@ class ChainInterceptor implements GrailsConfigurationAware{
 	}
 
 	boolean before(){
-		//println("##### FILTER (BEFORE)")
+		println("##### CHAININTERCEPTOR (BEFORE)")
 
 		params.format = request.format.toUpperCase()
 
 		def methods = ['get':'show','put':'update','post':'create','delete':'delete']
 		try{
+			println("trying... ${params.controller}/${params.action}")
 			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
 				def cache = (params.controller)?apiCacheService.getApiCache(params.controller):[:]
 				if(cache){
+					println("has cache...")
 					params.apiObject = (params.apiObjectVersion)?params.apiObjectVersion:cache['currentStable']['value']
 					if(!params.action){ 
 						String methodAction = methods[request.method.toLowerCase()]
@@ -78,7 +80,7 @@ class ChainInterceptor implements GrailsConfigurationAware{
 							
 					// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
 					boolean result = apiChainRequestService.handleApiRequest(cache,request,params,this.entryPoint)
-					
+					println("after handleApiRequest...")
 					
 					//HANDLE DOMAIN RESOLUTION
 					if(cache[params.apiObject]['domainPackage']){
@@ -115,7 +117,7 @@ class ChainInterceptor implements GrailsConfigurationAware{
 							def newModel = apiChainResponseService.formatDomainObject(model)
 							
 							LinkedHashMap content
-							if(apiChainRequestService.chain && params?.apiChain?.order){
+							if(apiChainRequestService.chain && params?.chain?.order){
 								boolean result2 = apiChainResponseService.handleApiChain(cache, request,response ,newModel,params)
 								forward(controller:params.controller,action:params.action,id:params.id)
 								return false
@@ -136,6 +138,7 @@ class ChainInterceptor implements GrailsConfigurationAware{
 						}
 						//return result
 					}else{
+						println("result : "+result)
 						return result
 					}
 				}
@@ -145,6 +148,7 @@ class ChainInterceptor implements GrailsConfigurationAware{
 
 		}catch(Exception e){
 			log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e);
+			println("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:"+ e);
 			return false
 		}
 	}
@@ -152,11 +156,13 @@ class ChainInterceptor implements GrailsConfigurationAware{
 	// model is automapped??
 
 	boolean after(){
-		//println("##### FILTER (AFTER)")
+		println("##### CHAININTERCEPTOR (AFTER)")
 
 		try{
+			println("trying...")
 			if(!model){
-				render(status:HttpServletResponse.SC_BAD_REQUEST)
+				println("NO MODEL")
+				//render(status:HttpServletResponse.SC_BAD_REQUEST)
 				return false
 			}
 
@@ -168,7 +174,9 @@ class ChainInterceptor implements GrailsConfigurationAware{
 			def cache = (params.controller)?apiCacheService.getApiCache(params.controller):[:]
 
 			LinkedHashMap content
-			if(apiChainResponseService.chain && params?.apiChain?.order){
+			println("chain : "+params)
+			if(apiChainResponseService.chain && params?.chain?.order){
+				println("ischain")
 				boolean result = apiChainResponseService.handleApiChain(cache, request,response,newModel,params)
 				forward(controller:params.controller,action:params.action,params: params)
                 return false
@@ -186,8 +194,10 @@ class ChainInterceptor implements GrailsConfigurationAware{
 
 			return false
 	   }catch(Exception e){
-		   log.error("[ApiToolkitFilters :: apitoolkit.after] : Exception - full stack trace follows:", e);
-		   return false
+			println("catching...")
+		   //log.error("[ApiToolkitFilters :: apitoolkit.after] : Exception - full stack trace follows:", e);
+		   println("[ApiToolkitFilters :: apitoolkit.after] : Exception - full stack trace follows:"+e)
+			return false
 	   }
 
 	}

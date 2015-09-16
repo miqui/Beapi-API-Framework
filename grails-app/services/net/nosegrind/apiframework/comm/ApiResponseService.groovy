@@ -44,6 +44,7 @@ class ApiResponseService extends ApiLayerService{
 	
 	def handleApiResponse(LinkedHashMap cache, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
 		try{
+			println("trying...")
 			String type = ''
 			if(cache){
 				if(cache[params.apiObject][params.action]){
@@ -66,7 +67,8 @@ class ApiResponseService extends ApiLayerService{
 				}
 			}
 		}catch(Exception e){
-			throw new Exception("[ApiResponseService :: handleApiResponse] : Exception - full stack trace follows:",e)
+			//throw new Exception("[ApiResponseService :: handleApiResponse] : Exception - full stack trace follows:",e)
+		println("[ApiResponseService :: handleApiResponse] : Exception - full stack trace follows:"+e)
 		}
 	}
 

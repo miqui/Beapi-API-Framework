@@ -70,7 +70,7 @@ class ApiFrameworkInterceptor implements GrailsConfigurationAware{
 							}
 						}
 					}
-							
+
 					// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
 					boolean result = apiRequestService.handleApiRequest(cache,request,params)
 					return result

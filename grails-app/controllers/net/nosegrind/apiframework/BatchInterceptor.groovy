@@ -48,7 +48,7 @@ class BatchInterceptor implements GrailsConfigurationAware{
 	}
 
 	boolean before(){
-		//println("##### FILTER (BEFORE)")
+		println("##### BATCHINTERCEPTOR (BEFORE)")
 
 		params.format = request.format.toUpperCase()
 
@@ -150,7 +150,7 @@ class BatchInterceptor implements GrailsConfigurationAware{
 	// model is automapped??
 
 	boolean after(){
-		//println("##### FILTER (AFTER)")
+		println("##### BATCHINTERCEPTOR (AFTER)")
 
 		try{
 			if(!model){

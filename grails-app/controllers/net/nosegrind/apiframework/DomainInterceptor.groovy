@@ -48,7 +48,7 @@ class DomainInterceptor implements GrailsConfigurationAware{
 	}
 
 	boolean before(){
-		//println("##### FILTER (BEFORE)")
+		println("##### DOMAININTERCEPTOR (BEFORE)")
 
 		params.format = request.format.toUpperCase()
 
@@ -135,7 +135,7 @@ class DomainInterceptor implements GrailsConfigurationAware{
 			
 
 	boolean after(){
-		//println("##### FILTER (AFTER)")
+		println("##### DOMAININTERCEPTOR (AFTER)")
 		try{
 			if(!model){
 				render(status:HttpServletResponse.SC_BAD_REQUEST)

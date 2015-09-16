@@ -49,11 +49,13 @@ class ChainResponseService extends ApiLayerService{
 			if(keys.last()){
 				int pos = checkChainedMethodPosition(cache,request,params,uri,params?.apiChain?.order as Map)
 				if(pos==3){
+					println("#### BAD POSITION")
 					String msg = '[ERROR] Bad combination of unsafe METHODS in api chain.'
 					errors._403_FORBIDDEN(msg).send()
 					return false
 				}else{
 					if(!uri2){
+						println("#### UNPARSABLE PATH")
 						String msg = 'Path was unable to be parsed. Check your path variables and try again.'
 						errors._404_NOT_FOUND(msg).send()
 						return false
@@ -99,7 +101,7 @@ class ChainResponseService extends ApiLayerService{
 
 			return false
 		}catch(Exception e){
-			throw new Exception("[ApiResponseService :: handleApiChain] : Exception - full stack trace follows:",e)
+			//throw new Exception("[ApiResponseService :: handleApiChain] : Exception - full stack trace follows:",e)
 		}
 	}
 	
@@ -420,8 +422,8 @@ class ChainResponseService extends ApiLayerService{
 					newMap = formatDomainObject(map[k])
 					return newMap
 				}else if(['class java.util.LinkedList','class java.util.ArrayList'].contains(map[k].getClass())) {
-						newMap = formatList(map[k])
-						return newMap
+					newMap = formatList(map[k])
+					return newMap
 				}else if(['class java.util.Map','class java.util.LinkedHashMap'].contains(map[k].getClass())) {
 					newMap = formatMap(map[k])
 					return newMap
@@ -429,7 +431,8 @@ class ChainResponseService extends ApiLayerService{
 			}
 			return newMap
 		}catch(Exception e){
-			throw new Exception("[ApiResponseService :: convertModel] : Exception - full stack trace follows:",e)
+			//throw new Exception("[ApiResponseService :: convertModel] : Exception - full stack trace follows:",e)
+			println(e)
 		}
 	}
 
