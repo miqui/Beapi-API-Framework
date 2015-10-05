@@ -52,6 +52,7 @@ class DomainInterceptor implements GrailsConfigurationAware{
 
 		params.format = request.format.toUpperCase()
 
+
 		Map methods = ['get':'show','put':'update','post':'create','delete':'delete']
 		try{
 			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){

@@ -1,10 +1,11 @@
 package net.nosegrind.apiframework
 
-import grails.config.Config
-import grails.core.support.GrailsConfigurationAware
+import grails.web.servlet.mvc.GrailsParameterMap
 import net.nosegrind.apiframework.comm.ApiRequestService
 import net.nosegrind.apiframework.comm.ApiResponseService
+import grails.util.Metadata
 
+import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
 
@@ -27,7 +28,7 @@ import javax.servlet.http.HttpServletResponse
  *****************************************************************************/
 
 
-class ApiFrameworkInterceptor implements GrailsConfigurationAware{
+class ApiFrameworkInterceptor{
 
     int order = HIGHEST_PRECEDENCE + 999
 
@@ -35,19 +36,25 @@ class ApiFrameworkInterceptor implements GrailsConfigurationAware{
 	ApiRequestService apiRequestService
 	ApiResponseService apiResponseService
 	ApiCacheService apiCacheService
+	ParamsService paramsService
 
-	void setConfiguration(Config cfg) {
-		//String apiVersion = cfg.info.app.version
-		String entryPoint = "v${cfg.info.app.version}"
+	String entryPoint
+
+	ApiFrameworkInterceptor(){
+		String apiVersion = Metadata.current.getApplicationVersion()
+		entryPoint = "v${apiVersion}"
 		match(uri:"/${entryPoint}/**")
 	}
 
 	boolean before(){
-		//println("##### FILTER (BEFORE)")
-
-		params.format = request.format.toUpperCase()
-
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
+
+		println("##### FILTER (BEFORE)")
+
+		paramsService.initParams(request)
+		paramsService.setApiParams(params)
+		println(params)
+
 		try{
 			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
 
@@ -86,7 +93,7 @@ class ApiFrameworkInterceptor implements GrailsConfigurationAware{
 	}
 
 	boolean after(){
-		//println("##### FILTER (AFTER)")
+		println("##### FILTER (AFTER)")
 		try{
 			if(!model){
 				render(status:HttpServletResponse.SC_BAD_REQUEST)

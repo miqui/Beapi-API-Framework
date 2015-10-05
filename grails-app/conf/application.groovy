@@ -26,3 +26,8 @@ grails.plugin.springsecurity.controllerAnnotations.staticRules = [
         '/login/**':					  ['permitAll'],
         '/logout/**':          		      ['permitAll']
 ]
+
+log4j = {
+    all 'org.codehaus.groovy.grails.web.mapping'
+
+}

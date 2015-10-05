@@ -27,7 +27,7 @@ import javax.servlet.http.HttpServletResponse
 
 class TracerouteInterceptor implements GrailsConfigurationAware{
 
-    int order = HIGHEST_PRECEDENCE + 999
+    int order = HIGHEST_PRECEDENCE + 996
 
 	ApiRequestService apiRequestService
 	ApiResponseService apiResponseService

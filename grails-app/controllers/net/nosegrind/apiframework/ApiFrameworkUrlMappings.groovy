@@ -195,7 +195,7 @@ class ApiFrameworkUrlMappings {
             parseRequest = true
         }
 
-        "/$chain/$controller/$action/$id**" {
+        "/$chainEntryPoint/$controller/$action/$id**" {
             parseRequest = true
         }
 

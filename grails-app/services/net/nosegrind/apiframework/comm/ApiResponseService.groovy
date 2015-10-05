@@ -37,11 +37,13 @@ import javax.servlet.http.HttpServletRequest
 
 import grails.core.GrailsApplication
 import net.nosegrind.apiframework.*
+import net.nosegrind.apiframework.ParamsService
 
 class ApiResponseService extends ApiLayerService{
-	
+
 	GrailsApplication grailsApplication
-	
+	ParamsService paramsService
+
 	def handleApiResponse(LinkedHashMap cache, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
 		try{
 			println("trying...")
@@ -53,9 +55,9 @@ class ApiResponseService extends ApiLayerService{
 					//type = (params.contentType)?formats.findAll{ type.startsWith(it) }[0].toString():params.contentType
 					//if(type){
 							response.setHeader('Authorization', cache[params.apiObject][params.action]['roles'].join(', '))
-							LinkedHashMap result = parseURIDefinitions(request,model,cache[params.apiObject][params.action]['returns'])
-
-							Map content = parseResponseMethod(request, params, result,cache[params.apiObject][params.action]['returns'])
+							LinkedHashMap result = paramsService.parseURIDefinitions(request,model,cache[params.apiObject][params.action]['returns'])
+println("before params : "+params)
+							Map content = paramsService.parseResponseMethod(request, params, result,cache[params.apiObject][params.action]['returns'])
 							return content
 					//}else{
 						//return true
@@ -69,37 +71,6 @@ class ApiResponseService extends ApiLayerService{
 		}catch(Exception e){
 			//throw new Exception("[ApiResponseService :: handleApiResponse] : Exception - full stack trace follows:",e)
 		println("[ApiResponseService :: handleApiResponse] : Exception - full stack trace follows:"+e)
-		}
-	}
-
-	
-	LinkedHashMap parseURIDefinitions(HttpServletRequest request, LinkedHashMap model,LinkedHashMap responseDefinitions){
-		try{
-			ApiStatuses errors = new ApiStatuses()
-			String msg = 'Error. Invalid variables being returned. Please see your administrator'
-			List optionalParams = ['action','controller','apiName_v','contentType', 'encoding','apiChain', 'apiBatch', 'apiCombine', 'apiObject','apiObjectVersion', 'chain']
-			List responseList = getApiParams(request,responseDefinitions)
-
-			HashMap params = getMethodParams()
-			//GrailsParameterMap params = RCH.currentRequestAttributes().params
-			List paramsList = model.keySet() as List
-			paramsList.removeAll(optionalParams)
-			if(!responseList.containsAll(paramsList)){
-				paramsList.removeAll(responseList)
-				paramsList.each(){ it ->
-					model.remove("${it}".toString())
-				}
-				if(!paramsList){
-					errors._400_BAD_REQUEST(msg).send()
-					return [:]
-				}else{
-					return model
-				}
-			}else{
-				return model
-			}
-		}catch(Exception e){
-			throw new Exception("[ApiResponseService :: parseURIDefinitions] : Exception - full stack trace follows:",e)
 		}
 	}
 	
@@ -123,19 +94,10 @@ class ApiResponseService extends ApiLayerService{
 	}
 	
 	boolean isRequestRedirected(){
-		if(request.getAttribute(GrailsApplicationAttributes.REDIRECT_ISSUED) != null){
-			return true
-		}else{
-			return false
-		}
+		return (request.getAttribute(GrailsApplicationAttributes.REDIRECT_ISSUED) != null)? true : false
 	}
 	
-	List getRedirectParams(){
-		def uri = grailsApplication.mainContext.servletContext.getControllerActionUri(request)
-		//def uri = HOLDER.getServletContext().getControllerActionUri(request)
-		return uri[1..(uri.size()-1)].split('/')
-	}
-	
+/*
 	private ArrayList processDocValues(List<ParamsDescriptor> value){
 		List val2 = []
 		value.each{ v ->
@@ -166,7 +128,8 @@ class ApiResponseService extends ApiLayerService{
 		}
 		return val2
 	}
-	
+	*/
+
 	private ArrayList processDocErrorCodes(HashSet error){
 		List errors = error as List
 		ArrayList err = []
@@ -176,149 +139,7 @@ class ApiResponseService extends ApiLayerService{
 		}
 		return err
 	}
-	
-	/*
-	 * TODO: Need to compare multiple authorities
-	 */
-	private String processJson(LinkedHashMap returns){
-		def json = [:]
-		returns.each{ p ->
-				p.value.each{ it ->
 
-					ParamsDescriptor paramDesc = it
-				
-					def j = [:]
-					if(paramDesc?.values){
-						j[paramDesc.name]=[]
-					}else{
-						String dataName=(['PKEY','FKEY','INDEX'].contains(paramDesc.paramType.toString()))?'ID':paramDesc.paramType
-						j = (paramDesc?.mockData?.trim())?["${paramDesc.name}":paramDesc.mockData]:["${paramDesc.name}":dataName]
-					}
-					j.each(){ key,val ->
-						if(val instanceof List){
-							def child = [:]
-							val.each(){ it2 ->
-								it2.each(){ key2,val2 ->
-									child[key2] = val2
-								}
-							}
-							json[key] = child
-						}else{
-							json[key]=val
-						}
-					}
-				}
-		}
-
-		if(json){
-			json = json as JSON
-		}
-		return json
-	}
-	
-	/*
-	 * TODO: Need to compare multiple authorities
-	 */
-	LinkedHashMap getApiDoc(GrailsParameterMap params){
-		LinkedHashMap newDoc = [:]
-		List paramDescProps = ['paramType','idReferences','name','description']
-		try{
-			def controller = grailsApplication.getArtefactByLogicalPropertyName('Controller', params.controller)
-			if(controller){
-				def cache = (params.controller)?apiCacheService.getApiCache(params.controller):null
-				if(cache){
-					if(cache[params.apiObject][params.action]){
-	
-						def doc = cache[params.apiObject][params.action].doc
-						def path = doc?.path
-						def method = doc?.method
-						def description = doc?.description
-	
-						def authority = springSecurityService.principal.authorities*.authority[0]
-						newDoc[params.action] = ['path':path,'method':method,'description':description]
-						if(doc.receives){
-							newDoc[params.action].receives = [:]
-							doc.receives.each{ it ->
-								if(authority==it.key || it.key=='permitAll'){
-									it.value.each(){ it2 ->
-										it2.getProperties().each(){ it3 ->
-											if(paramDescProps.contains(it3.key)){
-												//println("receives > ${it3.key} : ${it3.value}")
-												newDoc[params.action].receives[it3.key] = it3.value
-											}
-										}
-									}
-									//newDoc[params.action].receives[it.key] = it.value
-								}
-							}
-						}
-
-						if(doc.returns){
-							newDoc[params.action].returns = [:]
-							List jsonReturns = []
-							doc.returns.each(){ v ->
-								if(authority==v.key || v.key=='permitAll'){
-									jsonReturns.add(['${v.key}':v.value])
-									v.value.each(){ v2 ->
-										v2.getProperties().each(){ v3 ->
-											if(paramDescProps.contains(v3.key)){
-												//println("receives > ${v3.key} : ${v3.value}")
-												newDoc[params.action].returns[v3.key] = v3.value
-											}
-										}
-									}
-									//newDoc[params.action].returns[v.key] = v.value
-								}
-							}
-
-							//newDoc[params.action].json = processJson(newDoc[params.action].returns)
-							newDoc[params.action].json = processJson(jsonReturns)
-						}
-						
-						if(doc.errorcodes){
-							doc.errorcodes.each{ it ->
-								newDoc[params.action].errorcodes.add(it)
-							}
-						}
-						return newDoc
-					}
-				}
-			}
-			return [:]
-		}catch(Exception e){
-			throw new Exception("[ApiResponseService :: getApiDoc] : Exception - full stack trace follows:",e)
-		}
-	}
-
-	Map formatDomainObject(Object data){
-		try{
-			def nonPersistent = ["log", "class", "constraints", "properties", "errors", "mapping", "metaClass","maps"]
-			def newMap = [:]
-
-			if(data?.'id'){
-				newMap['id'] = data.id
-			}
-			if(data?.'version'!=null){
-				newMap['version'] = data.version
-			}
-			
-			data.getProperties().each { key, val ->
-				if (!nonPersistent.contains(key)) {
-					if(grailsApplication.isDomainClass(val.getClass())){
-						newMap.put key, val.id
-					}else{
-						newMap.put key, val
-					}
-				}
-			}
-
-			return newMap
-		}catch(Exception e){
-			throw new Exception("[ApiResponseService :: formatDomainObject] : Exception - full stack trace follows:",e)
-		}
-	}
-	
-	
 	/*
 	 * TODO: Need to compare multiple authorities
 	 */
@@ -329,6 +150,7 @@ class ApiResponseService extends ApiLayerService{
 		return ['validation.customRuntimeMessage', 'ApiCommandObject does not validate. Check that your data validates or that requesting user has access to api method and all fields in api command object.']
 	}
 
+	/*
     public ResponseEntity<LinkedHashMap> respond(LinkedHashMap model){
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.setLocation(location);
@@ -336,6 +158,7 @@ class ApiResponseService extends ApiLayerService{
         return new ResponseEntity<String>("Hello World", responseHeaders, HttpStatus.CREATED);
         return ResponseEntity(model,HttpStatus.BAD_REQUEST);
     }
+*/
 
 	Map convertModel(Map map){
 		try{
@@ -356,6 +179,34 @@ class ApiResponseService extends ApiLayerService{
 			return newMap
 		}catch(Exception e){
 			throw new Exception("[ApiResponseService :: convertModel] : Exception - full stack trace follows:",e)
+		}
+	}
+
+	Map formatDomainObject(Object data){
+		try{
+			def nonPersistent = ["log", "class", "constraints", "properties", "errors", "mapping", "metaClass","maps"]
+			def newMap = [:]
+
+			if(data?.'id'){
+				newMap['id'] = data.id
+			}
+			if(data?.'version'!=null){
+				newMap['version'] = data.version
+			}
+
+			data.getProperties().each { key, val ->
+				if (!nonPersistent.contains(key)) {
+					if(grailsApplication.isDomainClass(val.getClass())){
+						newMap.put key, val.id
+					}else{
+						newMap.put key, val
+					}
+				}
+			}
+
+			return newMap
+		}catch(Exception e){
+			throw new Exception("[ApiResponseService :: formatDomainObject] : Exception - full stack trace follows:",e)
 		}
 	}
 
@@ -387,61 +238,4 @@ class ApiResponseService extends ApiLayerService{
 		return newMap
 	}
 
-	Map parseResponseMethod(HttpServletRequest request, GrailsParameterMap params, Map map, LinkedHashMap returns){
-		Map data = [:]
-		switch(request.method) {
-			case 'PURGE':
-				// cleans cache; disabled for now
-				break;
-			case 'TRACE':
-				break;
-			case 'HEAD':
-				break;
-			case 'OPTIONS':
-				String contentType = (params.contentType)?params.contentType:'application/json'
-				String encoding = (params.encoding)?params.encoding:"UTF-8"
-				LinkedHashMap doc = getApiDoc(params)
-				data = ['content':doc,'contentType':contentType,'encoding':encoding]
-				break;
-			case 'GET':
-				if(map?.isEmpty()==false){
-					data = parseContentType(request,params, map, returns)
-				}
-				break;
-			case 'PUT':
-				if(!map.isEmpty()){
-					data = parseContentType(request,params, map, returns)
-				}
-				break;
-			case 'POST':
-				if(!map.isEmpty()){
-					data = parseContentType(request,params, map, returns)
-				}
-				break;
-			case 'DELETE':
-				if(!map.isEmpty()){
-					data = parseContentType(request,params, map, returns)
-				}
-				break;
-		}
-		return ['apiToolkitContent':data.content,'apiToolkitType':data.contentType,'apiToolkitEncoding':data.encoding]
-	}
-
-	Map parseContentType(HttpServletRequest request, GrailsParameterMap params, Map map, LinkedHashMap returns){
-		String content
-		String type = params.format
-		String contentType = "application/${params.format.toLowerCase()}"
-		String encoding = (params.encoding)?params.encoding:"UTF-8"
-		LinkedHashMap result = parseURIDefinitions(request,map,returns)
-		switch(type){
-			case 'XML':
-				content = result as XML
-				break
-			case 'JSON':
-			default:
-				content = result as JSON
-		}
-
-		return ['content':content,'type':contentType,'encoding':encoding]
-	}
 }

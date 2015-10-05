@@ -2,6 +2,8 @@ package net.nosegrind.apiframework.comm
 
 import grails.web.servlet.mvc.GrailsParameterMap
 import org.grails.groovy.grails.commons.*
+import org.grails.web.servlet.mvc.GrailsWebRequest
+import org.grails.web.util.WebUtils
 
 import javax.servlet.forward.*
 
@@ -18,20 +20,32 @@ class ChainRequestService extends ApiLayerService{
 	boolean handleApiRequest(LinkedHashMap cache, HttpServletRequest request, GrailsParameterMap params, String entryPoint){
 		try{
 			setEnv()
-			
+
 			ApiStatuses error = new ApiStatuses()
-			setApiParams(request, params)
+			//setApiParams(request, params)
+
+			def format = params.format
+
 			// CHECK IF URI HAS CACHE
 			if(cache[params.apiObject][params.action]){
-
+println("uri has cache...")
 				// CHECK ACCESS TO METHOD
-				List roles = cache[params.apiObject][params.action]['roles']?.toList()
-				
 				/*
+				List roles = cache[params.apiObject][params.action]['roles']?.toList()
 				if(!checkAuth(request,roles)){
 					return false
 				}
 				*/
+
+
+				if(!checkURIDefinitions(request,cache[params.apiObject][params.action]['receives'])){
+					println("return bad status")
+					String msg = 'Expected request variables do not match sent variables'
+					error._400_BAD_REQUEST(msg)?.send()
+					return false
+				}
+
+				println("################## after checkURIDefinitions: "+params)
 
 				// CHECK VERSION DEPRECATION DATE
 				if(cache[params.apiObject][params.action]['deprecated']?.get(0)){
@@ -42,7 +56,6 @@ class ChainRequestService extends ApiLayerService{
 						// replace msg with config deprecation message
 						String msg = "[ERROR] ${depMsg}"
 						error._400_BAD_REQUEST(msg)?.send()
-
 						return false
 					}
 				}
@@ -51,20 +64,19 @@ class ChainRequestService extends ApiLayerService{
 				def method = cache[params.apiObject][params.action]['method']?.trim()
 
 				// TEST FOR CHAIN PATHS
-				if(chain && params?.chain){
+				println("${chain}/${this.chain}/${params.apiChain}")
+				if(this.chain && params?.apiChain){
+					println("chain detected...")
 					List uri = [params.controller,params.action,params.id]
-					int pos = checkChainedMethodPosition(cache,request, params,uri,params?.chain?.order as Map)
+					int pos = checkChainedMethodPosition(cache,request, params,uri,params?.apiChain?.order as Map)
+					println("pso : ${pos}")
 					if(pos==3){
 						String msg = "[ERROR] Bad combination of unsafe METHODS in api chain."
 						error._400_BAD_REQUEST(msg)?.send()
 						return false
-					}else{
-						return true
 					}
-				}else{
-					return true
 				}
-
+				return true
 			}
 			return false
 		}catch(Exception e){
@@ -73,14 +85,16 @@ class ChainRequestService extends ApiLayerService{
 	}
 	
 	protected void setApiParams(HttpServletRequest request, GrailsParameterMap params){
+		println("############# setApiParams")
 		try{
-            String contentType = params.format
-
-            if(request?."${contentType}"){
-                request?."${contentType}".each{ k,v ->
+            String contentType = request?."${params.format}"
+            if(contentType){
+				contentType.each{ k,v ->
                     if(chain && k=='chain'){
-                        params.apiChain = [:]
-                        params.apiChain = request."${contentType}".chain
+						params.apiChain = [:]
+						v.each { k2,v2 ->
+							params.apiChain[k2] = v2
+						}
                     }else if(batch && k=='batch'){
                         params.apiBatch = []
                         v.each { it ->
@@ -92,14 +106,14 @@ class ChainRequestService extends ApiLayerService{
                         params[k]=v
                     }
                 }
-                if(request?."${contentType}"?.chain){
-                    request."${contentType}".remove('chain')
+                if(contentType?.chain){
+					contentType.remove('chain')
                 }
-                if(request?."${contentType}"?.batch){
-                    request."${contentType}".remove('batch')
+                if(contentType?.batch){
+					contentType.remove('batch')
                 }
             }
-			
+
 		}catch(Exception e){
 			throw new Exception("[ApiRequestService :: setApiParams] : Exception - full stack trace follows:"+ e);
 		}
@@ -117,4 +131,5 @@ class ChainRequestService extends ApiLayerService{
 		}
 		return false
 	}
+
 }

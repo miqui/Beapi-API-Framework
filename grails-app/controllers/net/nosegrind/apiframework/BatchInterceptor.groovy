@@ -27,9 +27,9 @@ import javax.servlet.http.HttpServletResponse
 
 class BatchInterceptor implements GrailsConfigurationAware{
 
-    int order = HIGHEST_PRECEDENCE + 999
+    int order = HIGHEST_PRECEDENCE + 998
 
-	@Autowired
+@Autowired
 	BatchRequestService apiBatchRequestService
     @Autowired
 	BatchResponseService apiBatchResponseService
@@ -51,6 +51,7 @@ class BatchInterceptor implements GrailsConfigurationAware{
 		println("##### BATCHINTERCEPTOR (BEFORE)")
 
 		params.format = request.format.toUpperCase()
+
 
 		def methods = ['get':'show','put':'update','post':'create','delete':'delete']
 		try{

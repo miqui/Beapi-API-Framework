@@ -22,7 +22,7 @@ class BatchRequestService extends ApiLayerService{
 			setEnv()
 			
 			ApiStatuses error = new ApiStatuses()
-			setApiParams(request, params)
+			//setApiParams(request, params)
 			// CHECK IF URI HAS CACHE
 			if(cache[params.apiObject][params.action]){
 				// CHECK ACCESS TO METHOD
@@ -47,6 +47,14 @@ class BatchRequestService extends ApiLayerService{
 						return false
 					}
 				}
+
+				if(!checkURIDefinitions(request,cache[params.apiObject][params.action]['receives'])){
+					//return bad status
+					String msg = 'Expected request variables do not match sent variables'
+					error._400_BAD_REQUEST(msg)?.send()
+					return false
+				}
+				println("################## after checkURIDefinitions: "+request[format])
 
 				// CHECK METHOD FOR API CHAINING. DOES METHOD MATCH?
 				def method = cache[params.apiObject][params.action]['method']?.trim()
@@ -105,7 +113,7 @@ class BatchRequestService extends ApiLayerService{
 		}
 	}
 	
-	protected void setApiParams(HttpServletRequest request, GrailsParameterMap params){
+	void setApiParams(HttpServletRequest request, GrailsParameterMap params){
 		try{
             String contentType = params.format
 

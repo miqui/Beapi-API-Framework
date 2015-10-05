@@ -162,7 +162,7 @@ class BatchResponseService extends ApiLayerService{
 			List optionalParams = ['action','controller','apiName_v','contentType', 'encoding','apiChain', 'apiBatch', 'apiCombine', 'apiObject','apiObjectVersion', 'chain']
 			List responseList = getApiParams(request,responseDefinitions)
 
-			HashMap params = getMethodParams()
+			//HashMap params = getMethodParams()
 			//GrailsParameterMap params = RCH.currentRequestAttributes().params
 			List paramsList = model.keySet() as List
 			paramsList.removeAll(optionalParams)

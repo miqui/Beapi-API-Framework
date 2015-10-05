@@ -1,6 +1,7 @@
 package net.nosegrind.apiframework.comm
 
 import net.nosegrind.apiframework.comm.ApiLayerService
+import net.nosegrind.apiframework.ParamsService
 
 /* ****************************************************************************
  * Copyright 2014 Owen Rubel
@@ -17,24 +18,21 @@ import net.nosegrind.apiframework.*
 
 class ApiRequestService extends ApiLayerService{
 
+	ParamsService paramsService
+
 	static transactional = false
 	
 	boolean handleApiRequest(LinkedHashMap cache, HttpServletRequest request, GrailsParameterMap params){
 		try{
 			setEnv()
-			
 			ApiStatuses error = new ApiStatuses()
-			setApiParams(request, params)
+
 			// CHECK IF URI HAS CACHE
 			if(cache[params.apiObject][params.action]){
 				// CHECK ACCESS TO METHOD
 				List roles = cache[params.apiObject][params.action]['roles']?.toList()
-				
-				/*
-				if(!checkAuth(request,roles)){
-					return false
-				}
-				*/
+
+				// if(!checkAuth(request,roles)){ return false }
 
 				// CHECK VERSION DEPRECATION DATE
 				if(cache[params.apiObject][params.action]['deprecated']?.get(0)){
@@ -47,47 +45,24 @@ class ApiRequestService extends ApiLayerService{
 					}
 				}
 
-				if(!checkURIDefinitions(request,cache[params.apiObject][params.action]['receives'])){
+				if(!paramsService.checkURIDefinitions(request,cache[params.apiObject][params.action]['receives'])){
 					// return bad status
 					String msg = 'Expected request variables do not match sent variables'
 					error._400_BAD_REQUEST(msg)?.send()
 					return false
-				}else{
-					return true
 				}
 
+				def method = cache[params.apiObject][params.action]['method']?.trim()
+
+				// DOES api.methods.contains(request.method)
+				if(!isRequestMatch(method,request.method.toString())){
+					return false
+				}
+				return true
 			}
 			return false
 		}catch(Exception e){
 			throw new Exception("[ApiRequestService :: handleApiRequest] : Exception - full stack trace follows:",e)
 		}
-	}
-	
-	protected void setApiParams(HttpServletRequest request, GrailsParameterMap params){
-		try{
-            String contentType = params.format
-
-            if(request?."${contentType}"){
-                request?."${contentType}".each{ k,v ->
-                        params[k]=v
-                }
-            }
-			
-		}catch(Exception e){
-			throw new Exception("[ApiRequestService :: setApiParams] : Exception - full stack trace follows:"+ e);
-		}
-	}
-	
-	boolean isRequestMatch(String protocol,String method){
-		if(['TRACERT','OPTIONS','HEAD'].contains(method)){
-			return true
-		}else{
-			if(protocol == method){
-				return true
-			}else{
-				return false
-			}
-		}
-		return false
 	}
 }

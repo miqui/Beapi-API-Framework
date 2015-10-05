@@ -65,6 +65,7 @@ class ApiLayerService{
 		return response
 	}
 
+	/*
 	GrailsParameterMap getParams(HttpServletRequest request,GrailsParameterMap params){
 		try{
 			String type = params.format
@@ -76,6 +77,7 @@ class ApiLayerService{
 			throw new Exception("[ApiResponseService :: getParams] : Exception - full stack trace follows:",e)
 		}
 	}
+*/
 
 	boolean checkAuth(HttpServletRequest request, List roles){
 		try{
@@ -114,17 +116,21 @@ class ApiLayerService{
 	 * TODO: Need to compare multiple authorities
 	 */
 	boolean checkURIDefinitions(HttpServletRequest request, LinkedHashMap requestDefinitions){
+		println("############# checkURIDefinitions")
 		try{
-			List optionalParams = ['action','controller','apiName_v','contentType', 'encoding','apiChain', 'apiBatch', 'apiCombine', 'apiObject','apiObjectVersion', 'chain']
+			List optionalParams = ['format','action','controller','apiName_v','contentType', 'encoding','apiChain', 'apiBatch', 'apiCombine', 'apiObject','apiObjectVersion', 'chain']
 			List requestList = getApiParams(request, requestDefinitions)
-			HashMap params = getMethodParams()
-			
-			//GrailsParameterMap params = RCH.currentRequestAttributes().params
-			List paramsList = (request.method=='GET')?params.get.keySet() as List:params.post.keySet() as List
+			HashMap params = getMethodParams(request)
 
+			//GrailsParameterMap params = RCH.currentRequestAttributes().params
+			List paramsList = params."${request.method.toLowerCase()}".keySet() as List
+println("#### paramsList : "+paramsList)
 			paramsList.removeAll(optionalParams)
+			println("#### paramsList : "+paramsList)
+			println("#### requestList : "+requestList)
 			if(paramsList.containsAll(requestList)){
 				paramsList.removeAll(requestList)
+				println("#### paramsListShouldBeEmpty : "+paramsList)
 				if(!paramsList){
 					return true
 				}
@@ -148,6 +154,7 @@ class ApiLayerService{
 					}
 				}
 			}
+			println("apilist : "+apiList)
 			return apiList
 		}catch(Exception e){
 			throw new Exception("[ApiLayerService :: getApiParams] : Exception - full stack trace follows:",e)
@@ -171,28 +178,39 @@ class ApiLayerService{
 			throw new Exception("[ApiLayerService :: getApiParams] : Exception - full stack trace follows:",e)
 		}
 	}
-	
-	HashMap getMethodParams(){
+
+
+	HashMap getMethodParams(HttpServletRequest request){
+		println("### getMethodParams")
 		try{
 			boolean isChain = false
 			List optionalParams = ['action','controller','v','contentType', 'encoding','apiChain', 'apiBatch', 'apiCombine', 'apiObject','apiObjectVersion', 'chain']
-			HttpServletRequest request = getRequest()
+			//HttpServletRequest request = getRequest()
 			GrailsParameterMap params = RCH.currentRequestAttributes().params
 			Map paramsRequest = params.findAll {
 				if(it.key=='apiChain'){ isChain=true }
 				return !optionalParams.contains(it.key)
 			}
-			
+			println("paramsRequest : "+paramsRequest)
+			println("isChain : "+isChain)
 			Map paramsGet = [:]
 			Map paramsPost = [:]
 			if(isChain){
+				println("ischain - make sure to get id")
 				paramsPost = paramsRequest
 			}else{
 				paramsGet = WebUtils.fromQueryString(request.getQueryString() ?: "")
 				paramsPost = paramsRequest.minus(paramsGet)
-				if(paramsPost['id']){
-					paramsGet['id'] = paramsPost['id']
-					paramsPost.remove('id')
+				if(request.method=='GET'){
+					paramsPost.each{ k,v ->
+						paramsGet[k] = v
+					}
+					paramsPost = null
+				}else{
+					paramsGet.each{ k,v ->
+						paramsPost[k] = v
+					}
+					paramsGet = null
 				}
 			}
 			return ['get':paramsGet,'post':paramsPost]
@@ -200,7 +218,8 @@ class ApiLayerService{
 			throw new Exception("[ApiLayerService :: getMethodParams] : Exception - full stack trace follows:",e)
 		}
 	}
-	
+
+
 	/*
 	void setApiCache(String controllername,LinkedHashMap apidoc){
 		apiCacheService.setApiCache(controllername,apidoc)
@@ -332,6 +351,8 @@ class ApiLayerService{
 	 * 3 = illegal combination
 	 */
 	protected int checkChainedMethodPosition(LinkedHashMap cache,HttpServletRequest request, GrailsParameterMap params, List uri, Map path){
+		println("#### checkChainedMethodPosition")
+		println(cache)
 		try{
 			boolean preMatch = false
 			boolean postMatch = false
@@ -343,11 +364,12 @@ class ApiLayerService{
 			String controller = uri[0]
 			String action = uri[1]
 			Long id = uri[2].toLong()
-			
 
 			// prematch check
 			String currentMethod = Method["${request.method.toString()}"].toString()
+			println("currentMethod:"+currentMethod)
 			String methods = cache[params.apiObject][action]['method'].trim()
+			println("methods:"+methods)
 			
 			if(currentMethod!=methods && methods=='GET'){
 				if(['prechain','postchain'].contains(params?.apiChain?.type)){
@@ -362,12 +384,17 @@ class ApiLayerService{
 		
 			// postmatch check
 			if(pathSize>=1){
+				println("pathSize>=1")
 				String last=path[keys[pathSize-1]]
 				if(last && (last!='return' || last!='null')){
 					List last2 = keys[pathSize-1].split('/')
-					cache = apiCacheService.getApiCache(last2[0])
-					methods = cache[params.apiObject][last2[1]]['method'].trim()
 
+					println(last2)
+					println(last2[0])
+					cache = apiCacheService.getApiCache(last2[0])
+					println(cache)
+					methods = cache[params.apiObject][last2[1]]['method'].trim()
+					println("methods2:"+methods)
 					if(methods=='GET'){
 						if(methods != currentMethod && params?.apiChain?.type=='postchain'){
 							postMatch = true
@@ -385,14 +412,20 @@ class ApiLayerService{
 			// path check
 			int start = 1
 			int end = pathSize-2
+			println("${start} > ${end}")
 			if(start<end){
+				//println("${start} > ${end}")
 				keys[0..(pathSize-1)].each{ val ->
 					if(val){
+						println("val : "+val)
 						List temp2 = val.split('/')
+						println(temp2)
+						println(temp2[0])
 						cache = apiCacheService.getApiCache(temp2[0])
-						methods = cache[params.apiObject][temp2[1]]['method'].trim() as List
+						methods = cache[params.apiObject][temp2[1]]['method'].trim()
+
 						if(methods=='GET'){
-							if(methods != currentMethod && params?.apiChain?.type=='blankchain'){
+							if(methods == currentMethod && params?.apiChain?.type=='blankchain'){
 								pathMatch = true
 							}
 						}else{
@@ -404,7 +437,7 @@ class ApiLayerService{
 				}
 			}
 
-			
+			println("${pathMatch} / ${preMatch} / ${postMatch}")
 			if(pathMatch || (preMatch && postMatch)){
 				if(params?.apiChain?.type=='blankchain'){
 					return 0
@@ -427,11 +460,23 @@ class ApiLayerService{
 				return 3
 			}
 
-			
+
 		}catch(Exception e){
-			throw new Exception("[ApiLayerService :: checkChainedMethodPosition] : Exception - full stack trace follows:",e)
+			//throw new Exception("[ApiLayerService :: checkChainedMethodPosition] : Exception - full stack trace follows:",e)
+			println("[ApiLayerService :: checkChainedMethodPosition] : Exception - full stack trace follows:"+e)
 		}
 	}
-	
 
+	boolean isRequestMatch(String protocol,String method){
+		if(['TRACERT','OPTIONS','HEAD'].contains(method)){
+			return true
+		}else{
+			if(protocol == method){
+				return true
+			}else{
+				return false
+			}
+		}
+		return false
+	}
 }

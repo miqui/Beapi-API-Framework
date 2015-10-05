@@ -14,6 +14,7 @@ import grails.web.servlet.mvc.GrailsParameterMap
 import org.grails.groovy.grails.commons.*
 import org.grails.validation.routines.UrlValidator
 import org.grails.web.util.GrailsApplicationAttributes
+import org.grails.web.util.WebUtils
 import org.springframework.http.ResponseEntity
 
 import javax.servlet.forward.*
@@ -27,27 +28,31 @@ class ChainResponseService extends ApiLayerService{
 	GrailsApplication grailsApplication
 	
 	boolean handleApiChain(LinkedHashMap cache, HttpServletRequest request, HttpServletResponse response, Map model, GrailsParameterMap params){
+		String controller
+		String action
 		try{
+			println("trying...")
 			List uri = [params.controller,params.action,params.id]
 			ApiStatuses errors = new ApiStatuses()
 			List keys = []
-			String controller
-			String action
+			List entrys = []
 			List uri2 = []
-			
+			String chainKey
+
 			if(params?.apiChain?.order!='null'){
 				keys = params?.apiChain?.order.keySet() as List
-				uri2 = keys.last().split('/')
+				uri2 = keys.first().split('/')
 				controller = uri2[0]
 				action = uri2[1]
+				chainKey = params?.apiChain?.order[keys.first()]
 			}
-			
-			Long id = model.id
+			println(controller)
+			println(action)
 
-			
 			//if(keys.last() && (params?.apiChain?.order["${keys.last()}"]!='null' && params?.apiChain?.order["${keys.last()}"]!='return')){
 			if(keys.last()){
 				int pos = checkChainedMethodPosition(cache,request,params,uri,params?.apiChain?.order as Map)
+				println("pos : "+pos)
 				if(pos==3){
 					println("#### BAD POSITION")
 					String msg = '[ERROR] Bad combination of unsafe METHODS in api chain.'
@@ -62,37 +67,40 @@ class ChainResponseService extends ApiLayerService{
 					}
 					
 					def currentPath = "${controller}/${action}"
+println(currentPath)
 					List roles = cache[params.apiObject][params.action]['roles'].toArray() as List
-					if(checkAuth(request,roles)){
-						/*
-						if(params?.apiChain.combine=='true'){
-							params.apiCombine["${params.controller}/${params.action}"] = parseURIDefinitions(model,cache[params.action][params.apiObject]['returns'])
-						}
-						*/
+					//if(checkAuth(request,roles)){
+
+						println("controller :"+controller)
 						params.controller = controller
 						params.action = action
 
+
+						if(params?.apiChain.combine=='true'){
+							params.apiCombine["${params.controller}/${params.action}"] = parseURIDefinitions(model,cache[params.action][params.apiObject]['returns'])
+						}
+
 						if(params.apiChain.key){
+							println("################## apiChain.key")
 							params.id = model[params.apiChain.key]
-							params.apiChain.remove('key')
+							params.apiChain.key = chainKey
 						}else{
+							println("################## NO apiChain.key")
 							params.id = model.id
 						}
 
-						if(params?.apiChain.combine=='true'){
-							params.apiCombine[currentPath] = parseURIDefinitions(request,model,cache[params.apiObject][params.action]['returns'])
-						}
+
 						
 						if(keys.last() && (params?.apiChain?.order["${keys.last()}"]=='null' && params?.apiChain?.order["${keys.last()}"]=='return')){
 							params.remove('apiChain')
 						}
 						params?.apiChain?.order.remove("$currentPath")
 						return true
-					}else{
-						String msg = "User does not have access."
-						errors._403_FORBIDDEN(msg).send()
-						return false
-					}
+					//}else{
+					//	String msg = "User does not have access."
+					//	errors._403_FORBIDDEN(msg).send()
+					//	return false
+					//}
 				}
 			}
 			//}else{
@@ -102,6 +110,7 @@ class ChainResponseService extends ApiLayerService{
 			return false
 		}catch(Exception e){
 			//throw new Exception("[ApiResponseService :: handleApiChain] : Exception - full stack trace follows:",e)
+			println("[ApiResponseService :: handleApiChain] : Exception - full stack trace follows:"+e)
 		}
 	}
 	
@@ -110,6 +119,7 @@ class ChainResponseService extends ApiLayerService{
 			String type = ''
 			if(cache){
 				if(cache[params.apiObject][params.action]){
+					println("cache has action...")
 					// make 'application/json' default
 					//def formats = ['text/html','text/json','application/json','text/xml','application/xml']
 					//type = (params.contentType)?formats.findAll{ type.startsWith(it) }[0].toString():params.contentType
@@ -156,7 +166,7 @@ class ChainResponseService extends ApiLayerService{
 			List optionalParams = ['action','controller','apiName_v','contentType', 'encoding','apiChain', 'apiBatch', 'apiCombine', 'apiObject','apiObjectVersion', 'chain']
 			List responseList = getApiParams(request,responseDefinitions)
 
-			HashMap params = getMethodParams()
+			//HashMap params = getMethodParams()
 			//GrailsParameterMap params = RCH.currentRequestAttributes().params
 			List paramsList = model.keySet() as List
 			paramsList.removeAll(optionalParams)
@@ -523,4 +533,5 @@ class ChainResponseService extends ApiLayerService{
 
 		return ['content':content,'type':contentType,'encoding':encoding]
 	}
+
 }
