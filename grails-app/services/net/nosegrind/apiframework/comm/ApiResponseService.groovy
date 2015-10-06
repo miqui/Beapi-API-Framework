@@ -46,23 +46,17 @@ class ApiResponseService extends ApiLayerService{
 
 	def handleApiResponse(LinkedHashMap cache, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
 		try{
-			println("trying...")
 			String type = ''
 			if(cache){
 				if(cache[params.apiObject][params.action]){
 					// make 'application/json' default
-					//def formats = ['text/html','text/json','application/json','text/xml','application/xml']
-					//type = (params.contentType)?formats.findAll{ type.startsWith(it) }[0].toString():params.contentType
-					//if(type){
+
+					if(paramsService.contentType){
 							response.setHeader('Authorization', cache[params.apiObject][params.action]['roles'].join(', '))
 							LinkedHashMap result = paramsService.parseURIDefinitions(request,model,cache[params.apiObject][params.action]['returns'])
-println("before params : "+params)
 							Map content = paramsService.parseResponseMethod(request, params, result,cache[params.apiObject][params.action]['returns'])
 							return content
-					//}else{
-						//return true
-						//render(view:params.action,model:model)
-					//}
+					}
 				}else{
 					//return true
 					//render(view:params.action,model:model)
@@ -70,7 +64,7 @@ println("before params : "+params)
 			}
 		}catch(Exception e){
 			//throw new Exception("[ApiResponseService :: handleApiResponse] : Exception - full stack trace follows:",e)
-		println("[ApiResponseService :: handleApiResponse] : Exception - full stack trace follows:"+e)
+			println("[ApiResponseService :: handleApiResponse] : Exception - full stack trace follows:"+e)
 		}
 	}
 	

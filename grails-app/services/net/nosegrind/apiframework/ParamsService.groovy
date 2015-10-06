@@ -22,13 +22,22 @@ class ParamsService{
 
     GrailsApplication grailsApplication
 
+    def formats = ['text/html','text/json','application/json','text/xml','application/xml']
+
     String format
+    String contentType
+    String encoding
     LinkedHashMap content = [:]
     String queryString
 
     void initParams(HttpServletRequest request){
+        List tempType = request.getHeader('Content-Type')?.split(';')
+        encoding = (tempType != null)?tempType[0]:'UTF-8'
+        String type = (tempType)?tempType[0]:(request.getHeader('Content-Type'))?request.getHeader('Content-Type'):'application/json'
+        contentType = (type)?formats.findAll{ type.startsWith(it) }[0].toString():type
         format = request.format.toUpperCase()
         queryString = request.getQueryString()
+
         if(request."$format"){
             request."$format"?.each() { key,value ->
                 content.put(key,value)
@@ -118,7 +127,6 @@ class ParamsService{
                     }
                 }
             }
-            println("apilist : "+apiList)
             return apiList
         }catch(Exception e){
             throw new Exception("[ParamsService :: getApiParams] : Exception - full stack trace follows:",e)
@@ -126,7 +134,7 @@ class ParamsService{
     }
 
     boolean checkURIDefinitions(HttpServletRequest request, LinkedHashMap requestDefinitions){
-        println("####### paramsService:checkUriDefinitions ########")
+        //println("#### paramsService:checkUriDefinitions")
         // put in check to see if if app.properties allow for this check
         try{
             List optionalParams = ['format','action','controller','apiName_v','contentType', 'encoding','apiChain', 'apiBatch', 'apiCombine', 'apiObject','apiObjectVersion', 'chain']
@@ -135,13 +143,10 @@ class ParamsService{
 
             //GrailsParameterMap params = RCH.currentRequestAttributes().params
             List paramsList = params."${request.method.toLowerCase()}".keySet() as List
-            println("#### paramsList : "+paramsList)
+
             paramsList.removeAll(optionalParams)
-            println("#### paramsList : "+paramsList)
-            println("#### requestListList : "+requestList)
             if(paramsList.containsAll(requestList)){
                 paramsList.removeAll(requestList)
-                println("#### paramsListShouldBeEmpty : "+paramsList)
                 if(!paramsList){
                     return true
                 }
@@ -160,22 +165,18 @@ class ParamsService{
     }
 
     HashMap getMethodParams(){
-        println("### getMethodParams")
+        // println("### paramsService : getMethodParams")
         try{
             boolean isChain = false
             List optionalParams = ['action','controller','v','contentType', 'encoding','apiChain', 'apiBatch', 'apiCombine', 'apiObject','apiObjectVersion', 'chain']
-            //HttpServletRequest request = getRequest()
             GrailsParameterMap params = RequestContextHolder.currentRequestAttributes().params
             Map paramsRequest = params.findAll {
                 if(it.key=='apiChain'){ isChain=true }
                 return !optionalParams.contains(it.key)
             }
-            println("paramsRequest : "+paramsRequest)
-            println("isChain : "+isChain)
             Map paramsGet = [:]
             Map paramsPost = [:]
             if(isChain){
-                println("ischain - make sure to get id")
                 paramsPost = paramsRequest
             }else{
                 paramsGet = WebUtils.fromQueryString(queryString ?: "")
@@ -199,7 +200,7 @@ println("[ParamsService :: getMethodParams] : Exception - full stack trace follo
         List optionalParams = ['action','controller','apiName_v','contentType', 'encoding','apiChain', 'apiBatch', 'apiCombine', 'apiObject','apiObjectVersion', 'chain']
         List responseList = getApiParams(request,responseDefinitions)
 
-        HashMap params = getMethodParams()
+        //HashMap params = getMethodParams()
         //GrailsParameterMap params = RCH.currentRequestAttributes().params
         List paramsList = model.keySet() as List
         paramsList.removeAll(optionalParams)
@@ -241,13 +242,10 @@ println("[ParamsService :: getMethodParams] : Exception - full stack trace follo
             case 'HEAD':
                 break;
             case 'OPTIONS':
-                String contentType = (params.contentType)?params.contentType:'application/json'
-                String encoding = (params.encoding)?params.encoding:"UTF-8"
                 LinkedHashMap doc = getApiDoc(params)
                 data = ['content':doc,'contentType':contentType,'encoding':encoding]
                 break;
             case 'GET':
-                println("GET")
                 if(map?.isEmpty()==false){
                     data = parseContentType(request,params, map, returns)
                 }
@@ -273,7 +271,6 @@ println("[ParamsService :: getMethodParams] : Exception - full stack trace follo
 
     Map parseContentType(HttpServletRequest request, GrailsParameterMap params, Map map, LinkedHashMap returns){
         String content
-        String contentType = "application/${format.toLowerCase()}"
         String encoding = (params.encoding)?params.encoding:"UTF-8"
         LinkedHashMap result = parseURIDefinitions(request,map,returns)
         switch(format){
@@ -315,7 +312,6 @@ println("[ParamsService :: getMethodParams] : Exception - full stack trace follo
                                     it.value.each(){ it2 ->
                                         it2.getProperties().each(){ it3 ->
                                             if(paramDescProps.contains(it3.key)){
-                                                //println("receives > ${it3.key} : ${it3.value}")
                                                 newDoc[params.action].receives[it3.key] = it3.value
                                             }
                                         }
@@ -334,7 +330,6 @@ println("[ParamsService :: getMethodParams] : Exception - full stack trace follo
                                     v.value.each(){ v2 ->
                                         v2.getProperties().each(){ v3 ->
                                             if(paramDescProps.contains(v3.key)){
-                                                //println("receives > ${v3.key} : ${v3.value}")
                                                 newDoc[params.action].returns[v3.key] = v3.value
                                             }
                                         }

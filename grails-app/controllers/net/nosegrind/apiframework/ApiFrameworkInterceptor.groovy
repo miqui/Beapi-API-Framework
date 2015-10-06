@@ -49,11 +49,11 @@ class ApiFrameworkInterceptor{
 	boolean before(){
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 
-		println("##### FILTER (BEFORE)")
+		//println("##### FILTER (BEFORE)")
 
 		paramsService.initParams(request)
 		paramsService.setApiParams(params)
-		println(params)
+
 
 		try{
 			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
@@ -93,17 +93,18 @@ class ApiFrameworkInterceptor{
 	}
 
 	boolean after(){
-		println("##### FILTER (AFTER)")
+		//println("##### FILTER (AFTER)")
 		try{
 			if(!model){
 				render(status:HttpServletResponse.SC_BAD_REQUEST)
 				return false
 			}
 
+
 			Map newModel = (model)?apiResponseService.convertModel(model):model
+
 			LinkedHashMap cache = (params.controller)?apiCacheService.getApiCache(params.controller):[:]
 			LinkedHashMap content = apiResponseService.handleApiResponse(cache,request,response,newModel,params)
-				
 			if(content){
                 render(text:content.apiToolkitContent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)
                 return false
