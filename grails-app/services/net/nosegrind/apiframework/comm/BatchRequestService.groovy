@@ -48,14 +48,6 @@ class BatchRequestService extends ApiLayerService{
 					}
 				}
 
-				if(!checkURIDefinitions(request,cache[params.apiObject][params.action]['receives'])){
-					//return bad status
-					String msg = 'Expected request variables do not match sent variables'
-					error._400_BAD_REQUEST(msg)?.send()
-					return false
-				}
-				println("################## after checkURIDefinitions: "+request[format])
-
 				// CHECK METHOD FOR API CHAINING. DOES METHOD MATCH?
 				def method = cache[params.apiObject][params.action]['method']?.trim()
 
@@ -98,14 +90,6 @@ class BatchRequestService extends ApiLayerService{
 					}
 					*/
 
-					if(!checkURIDefinitions(request,cache[params.apiObject][params.action]['receives'])){
-                        // return bad status
-						String msg = 'Expected request variables do not match sent variables'
-						error._400_BAD_REQUEST(msg)?.send()
-						return false
-					}else{
-						return true
-					}
 				}
 			}
 		}catch(Exception e){

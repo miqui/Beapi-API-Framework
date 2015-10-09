@@ -45,13 +45,6 @@ class ApiRequestService extends ApiLayerService{
 					}
 				}
 
-				if(!paramsService.checkURIDefinitions(request,cache[params.apiObject][params.action]['receives'])){
-					// return bad status
-					String msg = 'Expected request variables do not match sent variables'
-					error._400_BAD_REQUEST(msg)?.send()
-					return false
-				}
-
 				def method = cache[params.apiObject][params.action]['method']?.trim()
 
 				// DOES api.methods.contains(request.method)

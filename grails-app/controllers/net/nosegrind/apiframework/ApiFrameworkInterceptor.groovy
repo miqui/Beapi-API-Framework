@@ -4,27 +4,16 @@ import grails.web.servlet.mvc.GrailsParameterMap
 import net.nosegrind.apiframework.comm.ApiRequestService
 import net.nosegrind.apiframework.comm.ApiResponseService
 import grails.util.Metadata
+import org.springframework.web.context.request.RequestAttributes
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
 
-
-
 /* ****************************************************************************
  * Copyright 2014 Owen Rubel
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
  *****************************************************************************/
 
 
@@ -37,7 +26,6 @@ class ApiFrameworkInterceptor{
 	ApiResponseService apiResponseService
 	ApiCacheService apiCacheService
 	ParamsService paramsService
-
 	String entryPoint
 
 	ApiFrameworkInterceptor(){
@@ -47,13 +35,12 @@ class ApiFrameworkInterceptor{
 	}
 
 	boolean before(){
+		println("##### FILTER (BEFORE)")
+
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 
-		//println("##### FILTER (BEFORE)")
-
 		paramsService.initParams(request)
-		paramsService.setApiParams(params)
-
+		paramsService.setApiParams(request)
 
 		try{
 			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
@@ -61,7 +48,17 @@ class ApiFrameworkInterceptor{
 				LinkedHashMap cache = (params.controller)?apiCacheService.getApiCache(params.controller):[:]
 
 				if(cache){
+
 					params.apiObject = (params.apiObjectVersion)?params.apiObjectVersion:cache['currentStable']['value']
+
+					if(!paramsService.checkURIDefinitions(request,cache[params.apiObject][params.action]['receives'])){
+						// return bad status
+						HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getAttribute(RESPONSE_NAME_AT_ATTRIBUTES, RequestAttributes.SCOPE_REQUEST)
+						response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Expected request variables do not match sent variables")
+						return false
+					}
+
+
 					if(!params.action){ 
 						String methodAction = methods[request.method]
 						if(!cache[params.apiObject][methodAction]){
@@ -93,21 +90,22 @@ class ApiFrameworkInterceptor{
 	}
 
 	boolean after(){
-		//println("##### FILTER (AFTER)")
+		println("##### FILTER (AFTER)")
 		try{
-			if(!model){
-				render(status:HttpServletResponse.SC_BAD_REQUEST)
+			Map newModel = [:]
+
+			if (!model) {
+				render(status: HttpServletResponse.SC_BAD_REQUEST)
 				return false
+			} else {
+				newModel = apiResponseService.convertModel(model)
 			}
 
-
-			Map newModel = (model)?apiResponseService.convertModel(model):model
-
-			LinkedHashMap cache = (params.controller)?apiCacheService.getApiCache(params.controller):[:]
+			LinkedHashMap cache = apiCacheService.getApiCache(params?.controller)
 			LinkedHashMap content = apiResponseService.handleApiResponse(cache,request,response,newModel,params)
 			if(content){
-                render(text:content.apiToolkitContent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)
-                return false
+				render(text:content.apiToolkitContent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)
+				return false
 			}
 
 			return false

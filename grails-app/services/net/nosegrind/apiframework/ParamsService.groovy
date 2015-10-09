@@ -1,8 +1,10 @@
 package net.nosegrind.apiframework
 
+import org.grails.web.json.JSONObject
 import grails.converters.JSON
 import grails.converters.XML
 import grails.core.GrailsApplication
+import groovy.json.JsonSlurper
 import org.grails.web.util.WebUtils
 import org.springframework.web.context.request.RequestContextHolder
 
@@ -11,6 +13,7 @@ import org.springframework.web.context.request.RequestContextHolder
  * Copyright 2014 Owen Rubel
  *****************************************************************************/
 
+import grails.io.IOUtils;
 
 import javax.servlet.forward.*
 import javax.servlet.http.HttpServletRequest
@@ -24,32 +27,34 @@ class ParamsService{
 
     def formats = ['text/html','text/json','application/json','text/xml','application/xml']
 
+    boolean batch = true
+    boolean chain = true
+
     String format
     String contentType
     String encoding
-    LinkedHashMap content = [:]
     String queryString
 
     void initParams(HttpServletRequest request){
+        this.batch = grailsApplication.config.apitoolkit.batching.enabled
+        this.chain = grailsApplication.config.apitoolkit.chaining.enabled
+
         List tempType = request.getHeader('Content-Type')?.split(';')
         encoding = (tempType != null)?tempType[0]:'UTF-8'
         String type = (tempType)?tempType[0]:(request.getHeader('Content-Type'))?request.getHeader('Content-Type'):'application/json'
         contentType = (type)?formats.findAll{ type.startsWith(it) }[0].toString():type
-        format = request.format.toUpperCase()
         queryString = request.getQueryString()
 
-        if(request."$format"){
-            request."$format"?.each() { key,value ->
-                content.put(key,value)
-            }
-        }
+        format = request.format.toUpperCase()
+
     }
 
-    GrailsParameterMap setApiParams(GrailsParameterMap params){
+    void setApiParams(HttpServletRequest request){
         try{
-            if(content){
-                content.each{ k,v ->
-                    params.put(key,value)
+            GrailsParameterMap params = RequestContextHolder.currentRequestAttributes().params
+            if(request."$format"){
+                request."$format".each{ k,v ->
+                    params.put(k,v)
                 }
             }
         }catch(Exception e){
@@ -57,43 +62,57 @@ class ParamsService{
         }
     }
 
-    GrailsParameterMap setChainParams(GrailsParameterMap params){
+    void setChainParams(HttpServletRequest request){
         try {
-            if (content) {
-                content.each { k, v ->
+            GrailsParameterMap params = RequestContextHolder.currentRequestAttributes().params
+            if (request."$format") {
+                request."$format".each(){ k, v ->
                     if (chain && k == 'chain') {
                         params.apiChain = [:]
-                        params.apiChain = content.chain
-                        //if (content?.chain) {
-                        //    request."${format}".remove('chain')
-                        //}
+                        params.apiChain = request."$format".chain
                     }
                 }
+                // request."${format}".remove('chain')
             }
         }catch(Exception e){
             throw new Exception("[ParamsService :: setChainParams] : Exception - full stack trace follows:"+ e);
         }
     }
 
-    GrailsParameterMap setBatchParams(GrailsParameterMap params){
-        try {
-            if (content) {
-                content.each { k, v ->
+    void setBatchParams(HttpServletRequest request){
+        //try {
+            def params = RequestContextHolder.currentRequestAttributes().params
+            if (request."$format") {
+                request."$format".each(){ k,v ->
+                    println(k.getClass())
+                    println(v.getClass())
                     if (batch && k == 'batch') {
-                        params.apiBatch = []
-                        v.each { it ->
-                            params.apiBatch.add(it)
+                        //JSONObject obj =(JSONObject)request."$format".batch
+                        Iterator<JSONObject> iterator = v.iterator();
+                        List temp = []
+                        int inc = 0
+                        while(iterator.hasNext()) {
+                            JSONObject myObject = iterator.next();
+println(myObject)
+                            def temp2 =[:]
+                            myObject.each(){ k2, v2 ->
+                                temp2[k2] = v2
+                            }
+                            temp.add(temp2)
+
+                            iterator.remove()
+                            inc++
                         }
-                        params.apiBatch = params.apiBatch
-                        //if (content?.batch) {
-                        //    request.remove('batch')
-                        //}
+                        println("temp :"+temp)
+                        println(temp.getClass())
+                        params.apiBatch = temp
                     }
                 }
+                //request."$format".remove('batch')
             }
-        }catch(Exception e){
-            throw new Exception("[ParamsService :: setBatchParams] : Exception - full stack trace follows:"+ e);
-        }
+        //}catch(Exception e){
+        //    throw new Exception("[ParamsService :: setBatchParams] : Exception - full stack trace follows:"+ e);
+        //}
     }
 
     LinkedHashMap getApiObjectParams(HttpServletRequest request, LinkedHashMap definitions){
@@ -134,7 +153,7 @@ class ParamsService{
     }
 
     boolean checkURIDefinitions(HttpServletRequest request, LinkedHashMap requestDefinitions){
-        //println("#### paramsService:checkUriDefinitions")
+        println("#### paramsService:checkUriDefinitions")
         // put in check to see if if app.properties allow for this check
         try{
             List optionalParams = ['format','action','controller','apiName_v','contentType', 'encoding','apiChain', 'apiBatch', 'apiCombine', 'apiObject','apiObjectVersion', 'chain']
@@ -145,8 +164,11 @@ class ParamsService{
             List paramsList = params."${request.method.toLowerCase()}".keySet() as List
 
             paramsList.removeAll(optionalParams)
+            println("paramsList : "+paramsList)
+            println("requestList : "+requestList)
             if(paramsList.containsAll(requestList)){
                 paramsList.removeAll(requestList)
+                println("paramsList should be empty : "+paramsList)
                 if(!paramsList){
                     return true
                 }
@@ -165,10 +187,10 @@ class ParamsService{
     }
 
     HashMap getMethodParams(){
-        // println("### paramsService : getMethodParams")
+        println("### paramsService : getMethodParams")
         try{
             boolean isChain = false
-            List optionalParams = ['action','controller','v','contentType', 'encoding','apiChain', 'apiBatch', 'apiCombine', 'apiObject','apiObjectVersion', 'chain']
+            List optionalParams = ['format','action','controller','v','contentType', 'encoding','apiChain', 'apiBatch', 'apiCombine', 'apiObject','apiObjectVersion', 'chain']
             GrailsParameterMap params = RequestContextHolder.currentRequestAttributes().params
             Map paramsRequest = params.findAll {
                 if(it.key=='apiChain'){ isChain=true }
@@ -186,6 +208,8 @@ class ParamsService{
                     paramsPost.remove('id')
                 }
             }
+            println("paramsGet : "+paramsGet)
+            println("paramsPost : "+paramsPost)
             return ['get':paramsGet,'post':paramsPost]
         }catch(Exception e){
             //throw new Exception("[ParamsService :: getMethodParams] : Exception - full stack trace follows:",e)
