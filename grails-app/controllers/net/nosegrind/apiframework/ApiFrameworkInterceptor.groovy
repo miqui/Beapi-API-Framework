@@ -39,8 +39,7 @@ class ApiFrameworkInterceptor{
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 
-		paramsService.initParams(request)
-		paramsService.setApiParams(request)
+		paramsService.initParams(request,params)
 
 		try{
 			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){

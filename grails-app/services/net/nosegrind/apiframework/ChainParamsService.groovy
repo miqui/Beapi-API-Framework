@@ -21,14 +21,17 @@ import org.grails.groovy.grails.commons.*
 import grails.web.servlet.mvc.GrailsParameterMap
 import org.springframework.web.context.request.RequestContextHolder
 
-class ParamsService{
+class ChainParamsService{
 
     GrailsApplication grailsApplication
 
     def formats = ['text/html','text/json','application/json','text/xml','application/xml']
     List optionalParams = ['method','format','contentType','encoding','action','controller','v','apiCombine', 'apiObject']
 
-    void initParams(HttpServletRequest request,GrailsParameterMap params) {
+    boolean chain = true
+
+    void initParams(HttpServletRequest request,GrailsParameterMap params, String callType){
+        this.chain = grailsApplication.config.apitoolkit.chaining.enabled
 
         params.method = request.method
         List tempType = request.getHeader('Content-Type')?.split(';')
@@ -53,8 +56,9 @@ class ParamsService{
                 break
         }
 
-        content.each() { k, v ->
-            params.put(k, v)
+        // Check for Chain Support
+        if (apiRequestService.chain) {
+            params.apiChain = content?.chain
         }
     }
 
@@ -146,8 +150,10 @@ class ParamsService{
     HashMap getMethodParams(){
         println("### paramsService : getMethodParams")
         try{
+            boolean isChain = false
             GrailsParameterMap params = RequestContextHolder.currentRequestAttributes().params
             Map paramsRequest = params.findAll {
+                if(it.key=='apiChain'){ isChain=true }
                 return !optionalParams.contains(it.key)
             }
             Map paramsGet = [:]
@@ -171,10 +177,11 @@ println("[ParamsService :: getMethodParams] : Exception - full stack trace follo
         }
     }
 
-    LinkedHashMap parseURIDefinitions(HttpServletRequest request, LinkedHashMap model,List responseList){
+    LinkedHashMap parseURIDefinitions(HttpServletRequest request, LinkedHashMap model,LinkedHashMap responseDefinitions){
         //try{
         ApiStatuses errors = new ApiStatuses()
-        String msg = 'Error. Invalid variables being returned. Please see your administrator'
+
+        List responseList = getApiParams(request,responseDefinitions)
 
         //HashMap params = getMethodParams()
         //GrailsParameterMap params = RCH.currentRequestAttributes().params
@@ -186,6 +193,7 @@ println("[ParamsService :: getMethodParams] : Exception - full stack trace follo
                 model.remove("${it}".toString())
             }
             if(!paramsList){
+                String msg = 'Error. Invalid variables being returned. Please see your administrator'
                 errors._400_BAD_REQUEST(msg).send()
                 return [:]
             }else{
@@ -207,7 +215,7 @@ println("[ParamsService :: getMethodParams] : Exception - full stack trace follo
 
     void dropContentTypeParam(){}
 
-    Map parseResponseMethod(HttpServletRequest request, GrailsParameterMap params, LinkedHashMap result){
+    Map parseResponseMethod(HttpServletRequest request, GrailsParameterMap params, Map map, LinkedHashMap returns){
         Map data = [:]
         switch(request.method) {
             case 'PURGE':
@@ -222,29 +230,29 @@ println("[ParamsService :: getMethodParams] : Exception - full stack trace follo
                 data = ['content':doc,'contentType':contentType,'encoding':encoding]
                 break;
             case 'GET':
+                if(map?.isEmpty()==false){
+                    data = parseContentType(request,params, map, returns)
+                }
+                break;
             case 'PUT':
+                if(!map.isEmpty()){
+                    data = parseContentType(request,params, map, returns)
+                }
+                break;
             case 'POST':
+                if(!map.isEmpty()){
+                    data = parseContentType(request,params, map, returns)
+                }
+                break;
             case 'DELETE':
                 if(!map.isEmpty()){
-                    String content
-                    String encoding = (params.encoding)?params.encoding:"UTF-8"
-                    switch(format){
-                        case 'XML':
-                            content = result as XML
-                            break
-                        case 'JSON':
-                        default:
-                            content = result as JSON
-                    }
-
-                    data = ['content':content,'type':format,'encoding':encoding]
+                    data = parseContentType(request,params, map, returns)
                 }
                 break;
         }
         return ['apiToolkitContent':data.content,'apiToolkitType':data.contentType,'apiToolkitEncoding':data.encoding]
     }
 
-    /*
     Map parseContentType(HttpServletRequest request, GrailsParameterMap params, Map map, LinkedHashMap returns){
         String content
         String encoding = (params.encoding)?params.encoding:"UTF-8"
@@ -260,7 +268,6 @@ println("[ParamsService :: getMethodParams] : Exception - full stack trace follo
 
         return ['content':content,'type':format,'encoding':encoding]
     }
-    */
 
     /*
      * TODO: Need to compare multiple authorities
@@ -335,49 +342,41 @@ println("[ParamsService :: getMethodParams] : Exception - full stack trace follo
     }
 
     /*
- * TODO: Need to compare multiple authorities
- */
+     * TODO: Need to compare multiple authorities
+     */
     private String processJson(LinkedHashMap returns){
+        def json = [:]
+        returns.each{ p ->
+            p.value.each{ it ->
 
-        try{
-            LinkedHashMap json = [:]
-            returns.each{ p ->
-                p.value.each{ it ->
-                    if(it) {
-                        ParamsDescriptor paramDesc = it
+                ParamsDescriptor paramDesc = it
 
-                        LinkedHashMap j = [:]
-                        if (paramDesc?.values) {
-                            j["$paramDesc.name"] = []
-                        } else {
-                            String dataName = (['PKEY', 'FKEY', 'INDEX'].contains(paramDesc?.paramType?.toString())) ? 'ID' : paramDesc.paramType
-                            j = (paramDesc?.mockData?.trim()) ? ["$paramDesc.name": "$paramDesc.mockData"] : ["$paramDesc.name": "$dataName"]
-                        }
-                        j.each() { key, val ->
-                            if (val instanceof List) {
-                                def child = [:]
-                                val.each() { it2 ->
-                                    it2.each() { key2, val2 ->
-                                        child[key2] = val2
-                                    }
-                                }
-                                json[key] = child
-                            } else {
-                                json[key] = val
+                def j = [:]
+                if(paramDesc?.values){
+                    j[paramDesc.name]=[]
+                }else{
+                    String dataName=(['PKEY','FKEY','INDEX'].contains(paramDesc.paramType.toString()))?'ID':paramDesc.paramType
+                    j = (paramDesc?.mockData?.trim())?["${paramDesc.name}":paramDesc.mockData]:["${paramDesc.name}":dataName]
+                }
+                j.each(){ key,val ->
+                    if(val instanceof List){
+                        def child = [:]
+                        val.each(){ it2 ->
+                            it2.each(){ key2,val2 ->
+                                child[key2] = val2
                             }
                         }
+                        json[key] = child
+                    }else{
+                        json[key]=val
                     }
                 }
             }
-
-            String jsonReturn
-            if(json){
-                jsonReturn = json as JSON
-            }
-            return jsonReturn
-        }catch(Exception e){
-            throw new Exception("[ApiLayerService :: processJson] : Exception - full stack trace follows:",e)
         }
-    }
 
+        if(json){
+            json = json as JSON
+        }
+        return json
+    }
 }

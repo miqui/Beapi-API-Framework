@@ -116,7 +116,7 @@ class ApiCacheService{
 		try{
 			Map doc = [:]
 			def cache = getApiCache(controllername)
-			String apiPrefix = (grailsApplication.config.apitoolkit.apiName)?"${grailsApplication.config.apitoolkit.apiName}_v${grailsApplication.metadata['app.version']}" as String:"v${grailsApplication.metadata['app.version']}" as String
+			String apiPrefix = "v"+grailsApplication.metadata['app.version'] as String
 			
 			if(cache){
 				String path = "/${apiPrefix}-${apiversion}/${controllername}/${actionname}"

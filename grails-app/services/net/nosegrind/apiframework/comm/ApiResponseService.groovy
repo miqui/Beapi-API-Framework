@@ -54,7 +54,7 @@ class ApiResponseService extends ApiLayerService{
 					if(paramsService.contentType){
 							response.setHeader('Authorization', cache[params.apiObject][params.action]['roles'].join(', '))
 							LinkedHashMap result = paramsService.parseURIDefinitions(request,model,cache[params.apiObject][params.action]['returns'])
-							Map content = paramsService.parseResponseMethod(request, params, result,cache[params.apiObject][params.action]['returns'])
+							Map content = paramsService.parseResponseMethod(request, params, result)
 							return content
 					}
 				}else{
