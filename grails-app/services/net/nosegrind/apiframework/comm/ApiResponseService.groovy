@@ -5,22 +5,11 @@ package net.nosegrind.apiframework.comm
  *****************************************************************************/
 
 
-import grails.converters.JSON
-import grails.converters.XML
 
 //import grails.plugin.springsecurity.SpringSecurityService
 
 import grails.web.http.HttpHeaders
-import net.nosegrind.apiframework.comm.ApiLayerService
-
-//import grails.util.Holders as HOLDER
-
-//import java.util.ArrayList
-//import java.util.HashSet
-//import java.util.Map
-//import java.util.regex.Matcher
-//import java.util.regex.Pattern
-//import java.lang.reflect.Method
+import net.nosegrind.apiframework.comm.ApiLayer
 
 import javax.servlet.forward.*
 import org.springframework.http.ResponseEntity
@@ -37,24 +26,26 @@ import javax.servlet.http.HttpServletRequest
 
 import grails.core.GrailsApplication
 import net.nosegrind.apiframework.*
-import net.nosegrind.apiframework.ParamsService
+import net.nosegrind.apiframework.Timer
 
-class ApiResponseService extends ApiLayerService{
+class ApiResponseService extends ApiLayer{
 
 	GrailsApplication grailsApplication
-	ParamsService paramsService
+
 
 	def handleApiResponse(LinkedHashMap cache, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
+		//println("#### [ApiResponseService : handleApiResponse ] ####")
+
 		try{
-			String type = ''
 			if(cache){
 				if(cache[params.apiObject][params.action]){
 					// make 'application/json' default
 
-					if(paramsService.contentType){
+					if(params.contentType){
 							response.setHeader('Authorization', cache[params.apiObject][params.action]['roles'].join(', '))
-							LinkedHashMap result = paramsService.parseURIDefinitions(request,model,cache[params.apiObject][params.action]['returns'])
-							Map content = paramsService.parseResponseMethod(request, params, result)
+							List responseList = getApiParams(request,cache[params.apiObject][params.action]['returns'])
+							LinkedHashMap result = parseURIDefinitions(model,responseList)
+							Map content = parseResponseMethod(request, params, result)
 							return content
 					}
 				}else{
@@ -66,19 +57,7 @@ class ApiResponseService extends ApiLayerService{
 			//throw new Exception("[ApiResponseService :: handleApiResponse] : Exception - full stack trace follows:",e)
 			println("[ApiResponseService :: handleApiResponse] : Exception - full stack trace follows:"+e)
 		}
-	}
-	
-	Integer getKey(String key){
-		switch(key){
-			case'FKEY':
-				return 2
-				break
-			case 'PKEY':
-				return 1
-				break
-			default:
-				return 0
-		}
+
 	}
 	
 	boolean validateUrl(String url){
@@ -90,39 +69,6 @@ class ApiResponseService extends ApiLayerService{
 	boolean isRequestRedirected(){
 		return (request.getAttribute(GrailsApplicationAttributes.REDIRECT_ISSUED) != null)? true : false
 	}
-	
-/*
-	private ArrayList processDocValues(List<ParamsDescriptor> value){
-		List val2 = []
-		value.each{ v ->
-			Map val = [:]
-			val = [
-				'paramType':v.paramType,
-				'name':v.name,
-				'description':v.description
-			]
-			
-			if(v.paramType=='PKEY' || v.paramType=='FKEY'){
-				val["idReferences"] = v.idReferences
-			}
-	
-			if(v.required==false){
-				val['required'] = false
-			}
-			if(v.mockData){
-				val['mockData'] = value.mockData
-			}
-			if(v.values){
-				val['values'] = processDocValues(v.values)
-			}
-			if(v.roles){
-				val['roles'] = v.roles
-			}
-			val2.add(val)
-		}
-		return val2
-	}
-	*/
 
 	private ArrayList processDocErrorCodes(HashSet error){
 		List errors = error as List
@@ -155,16 +101,18 @@ class ApiResponseService extends ApiLayerService{
 */
 
 	Map convertModel(Map map){
+		//println("#### [ApiResponseService : convertModel ] ####")
+
 		try{
 			Map newMap = [:]
-			String k = map?.entrySet()?.toList()?.first()?.key
+			String k = map.entrySet().toList().first().key
 			if(map && (!map?.response && !map?.metaClass && !map?.params)){
 				if(grailsApplication.isDomainClass(map[k].getClass())){
 					newMap = formatDomainObject(map[k])
 					return newMap
 				}else if(['class java.util.LinkedList','class java.util.ArrayList'].contains(map[k].getClass())) {
-						newMap = formatList(map[k])
-						return newMap
+					newMap = formatList(map[k])
+					return newMap
 				}else if(['class java.util.Map','class java.util.LinkedHashMap'].contains(map[k].getClass())) {
 					newMap = formatMap(map[k])
 					return newMap
@@ -177,24 +125,19 @@ class ApiResponseService extends ApiLayerService{
 	}
 
 	Map formatDomainObject(Object data){
+		//println("#### [ApiResponseService : formatDomainObject ] ####")
 		try{
-			def nonPersistent = ["log", "class", "constraints", "properties", "errors", "mapping", "metaClass","maps"]
-			def newMap = [:]
+			List nonPersistent = ['log', 'class', 'constraints', 'properties', 'errors', 'mapping', 'metaClass','maps']
+			Map newMap = [:]
 
-			if(data?.'id'){
-				newMap['id'] = data.id
-			}
-			if(data?.'version'!=null){
-				newMap['version'] = data.version
-			}
+			newMap.put('id',data?.id)
+			newMap.put('version',data?.version)
 
-			data.getProperties().each { key, val ->
+
+			data.properties.each { key, val ->
 				if (!nonPersistent.contains(key)) {
-					if(grailsApplication.isDomainClass(val.getClass())){
-						newMap.put key, val.id
-					}else{
-						newMap.put key, val
-					}
+					// no lazy mapping
+					newMap[key] = (grailsApplication.isDomainClass(val.getClass()))? val.id:val
 				}
 			}
 
@@ -204,7 +147,10 @@ class ApiResponseService extends ApiLayerService{
 		}
 	}
 
+
+
 	Map formatList(List list){
+		//println("#### [ApiResponseService : formatList ] ####")
 		Map newMap = [:]
 		list.eachWithIndex(){ val, key ->
 			if(val){
@@ -219,6 +165,7 @@ class ApiResponseService extends ApiLayerService{
 	}
 
 	Map formatMap(Map map) {
+		//println("#### [ApiResponseService : formatMap ] ####")
 		Map newMap = [:]
 		map.each(){ key, val ->
 			if(val){

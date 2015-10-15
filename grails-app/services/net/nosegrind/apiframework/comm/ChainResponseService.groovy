@@ -23,7 +23,7 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import net.nosegrind.apiframework.*
 
-class ChainResponseService extends ApiLayerService{
+class ChainResponseService extends ApiLayer{
 	
 	GrailsApplication grailsApplication
 	

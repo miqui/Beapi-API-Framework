@@ -13,7 +13,7 @@ import javax.servlet.http.HttpServletResponse
  *****************************************************************************/
 
 
-class BatchInterceptor{
+class BatchInterceptor extends Params{
 
 	int order = HIGHEST_PRECEDENCE + 998
 
@@ -21,7 +21,7 @@ class BatchInterceptor{
 	BatchResponseService batchResponseService
 	ApiDomainService apiDomainService
 	ApiCacheService apiCacheService
-	ParamsService paramsService
+
 
 	String entryPoint
 

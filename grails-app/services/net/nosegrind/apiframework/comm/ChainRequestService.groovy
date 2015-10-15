@@ -13,7 +13,7 @@ import javax.servlet.forward.*
 import javax.servlet.http.HttpServletRequest
 import net.nosegrind.apiframework.*
 
-class ChainRequestService extends ApiLayerService{
+class ChainRequestService extends ApiLayer{
 
 	static transactional = false
 	

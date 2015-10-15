@@ -119,7 +119,7 @@ class BatchParamsService{
         // put in check to see if if app.properties allow for this check
         try{
             List requestList = getApiParams(request, requestDefinitions)
-            HashMap params = getMethodParams()
+            HashMap params = getMethodParams(request)
 
             //GrailsParameterMap params = RCH.currentRequestAttributes().params
             List paramsList = params."${request.method.toLowerCase()}".keySet() as List
@@ -147,7 +147,7 @@ class BatchParamsService{
         return uri[1..(uri.size()-1)].split('/')
     }
 
-    HashMap getMethodParams(){
+    HashMap getMethodParams(HttpServletRequest request){
         println("### paramsService : getMethodParams")
         try{
             boolean isChain = false
@@ -161,7 +161,7 @@ class BatchParamsService{
             if(isChain){
                 paramsPost = paramsRequest
             }else{
-                paramsGet = WebUtils.fromQueryString(queryString ?: "")
+                paramsGet = WebUtils.fromQueryString(request.queryString ?: "")
                 paramsPost = paramsRequest.minus(paramsGet)
                 if(paramsPost['id']){
                     paramsGet['id'] = paramsPost['id']

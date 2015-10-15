@@ -34,7 +34,7 @@ import org.springframework.web.context.request.ServletRequestAttributes
 import net.nosegrind.apiframework.*
 
 
-class ApiLayerService{
+abstract class ApiLayer{
 
 	static transactional = false
 	
@@ -42,17 +42,11 @@ class ApiLayerService{
 	//SpringSecurityService springSecurityService
 	ApiCacheService apiCacheService
 
-	boolean chain = true
-	boolean batch = true
-	boolean localauth = true
-	
+
+	List optionalParams = ['method','format','contentType','encoding','action','controller','v','apiCombine', 'apiObject']
+
 	ApiStatuses errors = new ApiStatuses()
-	
-	void setEnv(){
-		this.batch = grailsApplication.config.apitoolkit.batching.enabled
-		this.chain = grailsApplication.config.apitoolkit.chaining.enabled
-		this.localauth = grailsApplication.config.apitoolkit.localauth.enabled
-	}
+
 	
 	private HttpServletRequest getRequest(){
 		//return RCH.currentRequestAttributes().currentRequest
@@ -63,6 +57,92 @@ class ApiLayerService{
 	private HttpServletResponse getResponse(){
 		HttpServletResponse response = ((ServletRequestAttributes) RCH.getRequestAttributes()).getAttribute(RESPONSE_NAME_AT_ATTRIBUTES, RequestAttributes.SCOPE_REQUEST)
 		return response
+	}
+
+	List getApiParams(HttpServletRequest request,LinkedHashMap definitions){
+		//println("#### [ParamsService : getApiParams ] ####")
+		try{
+			List apiList = []
+			definitions.each{ key,val ->
+				if(request.isUserInRole(key) || key=='permitAll'){
+					val.each{ it ->
+						if(it){
+							apiList.add(it.name)
+						}
+					}
+				}
+			}
+			return apiList
+		}catch(Exception e){
+			throw new Exception("[ParamsService :: getApiParams] : Exception - full stack trace follows:",e)
+		}
+	}
+
+	LinkedHashMap parseURIDefinitions(LinkedHashMap model,List responseList){
+		//println("#### [ParamsService : parseURIDefinitions ] ####")
+		try{
+			ApiStatuses errors = new ApiStatuses()
+			String msg = 'Error. Invalid variables being returned. Please see your administrator'
+
+			List paramsList = model.keySet() as List
+			paramsList.removeAll(optionalParams)
+			if(!responseList.containsAll(paramsList)){
+				paramsList.removeAll(responseList)
+				paramsList.each(){ it ->
+					model.remove("${it}".toString())
+				}
+				if(!paramsList){
+					errors._400_BAD_REQUEST(msg).send()
+					return [:]
+				}else{
+					return model
+				}
+			}else{
+				return model
+			}
+		}catch(Exception e){
+			throw new Exception("[ApiResponseService :: parseURIDefinitions] : Exception - full stack trace follows:",e)
+		}
+	}
+
+	Map parseResponseMethod(HttpServletRequest request, GrailsParameterMap params, LinkedHashMap result){
+		//println("#### [ParamsService : parseResponseMethods ] ####")
+
+		Map data = [:]
+		switch(request.method) {
+			case 'PURGE':
+				// cleans cache; disabled for now
+				break;
+			case 'TRACE':
+				break;
+			case 'HEAD':
+				break;
+			case 'OPTIONS':
+				LinkedHashMap doc = getApiDoc(params)
+				data = ['content':doc,'contentType':params.contentType,'encoding':params.encoding]
+				break;
+			case 'GET':
+			case 'PUT':
+			case 'POST':
+			case 'DELETE':
+				if(!result.isEmpty()){
+					String content
+					String encoding = (params.encoding)?params.encoding:"UTF-8"
+					switch(params.format){
+						case 'XML':
+							content = result as XML
+							break
+						case 'JSON':
+						default:
+							content = result as JSON
+					}
+
+					data = ['content':content,'contentType':params.contentType,'encoding':encoding]
+				}
+				break;
+		}
+
+		return ['apiToolkitContent':data.content,'apiToolkitType':data.contentType,'apiToolkitEncoding':data.encoding]
 	}
 
 	/*

@@ -1,7 +1,7 @@
 package net.nosegrind.apiframework.comm
 
-import net.nosegrind.apiframework.comm.ApiLayerService
-import net.nosegrind.apiframework.ParamsService
+import net.nosegrind.apiframework.comm.ApiLayer
+
 
 /* ****************************************************************************
  * Copyright 2014 Owen Rubel
@@ -16,15 +16,14 @@ import grails.web.servlet.mvc.GrailsParameterMap
 import javax.servlet.http.HttpServletRequest
 import net.nosegrind.apiframework.*
 
-class ApiRequestService extends ApiLayerService{
-
-	ParamsService paramsService
+class ApiRequestService extends ApiLayer{
 
 	static transactional = false
 	
 	boolean handleApiRequest(LinkedHashMap cache, HttpServletRequest request, GrailsParameterMap params){
+		//println("#### [ApiRequestService : handleApiRequest ] ####")
 		try{
-			setEnv()
+			//setEnv()
 			ApiStatuses error = new ApiStatuses()
 
 			// CHECK IF URI HAS CACHE

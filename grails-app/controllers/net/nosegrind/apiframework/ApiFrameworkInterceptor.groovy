@@ -1,6 +1,8 @@
 package net.nosegrind.apiframework
 
+import grails.core.GrailsApplication
 import grails.web.servlet.mvc.GrailsParameterMap
+import groovy.json.JsonSlurper
 import net.nosegrind.apiframework.comm.ApiRequestService
 import net.nosegrind.apiframework.comm.ApiResponseService
 import grails.util.Metadata
@@ -11,22 +13,21 @@ import org.springframework.web.context.request.ServletRequestAttributes
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
+import net.nosegrind.apiframework.Timer
 
 /* ****************************************************************************
  * Copyright 2014 Owen Rubel
  *****************************************************************************/
 
 
-class ApiFrameworkInterceptor{
+class ApiFrameworkInterceptor extends Params{
 
     int order = HIGHEST_PRECEDENCE + 999
 
-
+	GrailsApplication grailsApplication
 	ApiRequestService apiRequestService
 	ApiResponseService apiResponseService
 	ApiCacheService apiCacheService
-	ParamsService paramsService
-	String entryPoint
 
 	ApiFrameworkInterceptor(){
 		String apiVersion = Metadata.current.getApplicationVersion()
@@ -35,11 +36,11 @@ class ApiFrameworkInterceptor{
 	}
 
 	boolean before(){
-		println("##### FILTER (BEFORE)")
+		//println("##### FILTER (BEFORE)")
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 
-		paramsService.initParams(request,params)
+		initParams()
 
 		try{
 			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
@@ -47,16 +48,14 @@ class ApiFrameworkInterceptor{
 				LinkedHashMap cache = (params.controller)?apiCacheService.getApiCache(params.controller):[:]
 
 				if(cache){
-
 					params.apiObject = (params.apiObjectVersion)?params.apiObjectVersion:cache['currentStable']['value']
 
-					if(!paramsService.checkURIDefinitions(request,cache[params.apiObject][params.action]['receives'])){
+					if(!checkURIDefinitions(cache[params.apiObject][params.action]['receives'])){
 						// return bad status
 						HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getAttribute(RESPONSE_NAME_AT_ATTRIBUTES, RequestAttributes.SCOPE_REQUEST)
 						response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Expected request variables do not match sent variables")
 						return false
 					}
-
 
 					if(!params.action){ 
 						String methodAction = methods[request.method]
@@ -89,9 +88,10 @@ class ApiFrameworkInterceptor{
 	}
 
 	boolean after(){
-		println("##### FILTER (AFTER)")
+		//println("##### FILTER (AFTER)")
 		try{
 			Map newModel = [:]
+			Timer time = new Timer()
 
 			if (!model) {
 				render(status: HttpServletResponse.SC_BAD_REQUEST)
@@ -102,6 +102,7 @@ class ApiFrameworkInterceptor{
 
 			LinkedHashMap cache = apiCacheService.getApiCache(params?.controller)
 			LinkedHashMap content = apiResponseService.handleApiResponse(cache,request,response,newModel,params)
+
 			if(content){
 				render(text:content.apiToolkitContent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)
 				return false
@@ -114,5 +115,6 @@ class ApiFrameworkInterceptor{
 	   }
 
 	}
+
 }
 

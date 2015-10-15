@@ -1,6 +1,5 @@
 package net.nosegrind.apiframework
 
-import net.nosegrind.apiframework.comm.ApiLayerService
 
 /* ****************************************************************************
  * Copyright 2014 Owen Rubel
@@ -9,13 +8,16 @@ import grails.core.GrailsApplication
 
 //import grails.plugin.springsecurity.SpringSecurityService
 import org.grails.groovy.grails.commons.*
-import grails.web.servlet.mvc.GrailsParameterMap;
+import grails.web.servlet.mvc.GrailsParameterMap
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
+
+import javax.servlet.http.HttpServletRequest;
 
 class ApiDomainService{
 
 	GrailsApplication grailsApplication
 	//SpringSecurityService springSecurityService
-	ApiLayerService apiLayerService
 
 	static transactional = false
 	
@@ -37,8 +39,8 @@ class ApiDomainService{
 		}catch(Exception e){
 			log.error("[ApiDomainService :: createInstance] : Could not find domain package '${domainPackage}' - full stack trace follows:", e);
 		}
-		def request = apiLayerService.getRequest()
-		def apiParams = apiLayerService.getApiObjectParams(request,cache[params.apiObject][params.action]['receives'])
+		def request = getRequest()
+		def apiParams = getApiObjectParams(request,cache[params.apiObject][params.action]['receives'])
 
 		def domainInstance = domain.newInstance()
 		apiParams.each{ k,v ->
@@ -67,8 +69,8 @@ class ApiDomainService{
 		}catch(Exception e){
 			log.error("[ApiDomainService :: updateInstance] : Could not find domain package '${domainPackage}' - full stack trace follows:", e);
 		}
-		def request = apiLayerService.getRequest()
-		def apiParams = apiLayerService.getApiObjectParams(request,cache[params.apiObject][params.action]['receives'])
+		def request = getRequest()
+		def apiParams = getApiObjectParams(request,cache[params.apiObject][params.action]['receives'])
 
 		def domainInstance
 		def pkeys = apiParams.collect(){ if(it.value == 'PKEY'){ it.key } }
@@ -99,8 +101,8 @@ class ApiDomainService{
 	String deleteInstance(LinkedHashMap cache, GrailsParameterMap params){
 		def domainInstance
 		try{
-			def request = apiLayerService.getRequest()
-			def apiParams = apiLayerService.getApiObjectParams(request,cache[params.apiObject][params.action]['receives'])
+			def request = getRequest()
+			def apiParams = getApiObjectParams(request,cache[params.apiObject][params.action]['receives'])
 			def pkeys = apiParams.collect(){ if(it.value == 'PKEY'){ it.key } }
 			try{
 				if(pkeys.contains('id')){
@@ -117,6 +119,32 @@ class ApiDomainService{
 			}
 		}catch(Exception e){
 			log.error("[ApiDomainService :: deleteInstance] : Could not find domain - full stack trace follows:", e);
+		}
+	}
+
+	private HttpServletRequest getRequest(){
+		//return RCH.currentRequestAttributes().currentRequest
+		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest()
+		return request
+	}
+
+	LinkedHashMap getApiObjectParams(HttpServletRequest request, LinkedHashMap definitions){
+		//println("#### [ParamsService : getApiObjectParams ] ####")
+		try{
+			LinkedHashMap apiList = [:]
+			definitions.each{ key,val ->
+				if(request.isUserInRole(key) || key=='permitAll'){
+					val.each{ it ->
+						if(it){
+							apiList[it.name] = it.paramType
+						}
+					}
+				}
+			}
+			return apiList
+		}catch(Exception e){
+			//throw new Exception("[ParamsService :: getApiObjectParams] : Exception - full stack trace follows:",e)
+			println("[ParamsService :: getApiObjectParams] : Exception - full stack trace follows:"+e)
 		}
 	}
 }

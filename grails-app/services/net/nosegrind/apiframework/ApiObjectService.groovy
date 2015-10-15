@@ -1,7 +1,5 @@
 package net.nosegrind.apiframework
 
-import net.nosegrind.apiframework.comm.ApiLayerService
-
 /* ****************************************************************************
  * Copyright 2014 Owen Rubel
  *****************************************************************************/
@@ -25,7 +23,6 @@ class ApiObjectService{
 
 	GrailsApplication grailsApplication
 	//SpringSecurityService springSecurityService
-	ApiLayerService apiLayerService
 	//ApiToolkitService apiToolkitService
 	//GrailsCacheManager grailsCacheManager
 	//CacheManager cacheManager

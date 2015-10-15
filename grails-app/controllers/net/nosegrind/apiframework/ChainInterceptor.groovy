@@ -31,7 +31,7 @@ import static grails.artefact.controller.support.RequestForwarder$Trait$Helper.f
 
 
 //class ChainInterceptor implements GrailsConfigurationAware{
-class ChainInterceptor{
+class ChainInterceptor extends Params{
 
     int order = HIGHEST_PRECEDENCE + 997
 	

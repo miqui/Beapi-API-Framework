@@ -2,6 +2,7 @@ package net.nosegrind.apiframework
 
 import grails.config.Config
 import grails.core.support.GrailsConfigurationAware
+import grails.util.Metadata
 import net.nosegrind.apiframework.comm.ApiRequestService
 import net.nosegrind.apiframework.comm.ApiResponseService
 
@@ -27,7 +28,7 @@ import javax.servlet.http.HttpServletResponse
  *****************************************************************************/
 
 
-class DomainInterceptor implements GrailsConfigurationAware{
+class DomainInterceptor extends Params{
 
     int order = HIGHEST_PRECEDENCE + 999
 
@@ -37,15 +38,14 @@ class DomainInterceptor implements GrailsConfigurationAware{
 	ApiDomainService apiDomainService
 	ApiCacheService apiCacheService
 
-
-	String apiName
     String entryPoint
 
-	void setConfiguration(Config cfg) {
-		String apiVersion = cfg.info.app.version
-		this.entryPoint = "d${apiVersion}"
-		match(uri:"/${this.entryPoint}/**")
+	DomainInterceptor(){
+		String apiVersion = Metadata.current.getApplicationVersion()
+		entryPoint = "d${apiVersion}"
+		match(uri:"/${entryPoint}/**")
 	}
+
 
 	boolean before(){
 		println("##### DOMAININTERCEPTOR (BEFORE)")

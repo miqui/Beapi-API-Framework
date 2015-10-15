@@ -39,10 +39,12 @@ class ApiCacheService{
 	//ApiToolkitService apiToolkitService
 	GrailsCacheManager grailsCacheManager
 	//CacheManager cacheManager
+
 	
 	/*
 	 * Only flush on RESTART.
 	 * DO NOT flush while LIVE!!!
+	 * Need to lock this down to avoid process calling this.
 	 */
 	void flushAllApiCache(){
 		grailsApplication?.controllerClasses?.each { controllerClass ->
@@ -135,7 +137,7 @@ class ApiCacheService{
 						doc['returns']["$returnVal.key"] = returnVal.value
 					}
 					doc['json'] = [:]
-					doc['json'] = apiLayerService.processJson(doc["returns"])
+					doc['json'] = processJson(doc["returns"])
 				}
 				
 				//if(cont["${actionname}"]["${apiversion}"]["errorcodes"]){
@@ -168,5 +170,51 @@ class ApiCacheService{
 		cacheNames = grailsCacheManager?.getCache('ApiCache')?.getAllKeys() as List
 		return cacheNames
 
+	}
+
+	/*
+* TODO: Need to compare multiple authorities
+*/
+	private String processJson(LinkedHashMap returns){
+		//println("#### [ParamsService : processJson ] ####")
+		try{
+			LinkedHashMap json = [:]
+			returns.each{ p ->
+				p.value.each{ it ->
+					if(it) {
+						ParamsDescriptor paramDesc = it
+
+						LinkedHashMap j = [:]
+						if (paramDesc?.values) {
+							j["$paramDesc.name"] = []
+						} else {
+							String dataName = (['PKEY', 'FKEY', 'INDEX'].contains(paramDesc?.paramType?.toString())) ? 'ID' : paramDesc.paramType
+							j = (paramDesc?.mockData?.trim()) ? ["$paramDesc.name": "$paramDesc.mockData"] : ["$paramDesc.name": "$dataName"]
+						}
+						j.each() { key, val ->
+							if (val instanceof List) {
+								def child = [:]
+								val.each() { it2 ->
+									it2.each() { key2, val2 ->
+										child[key2] = val2
+									}
+								}
+								json[key] = child
+							} else {
+								json[key] = val
+							}
+						}
+					}
+				}
+			}
+
+			String jsonReturn
+			if(json){
+				jsonReturn = json as JSON
+			}
+			return jsonReturn
+		}catch(Exception e){
+			throw new Exception("[ApiLayerService :: processJson] : Exception - full stack trace follows:",e)
+		}
 	}
 }
