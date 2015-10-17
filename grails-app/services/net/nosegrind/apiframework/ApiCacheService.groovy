@@ -28,6 +28,10 @@ import net.nosegrind.apiframework.ApiDescriptor
 
 import net.nosegrind.apiframework.*
 
+import static groovyx.gpars.GParsPool.withPool
+import static groovyx.gpars.GParsPool.withPool
+import static groovyx.gpars.GParsPool.withPool
+
 class ApiCacheService{
 
 	static transactional = false
@@ -173,10 +177,10 @@ class ApiCacheService{
 	}
 
 	/*
-* TODO: Need to compare multiple authorities
-*/
+ * TODO: Need to compare multiple authorities
+ */
 	private String processJson(LinkedHashMap returns){
-		//println("#### [ParamsService : processJson ] ####")
+		println("#### [ParamsService : processJson ] ####")
 		try{
 			LinkedHashMap json = [:]
 			returns.each{ p ->
@@ -191,17 +195,23 @@ class ApiCacheService{
 							String dataName = (['PKEY', 'FKEY', 'INDEX'].contains(paramDesc?.paramType?.toString())) ? 'ID' : paramDesc.paramType
 							j = (paramDesc?.mockData?.trim()) ? ["$paramDesc.name": "$paramDesc.mockData"] : ["$paramDesc.name": "$dataName"]
 						}
-						j.each() { key, val ->
-							if (val instanceof List) {
-								def child = [:]
-								val.each() { it2 ->
-									it2.each() { key2, val2 ->
-										child[key2] = val2
+						withPool(8) {
+							j.eachParallel { key, val ->
+								if (val instanceof List) {
+									def child = [:]
+									withPool(8) {
+										val.eachParallel { it2 ->
+											withPool(8) {
+												it2.eachParallel { key2, val2 ->
+													child[key2] = val2
+												}
+											}
+										}
 									}
+									json[key] = child
+								} else {
+									json[key] = val
 								}
-								json[key] = child
-							} else {
-								json[key] = val
 							}
 						}
 					}

@@ -6,7 +6,7 @@ package net.nosegrind.apiframework
  * Copyright 2014 Owen Rubel
  *****************************************************************************/
 
-
+import static groovyx.gpars.GParsPool.withPool
 import grails.converters.JSON
 import grails.converters.XML
 
@@ -19,21 +19,10 @@ import org.grails.groovy.grails.commons.*
 
 abstract class Params{
 
-
-    String entryPoint
-    boolean chain = true
-    boolean batch = true
-    boolean localauth = true
-
     def formats = ['text/html','text/json','application/json','text/xml','application/xml']
     List optionalParams = ['method','format','contentType','encoding','action','controller','v','apiCombine', 'apiObject']
 
-
     void initParams() {
-        batch = grailsApplication.config.apitoolkit.batching.enabled
-        chain = grailsApplication.config.apitoolkit.chaining.enabled
-        localauth = grailsApplication.config.apitoolkit.localauth.enabled
-
         //println("#### [ParamsService : initParams ] ####")
         params.method = request.method
         List tempType = request.getHeader('Content-Type')?.split(';')
@@ -43,7 +32,7 @@ abstract class Params{
         //String queryString = request.getQueryString()
         params.format = request.format
 
-        if (params?.format) {
+        if (request?."${params.format}") {
             LinkedHashMap content = [:]
             switch (params.format) {
                 case 'XML':
@@ -56,18 +45,17 @@ abstract class Params{
                 case 'JSON':
                     String json = request."${params.format}".toString()
                     def slurper = new JsonSlurper()
-                    slurper.parseText(json).each(){ k,v ->
-                        params.put(k, v)
+
+                    withPool{
+                        slurper.parseText(json).eachParallel { k, v ->
+                            params.put(k, v)
+                        }
                     }
                     break
                 default:
                     break
             }
-/*
-            content.each() { k, v ->
-                params.put(k, v)
-            }
-            */
+
         }
 
     }
@@ -109,21 +97,22 @@ abstract class Params{
 
     List getApiParams(LinkedHashMap definitions){
         //println("#### [ParamsService : getApiParams ] ####")
-        try{
+        //try{
             List apiList = []
-            definitions.each{ key,val ->
-                if(request.isUserInRole(key) || key=='permitAll'){
-                    val.each{ it ->
-                        if(it){
-                            apiList.add(it.name)
+            definitions.each(){ key, val ->
+                if (request.isUserInRole(key) || key == 'permitAll') {
+                    val.each(){ it2 ->
+                        if (it2) {
+                            apiList.add(it2.name)
                         }
                     }
                 }
             }
+
             return apiList
-        }catch(Exception e){
-            throw new Exception("[ParamsService :: getApiParams] : Exception - full stack trace follows:",e)
-        }
+        //}catch(Exception e){
+        //    throw new Exception("[ParamsService :: getApiParams] : Exception - full stack trace follows:",e)
+        //}
     }
 
     boolean checkURIDefinitions(LinkedHashMap requestDefinitions){
@@ -131,10 +120,12 @@ abstract class Params{
         // put in check to see if if app.properties allow for this check
         try{
             List requestList = getApiParams(requestDefinitions)
-            HashMap params = getMethodParams()
+            HashMap methodParams = getMethodParams()
 
             //GrailsParameterMap params = RCH.currentRequestAttributes().params
-            List paramsList = params."${request.method.toLowerCase()}".keySet() as List
+            //println(request.method)
+            //println(methodParams)
+            List paramsList = methodParams."${request.method.toLowerCase()}".keySet() as List
 
             paramsList.removeAll(optionalParams)
             if(paramsList.containsAll(requestList)){
@@ -160,9 +151,10 @@ abstract class Params{
     HashMap getMethodParams(){
         //println("#### [ParamsService : getMethodParams ] ####")
         try{
-            Map paramsRequest = params.findAll {
-                return !optionalParams.contains(it.key)
-            }
+            Map paramsRequest = [:]
+            //withPool(4) {
+                paramsRequest = params.findAll { it2 -> !optionalParams.contains(it2.key) }
+            //}
             Map paramsGet = [:]
             Map paramsPost = [:]
 
@@ -275,7 +267,7 @@ abstract class Params{
  * TODO: Need to compare multiple authorities
  */
     private String processJson(LinkedHashMap returns){
-        //println("#### [ParamsService : processJson ] ####")
+        println("#### [ParamsService : processJson ] ####")
         try{
             LinkedHashMap json = [:]
             returns.each{ p ->
@@ -290,17 +282,23 @@ abstract class Params{
                             String dataName = (['PKEY', 'FKEY', 'INDEX'].contains(paramDesc?.paramType?.toString())) ? 'ID' : paramDesc.paramType
                             j = (paramDesc?.mockData?.trim()) ? ["$paramDesc.name": "$paramDesc.mockData"] : ["$paramDesc.name": "$dataName"]
                         }
-                        j.each() { key, val ->
-                            if (val instanceof List) {
-                                def child = [:]
-                                val.each() { it2 ->
-                                    it2.each() { key2, val2 ->
-                                        child[key2] = val2
+                        withPool(20) {
+                            j.eachParallel { key, val ->
+                                if (val instanceof List) {
+                                    def child = [:]
+                                    withExistingPool {
+                                        val.eachParallel { it2 ->
+                                            withExistingPool {
+                                                it2.eachParallel { key2, val2 ->
+                                                    child[key2] = val2
+                                                }
+                                            }
+                                        }
                                     }
+                                    json[key] = child
+                                } else {
+                                    json[key] = val
                                 }
-                                json[key] = child
-                            } else {
-                                json[key] = val
                             }
                         }
                     }

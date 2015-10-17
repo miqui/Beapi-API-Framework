@@ -63,6 +63,17 @@ class GrailsApiFrameworkGrailsPlugin extends Plugin{
 		writeFile("templates/domains/Hook.groovy.template","${basedir}/grails-app/domain/Hook.groovy")
 		writeFile("templates/domains/HookRole.groovy.template","${basedir}/grails-app/domain/HookRole.groovy")
 		writeFile("templates/domains/Role.groovy.template","${basedir}/grails-app/domain/Role.groovy")
+
+
+        final String isBatchServer = grailsApplication.config.apitoolkit.batching.enabled
+        final String isChainServer = grailsApplication.config.apitoolkit.chaining.enabled
+        //final String isLocalAuth = (String)grailsApplication.config.apitoolkit.localauth.enabled
+
+
+        System.setProperty('isBatchServer', isBatchServer)
+        System.setProperty('isChainServer', isChainServer)
+        //System.setProperty('isLocalAuth', isLocalAuth)
+
 	}
 	
     void onChange(Map<String, Object> event) {
@@ -79,7 +90,7 @@ class GrailsApiFrameworkGrailsPlugin extends Plugin{
     void onShutdown(Map<String, Object> event) {
         // TODO Implement code that is executed when the application shuts down (optional)
     }
-	
+
 	void writeFile(String inPath, String outPath){
 		String pluginDir = new File(getClass().protectionDomain.codeSource.location.path).path
 		def plugin = new File(pluginDir)

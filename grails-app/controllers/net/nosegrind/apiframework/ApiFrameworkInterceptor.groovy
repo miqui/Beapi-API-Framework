@@ -28,6 +28,7 @@ class ApiFrameworkInterceptor extends Params{
 	ApiRequestService apiRequestService
 	ApiResponseService apiResponseService
 	ApiCacheService apiCacheService
+	String entryPoint
 
 	ApiFrameworkInterceptor(){
 		String apiVersion = Metadata.current.getApplicationVersion()
@@ -91,7 +92,6 @@ class ApiFrameworkInterceptor extends Params{
 		//println("##### FILTER (AFTER)")
 		try{
 			Map newModel = [:]
-			Timer time = new Timer()
 
 			if (!model) {
 				render(status: HttpServletResponse.SC_BAD_REQUEST)
