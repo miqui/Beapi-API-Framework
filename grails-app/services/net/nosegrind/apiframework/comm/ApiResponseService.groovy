@@ -28,26 +28,26 @@ import grails.core.GrailsApplication
 import net.nosegrind.apiframework.*
 import net.nosegrind.apiframework.Timer
 
-import static groovyx.gpars.GParsPool.withPool
-
 class ApiResponseService extends ApiLayer{
 
 	GrailsApplication grailsApplication
+	ApiCacheService apiCacheService
 
-	def handleApiResponse(LinkedHashMap cache, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
+	def handleApiResponse(HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
 		//println("#### [ApiResponseService : handleApiResponse ] ####")
 
 		try{
+			LinkedHashMap cache = apiCacheService.getApiCache(params?.controller)
 			if(cache){
 				if(cache[params.apiObject][params.action]){
 					// make 'application/json' default
 
 					if(params.contentType){
-							response.setHeader('Authorization', cache[params.apiObject][params.action]['roles'].join(', '))
-							List responseList = getApiParams(request,cache[params.apiObject][params.action]['returns'])
-							LinkedHashMap result = parseURIDefinitions(model,responseList)
-							Map content = parseResponseMethod(request, params, result)
-							return content
+						response.setHeader('Authorization', cache[params.apiObject][params.action]['roles'].join(', '))
+						List responseList = getApiParams(request,cache[params.apiObject][params.action]['returns'])
+						LinkedHashMap result = parseURIDefinitions(model,responseList)
+						LinkedHashMap content = parseResponseMethod(request, params, result)
+						return content
 					}
 				}else{
 					//return true
@@ -60,5 +60,4 @@ class ApiResponseService extends ApiLayer{
 		}
 
 	}
-
 }
