@@ -98,18 +98,18 @@ abstract class Params{
     List getApiParams(LinkedHashMap definitions){
         //println("#### [ParamsService : getApiParams ] ####")
         //try{
-            List apiList = []
-            definitions.each(){ key, val ->
-                if (request.isUserInRole(key) || key == 'permitAll') {
-                    val.each(){ it2 ->
-                        if (it2) {
-                            apiList.add(it2.name)
-                        }
+        List apiList = []
+        definitions.each(){ key, val ->
+            if (request.isUserInRole(key) || key == 'permitAll') {
+                val.each(){ it2 ->
+                    if (it2) {
+                        apiList.add(it2.name)
                     }
                 }
             }
+        }
 
-            return apiList
+        return apiList
         //}catch(Exception e){
         //    throw new Exception("[ParamsService :: getApiParams] : Exception - full stack trace follows:",e)
         //}
@@ -153,7 +153,7 @@ abstract class Params{
         try{
             Map paramsRequest = [:]
             //withPool(4) {
-                paramsRequest = params.findAll { it2 -> !optionalParams.contains(it2.key) }
+            paramsRequest = params.findAll { it2 -> !optionalParams.contains(it2.key) }
             //}
             Map paramsGet = [:]
             Map paramsPost = [:]
@@ -282,7 +282,7 @@ abstract class Params{
                             String dataName = (['PKEY', 'FKEY', 'INDEX'].contains(paramDesc?.paramType?.toString())) ? 'ID' : paramDesc.paramType
                             j = (paramDesc?.mockData?.trim()) ? ["$paramDesc.name": "$paramDesc.mockData"] : ["$paramDesc.name": "$dataName"]
                         }
-                        withPool(20) {
+                        withPool {
                             j.eachParallel { key, val ->
                                 if (val instanceof List) {
                                     def child = [:]

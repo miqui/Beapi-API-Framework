@@ -30,7 +30,7 @@ import org.springframework.web.context.request.RequestContextHolder as RCH
 import org.springframework.web.context.request.ServletRequestAttributes
 import net.nosegrind.apiframework.*
 import static groovyx.gpars.GParsPool.withPool
-
+import java.util.concurrent.ForkJoinPool
 
 abstract class ApiLayer{
 
@@ -43,12 +43,12 @@ abstract class ApiLayer{
 
 	ApiStatuses errors = new ApiStatuses()
 
-	
+
 	private HttpServletRequest getRequest(){
 		HttpServletRequest request = ((ServletRequestAttributes) RCH.currentRequestAttributes()).getRequest()
 		return request
 	}
-	
+
 	private HttpServletResponse getResponse(){
 		HttpServletResponse response = ((ServletRequestAttributes) RCH.getRequestAttributes()).getAttribute(RESPONSE_NAME_AT_ATTRIBUTES, RequestAttributes.SCOPE_REQUEST)
 		return response
@@ -56,53 +56,58 @@ abstract class ApiLayer{
 
 	List getApiParams(HttpServletRequest request,LinkedHashMap definitions){
 		//println("#### [ApiLayer : getApiParams ] ####")
-		try{
-			List apiList = []
-			definitions.each() { key,val ->
-					if (request.isUserInRole(key) || key == 'permitAll') {
-							val.each(){ it4 ->
-								apiList.add(it4.name)
-							}
-					}
+		//try{
+		List apiList = []
+		definitions.each() { it2 ->
+			if (request.isUserInRole(it2.key) || it2.key == 'permitAll') {
+				//withPool {
+				it2.value.each() { it4 ->
+					apiList.add(it4.name)
+				}
+				//}
 			}
-
-			return apiList
-		}catch(Exception e){
-			throw new Exception("[ApiLayer :: getApiParams] : Exception - full stack trace follows:",e)
 		}
+
+
+		return apiList
+		//}catch(Exception e){
+		//	throw new Exception("[ApiLayer :: getApiParams] : Exception - full stack trace follows:",e)
+		//}
 	}
 
 	LinkedHashMap parseURIDefinitions(LinkedHashMap model,List responseList){
 		//println("#### [ApiLayer : parseURIDefinitions ] ####")
-		try{
-			ApiStatuses errors = new ApiStatuses()
-			String msg = 'Error. Invalid variables being returned. Please see your administrator'
+		//try{
+		ApiStatuses errors = new ApiStatuses()
+		String msg = 'Error. Invalid variables being returned. Please see your administrator'
 
-			List paramsList = model.keySet() as List
-			paramsList.removeAll(optionalParams)
-			if(!responseList.containsAll(paramsList)){
-				paramsList.removeAll(responseList)
-				paramsList.each(){ it ->
-					model.remove("${it}".toString())
-				}
-				if(!paramsList){
-					errors._400_BAD_REQUEST(msg).send()
-					return [:]
-				}else{
-					return model
-				}
+		List paramsList = model.keySet() as List
+		paramsList.removeAll(optionalParams)
+		if(!responseList.containsAll(paramsList)){
+			paramsList.removeAll(responseList)
+			//withPool {
+			paramsList.each() { it2 ->
+				model.remove("${it2}".toString())
+			}
+			//}
+			if(!paramsList){
+				errors._400_BAD_REQUEST(msg).send()
+				return [:]
 			}else{
 				return model
 			}
-		}catch(Exception e){
-			throw new Exception("[ApiLayer :: parseURIDefinitions] : Exception - full stack trace follows:",e)
+		}else{
+			return model
 		}
+		//}catch(Exception e){
+		//	throw new Exception("[ApiLayer :: parseURIDefinitions] : Exception - full stack trace follows:",e)
+		//}
 	}
 
-	Map parseResponseMethod(HttpServletRequest request, GrailsParameterMap params, LinkedHashMap result){
+	LinkedHashMap parseResponseMethod(HttpServletRequest request, GrailsParameterMap params, LinkedHashMap result){
 		//println("#### [ApiLayer : parseResponseMethods ] ####")
 
-		Map data = [:]
+		LinkedHashMap data = [:]
 		switch(request.method) {
 			case 'PURGE':
 				// cleans cache; disabled for now
@@ -217,9 +222,9 @@ abstract class ApiLayer{
 			throw new Exception("[ApiLayer :: checkDeprecationDate] : Exception - full stack trace follows:",e)
 		}
 	}
-	
 
-	
+
+
 	/*
 	private ArrayList processDocErrorCodes(HashSet error){
 		try{
@@ -235,7 +240,7 @@ abstract class ApiLayer{
 		}
 	}
 	*/
-	
+
 	// api call now needs to detect request method and see if it matches anno request method
 	boolean isApiCall(){
 		try{
@@ -253,7 +258,7 @@ abstract class ApiLayer{
 			throw new Exception("[ApiLayerService :: isApiCall] : Exception - full stack trace follows:",e)
 		}
 	}
-	
+
 	protected void setParams(HttpServletRequest request,GrailsParameterMap params){
 		try{
 			String type = params.format
@@ -264,7 +269,7 @@ abstract class ApiLayer{
 			throw new Exception("[ApiLayerService :: setParams] : Exception - full stack trace follows:",e)
 		}
 	}
-	
+
 	/*
 	 * Returns chainType
 	 * 0 = blankchain
@@ -291,7 +296,7 @@ abstract class ApiLayer{
 			println("currentMethod:"+currentMethod)
 			String methods = cache[params.apiObject][action]['method'].trim()
 			println("methods:"+methods)
-			
+
 			if(currentMethod!=methods && methods=='GET'){
 				if(['prechain','postchain'].contains(params?.apiChain?.type)){
 					preMatch = true
@@ -302,7 +307,7 @@ abstract class ApiLayer{
 				}
 			}
 
-		
+
 			// postmatch check
 			if(pathSize>=1){
 				println("pathSize>=1")
@@ -442,11 +447,11 @@ abstract class ApiLayer{
 */
 
 
-	Map convertModel(Map map){
+	LinkedHashMap convertModel(Map map){
 		//println("#### [ApiResponseService : convertModel ] ####")
 
 		try{
-			Map newMap = [:]
+			LinkedHashMap newMap = [:]
 			String k = map.entrySet().toList().first().key
 			if(map && (!map?.response && !map?.metaClass && !map?.params)){
 				if(grailsApplication.isDomainClass(map[k].getClass())){
@@ -466,34 +471,33 @@ abstract class ApiLayer{
 		}
 	}
 
-	Map formatDomainObject(Object data){
+	LinkedHashMap formatDomainObject(Object data){
 		//println("#### [ApiResponseService : formatDomainObject ] ####")
-		try{
-			List nonPersistent = ['log', 'class', 'constraints', 'properties', 'errors', 'mapping', 'metaClass','maps']
-			Map newMap = [:]
+		//try{
+		List nonPersistent = ['log', 'class', 'constraints', 'properties', 'errors', 'mapping', 'metaClass','maps']
+		LinkedHashMap newMap = [:]
 
-			newMap.put('id',data?.id)
-			newMap.put('version',data?.version)
+		newMap.put('id',data?.id)
+		newMap.put('version',data?.version)
 
-			data.properties.each() { key, val ->
-				if (!nonPersistent.contains(key)) {
-					// no lazy mapping
-					newMap[key] = (grailsApplication.isDomainClass(val.getClass())) ? val.id : val
-				}
+		data.properties.each() { it ->
+			if (!nonPersistent.contains(it.key)) {
+				// no lazy mapping
+				newMap[it.key] = (grailsApplication.isDomainClass(it.value.getClass())) ? it.value.id : it.value
 			}
-
-
-			return newMap
-		}catch(Exception e){
-			throw new Exception("[ApiResponseService :: formatDomainObject] : Exception - full stack trace follows:",e)
 		}
+
+
+		return newMap
+		//}catch(Exception e){
+		//	throw new Exception("[ApiResponseService :: formatDomainObject] : Exception - full stack trace follows:",e)
+		//}
 	}
 
 
-
-	Map formatList(List list){
+	LinkedHashMap formatList(List list){
 		//println("#### [ApiResponseService : formatList ] ####")
-		Map newMap = [:]
+		LinkedHashMap newMap = [:]
 		list.eachWithIndex(){ val, key ->
 			if(val){
 				if(grailsApplication.isDomainClass(val.getClass())){
@@ -506,19 +510,18 @@ abstract class ApiLayer{
 		return newMap
 	}
 
-	Map formatMap(Map map) {
+	LinkedHashMap formatMap(Map map) {
 		//println("#### [ApiResponseService : formatMap ] ####")
-		Map newMap = [:]
+		LinkedHashMap newMap = [:]
 
-		withPool {
-			map.eachParallel { key, val ->
-				if(grailsApplication.isDomainClass(val.getClass())){
-					newMap[key]=formatDomainObject(val)
-				}else{
-					newMap[key] = ((val in java.util.ArrayList || val in java.util.List) || val in java.util.Map)?val:val.toString()
-				}
+		map.each(){ key, val ->
+			if(grailsApplication.isDomainClass(val.getClass())){
+				newMap[key]=formatDomainObject(val)
+			}else{
+				newMap[key] = ((val in java.util.ArrayList || val in java.util.List) || val in java.util.Map)?val:val.toString()
 			}
 		}
+
 
 		return newMap
 	}
