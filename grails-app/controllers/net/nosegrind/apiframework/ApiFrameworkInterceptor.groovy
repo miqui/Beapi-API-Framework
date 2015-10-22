@@ -13,14 +13,14 @@ import org.springframework.web.context.request.ServletRequestAttributes
 
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-
+import groovy.transform.CompileStatic
 import net.nosegrind.apiframework.Timer
 
 /* ****************************************************************************
  * Copyright 2014 Owen Rubel
  *****************************************************************************/
 
-
+@CompileStatic
 class ApiFrameworkInterceptor extends Params{
 
 	int order = HIGHEST_PRECEDENCE + 999
@@ -47,14 +47,20 @@ class ApiFrameworkInterceptor extends Params{
 		try{
 			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
 
-			LinkedHashMap cache = (params.controller)?apiCacheService.getApiCache(params.controller):[:]
+			LinkedHashMap cache = [:]
+			if(params.controller){
+				cache = apiCacheService.getApiCache(params.controller.toString())
+			}
 
 			if(cache){
 				params.apiObject = (params.apiObjectVersion)?params.apiObjectVersion:cache['currentStable']['value']
-
-				if(!checkURIDefinitions(cache[params.apiObject][params.action]['receives'])){
+				LinkedHashMap receives = cache[params.apiObject.toString()][params.action.toString()]['receives'] as LinkedHashMap
+				boolean requestKeysMatch = checkURIDefinitions(receives)
+				if(!requestKeysMatch){
 					// return bad status
-					HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getAttribute(RESPONSE_NAME_AT_ATTRIBUTES, RequestAttributes.SCOPE_REQUEST)
+
+					HttpServletResponse response = getResponse()
+					//HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getAttribute(RESPONSE_NAME_AT_ATTRIBUTES, RequestAttributes.SCOPE_REQUEST)
 					response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Expected request variables do not match sent variables")
 					return false
 				}
@@ -67,7 +73,7 @@ class ApiFrameworkInterceptor extends Params{
 						params.action = methods[request.method]
 
 						// FORWARD FOR REST DEFAULTS WITH NO ACTION
-						List tempUri = request.getRequestURI().split("/")
+						String[] tempUri = request.getRequestURI().split("/")
 						if(tempUri[2].contains('dispatch') && "${params.controller}.dispatch" == tempUri[2] && !cache[params.apiObject]['domainPackage']){
 							forward(controller:params.controller,action:params.action,params:params)
 							return false
@@ -102,7 +108,7 @@ class ApiFrameworkInterceptor extends Params{
 			}
 
 
-			LinkedHashMap content = apiResponseService.handleApiResponse(request,response,newModel,params)
+			LinkedHashMap content = apiResponseService.handleApiResponse(request,response,newModel,params) as LinkedHashMap
 
 			if(content){
 				render(text:content.apiToolkitContent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)
