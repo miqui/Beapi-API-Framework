@@ -10,7 +10,7 @@ import grails.util.Metadata
 import org.springframework.web.context.request.RequestAttributes
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
-
+import net.nosegrind.apiframework.ApiDescriptor
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import groovy.transform.CompileStatic
@@ -47,44 +47,44 @@ class ApiFrameworkInterceptor extends Params{
 		try{
 			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
 
-			LinkedHashMap cache = [:]
-			if(params.controller){
-				cache = apiCacheService.getApiCache(params.controller.toString())
-			}
-
-			if(cache){
-				params.apiObject = (params.apiObjectVersion)?params.apiObjectVersion:cache['currentStable']['value']
-				LinkedHashMap receives = cache[params.apiObject.toString()][params.action.toString()]['receives'] as LinkedHashMap
-				boolean requestKeysMatch = checkURIDefinitions(receives)
-				if(!requestKeysMatch){
-					// return bad status
-
-					HttpServletResponse response = getResponse()
-					//HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getAttribute(RESPONSE_NAME_AT_ATTRIBUTES, RequestAttributes.SCOPE_REQUEST)
-					response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Expected request variables do not match sent variables")
-					return false
+				LinkedHashMap cache = [:]
+				if(params.controller){
+					cache = apiCacheService.getApiCache(params.controller.toString())
 				}
 
-				if(!params.action){
-					String methodAction = methods[request.method]
-					if(!cache[params.apiObject][methodAction]){
-						params.action = cache[params.apiObject]['defaultAction']
-					}else{
-						params.action = methods[request.method]
+				if(cache){
+					params.apiObject = (params.apiObjectVersion)?params.apiObjectVersion:cache['currentStable']['value']
+					LinkedHashMap receives = cache[params.apiObject.toString()][params.action.toString()]['receives'] as LinkedHashMap
+					boolean requestKeysMatch = checkURIDefinitions(receives)
+					if(!requestKeysMatch){
+						// return bad status
 
-						// FORWARD FOR REST DEFAULTS WITH NO ACTION
-						String[] tempUri = request.getRequestURI().split("/")
-						if(tempUri[2].contains('dispatch') && "${params.controller}.dispatch" == tempUri[2] && !cache[params.apiObject]['domainPackage']){
-							forward(controller:params.controller,action:params.action,params:params)
-							return false
+						HttpServletResponse response = getResponse()
+						//HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getAttribute(RESPONSE_NAME_AT_ATTRIBUTES, RequestAttributes.SCOPE_REQUEST)
+						response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Expected request variables do not match sent variables")
+						return false
+					}
+
+					if(!params.action){
+						String methodAction = methods[request.method]
+						if(!cache[params.apiObject][methodAction]){
+							params.action = cache[params.apiObject]['defaultAction']
+						}else{
+							params.action = methods[request.method]
+
+							// FORWARD FOR REST DEFAULTS WITH NO ACTION
+							String[] tempUri = request.getRequestURI().split("/")
+							if(tempUri[2].contains('dispatch') && "${params.controller}.dispatch" == tempUri[2] && !cache[params.apiObject]['domainPackage']){
+								forward(controller:params.controller,action:params.action,params:params)
+								return false
+							}
 						}
 					}
-				}
 
-				// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
-				boolean result = apiRequestService.handleApiRequest(cache,request,params)
-				return result
-			}
+					// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
+					boolean result = apiRequestService.handleApiRequest(cache[params.apiObject.toString()][params.action.toString()],request,params)
+					return result
+				}
 			//}
 
 			return false
@@ -107,8 +107,8 @@ class ApiFrameworkInterceptor extends Params{
 				newModel = apiResponseService.convertModel(model)
 			}
 
-
-			LinkedHashMap content = apiResponseService.handleApiResponse(request,response,newModel,params) as LinkedHashMap
+			LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
+			LinkedHashMap content = apiResponseService.handleApiResponse(cache[params.apiObject.toString()][params.action.toString()],request,response,newModel,params) as LinkedHashMap
 
 			if(content){
 				render(text:content.apiToolkitContent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)

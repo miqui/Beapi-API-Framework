@@ -23,7 +23,7 @@ import org.grails.web.util.GrailsApplicationAttributes
 
 import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.HttpServletRequest
-
+import net.nosegrind.apiframework.ApiDescriptor
 import grails.core.GrailsApplication
 import net.nosegrind.apiframework.*
 import net.nosegrind.apiframework.Timer
@@ -33,26 +33,23 @@ class ApiResponseService extends ApiLayer{
 	GrailsApplication grailsApplication
 	ApiCacheService apiCacheService
 
-	def handleApiResponse(HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
+	def handleApiResponse(Object cache, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
 		//println("#### [ApiResponseService : handleApiResponse ] ####")
 
 		try{
-			LinkedHashMap cache = apiCacheService.getApiCache(params?.controller)
 			if(cache){
-				if(cache[params.apiObject][params.action]){
-					// make 'application/json' default
+				// make 'application/json' default
 
-					if(params.contentType){
-						response.setHeader('Authorization', cache[params.apiObject][params.action]['roles'].join(', '))
-						List responseList = getApiParams(request,cache[params.apiObject][params.action]['returns'])
-						LinkedHashMap result = parseURIDefinitions(model,responseList)
-						LinkedHashMap content = parseResponseMethod(request, params, result)
-						return content
-					}
-				}else{
-					//return true
-					//render(view:params.action,model:model)
+				if(params.contentType){
+					response.setHeader('Authorization', cache['roles'].join(', '))
+					List responseList = getApiParams(request,cache['returns'])
+					LinkedHashMap result = parseURIDefinitions(model,responseList)
+					LinkedHashMap content = parseResponseMethod(request, params, result)
+					return content
 				}
+			}else{
+				//return true
+				//render(view:params.action,model:model)
 			}
 		}catch(Exception e){
 			//throw new Exception("[ApiResponseService :: handleApiResponse] : Exception - full stack trace follows:",e)
