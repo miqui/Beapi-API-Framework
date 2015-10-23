@@ -27,7 +27,9 @@ import net.nosegrind.apiframework.ApiDescriptor
 import grails.core.GrailsApplication
 import net.nosegrind.apiframework.*
 import net.nosegrind.apiframework.Timer
+import groovy.transform.CompileStatic
 
+@CompileStatic
 class ApiResponseService extends ApiLayer{
 
 	GrailsApplication grailsApplication
@@ -41,8 +43,8 @@ class ApiResponseService extends ApiLayer{
 				// make 'application/json' default
 
 				if(params.contentType){
-					response.setHeader('Authorization', cache['roles'].join(', '))
-					List responseList = getApiParams(request,cache['returns'])
+					response.setHeader('Authorization', cache['roles'].toString().join(', '))
+					List responseList = getApiParams(request,(LinkedHashMap)cache['returns'])
 					LinkedHashMap result = parseURIDefinitions(model,responseList)
 					LinkedHashMap content = parseResponseMethod(request, params, result)
 					return content

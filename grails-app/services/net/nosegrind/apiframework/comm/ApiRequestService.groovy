@@ -22,9 +22,6 @@ class ApiRequestService extends ApiLayer{
 	boolean handleApiRequest(Object cache, HttpServletRequest request, GrailsParameterMap params){
 		//println("#### [ApiRequestService : handleApiRequest ] ####")
 		try{
-			//setEnv()
-			//ApiStatuses error = new ApiStatuses()
-			//ApiStatuses error = ApiStatuses.instance
 
 			// CHECK IF URI HAS CACHE
 			if(cache){
