@@ -1,8 +1,5 @@
 package net.nosegrind.apiframework.comm
 
-
-
-
 /* ****************************************************************************
  * Copyright 2014 Owen Rubel
  *****************************************************************************/
@@ -15,9 +12,9 @@ import grails.web.servlet.mvc.GrailsParameterMap
 //import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper
 import javax.servlet.http.HttpServletRequest
 import net.nosegrind.apiframework.*
-//import groovy.transform.CompileStatic
+import groovy.transform.CompileStatic
 
-//@CompileStatic
+@CompileStatic
 class ApiRequestService extends ApiLayer{
 
 	static transactional = false
@@ -26,27 +23,29 @@ class ApiRequestService extends ApiLayer{
 		//println("#### [ApiRequestService : handleApiRequest ] ####")
 		try{
 			//setEnv()
-			ApiStatuses error = new ApiStatuses()
+			//ApiStatuses error = new ApiStatuses()
+			//ApiStatuses error = ApiStatuses.instance
 
 			// CHECK IF URI HAS CACHE
 			if(cache){
 				// CHECK ACCESS TO METHOD
-				List roles = cache['roles']?.toList()
+				List roles = cache['roles'] as List
 
 				// if(!checkAuth(request,roles)){ return false }
 
 				// CHECK VERSION DEPRECATION DATE
-				if(cache['deprecated']?.get(0)){
-					if(checkDeprecationDate(cache['deprecated'][0])){
-						String depMsg = cache['deprecated'][1]
+				List deprecated = cache['deprecated'] as List
+				if(deprecated?.get(0)){
+					if(checkDeprecationDate(deprecated[0].toString())){
+						String depMsg = deprecated[1].toString()
 						// replace msg with config deprecation message
-						String msg = "[ERROR] ${depMsg}"
-						error._400_BAD_REQUEST(msg)?.send()
+						String msg = "[ERROR] "+depMsg
+						ApiStatuses._400_BAD_REQUEST(msg)?.send()
 						return false
 					}
 				}
 
-				def method = cache['method']?.trim()
+				def method = cache['method']?.toString().trim()
 
 				// DOES api.methods.contains(request.method)
 				if(!isRequestMatch(method,request.method.toString())){

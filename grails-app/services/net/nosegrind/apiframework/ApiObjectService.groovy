@@ -211,7 +211,7 @@ class ApiObjectService{
 				//String actionname = temp[1]
 				String actionname = it.key
 				
-				ApiStatuses error = new ApiStatuses()
+				//ApiStatuses error = new ApiStatuses()
 				
 				ApiDescriptor apiDescriptor
 				Map apiParams

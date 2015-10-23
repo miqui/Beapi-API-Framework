@@ -41,7 +41,7 @@ abstract class ApiLayer{
 
 	List optionalParams = ['method','format','contentType','encoding','action','controller','v','apiCombine', 'apiObject']
 
-	ApiStatuses errors = new ApiStatuses()
+	//ApiStatuses error = ApiStatuses.instance
 
 
 	private HttpServletRequest getRequest(){
@@ -78,7 +78,7 @@ abstract class ApiLayer{
 	LinkedHashMap parseURIDefinitions(LinkedHashMap model,List responseList){
 		//println("#### [ApiLayer : parseURIDefinitions ] ####")
 		//try{
-		ApiStatuses errors = new ApiStatuses()
+		//ApiStatuses errors = new ApiStatuses()
 		String msg = 'Error. Invalid variables being returned. Please see your administrator'
 
 		List paramsList = model.keySet() as List
@@ -91,7 +91,7 @@ abstract class ApiLayer{
 			}
 			//}
 			if(!paramsList){
-				errors._400_BAD_REQUEST(msg).send()
+				ApiStatuses._400_BAD_REQUEST(msg).send()
 				return [:]
 			}else{
 				return model

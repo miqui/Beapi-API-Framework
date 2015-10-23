@@ -16,6 +16,7 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
 //@GrailsCompileStatic
+@Singleton
 class ApiStatuses{
 
 	def grailsApplication
@@ -25,11 +26,11 @@ class ApiStatuses{
 
 	ErrorCodeDescriptor status
 	
-	private static final INSTANCE = new ApiStatuses()
+	//private static final INSTANCE = new ApiStatuses()
 	
-	static getInstance(){ return INSTANCE }
+	//static getInstance(){ return INSTANCE }
 	
-	private ApiStatuses() {}
+	//private ApiStatuses() {}
 	public static final String RESPONSE_NAME_AT_ATTRIBUTES = ServletRequestAttributes.class.getName() + ".ATTRIBUTE_NAME";
 	
 	private HttpServletRequest getRequest(){
@@ -37,13 +38,15 @@ class ApiStatuses{
 		return request
 	}
 
+		/*
 	private HttpServletResponse getResponse(){
 		HttpServletResponse response = ((ServletRequestAttributes) RCH.getRequestAttributes()).getAttribute(RESPONSE_NAME_AT_ATTRIBUTES, RequestAttributes.SCOPE_REQUEST)
 		return response
 	}
+	*/
 
 	String getContentType(){
-		HttpServletRequest request = getRequest()
+		//HttpServletRequest request = getRequest()
 		def tempType = request.getHeader('Content-Type')?.split(';')
 		def type = (tempType)?tempType[0]:request.getHeader('Content-Type')
 		return type
@@ -64,7 +67,6 @@ class ApiStatuses{
 	def toObject(){
 		return this.status
 	}
-	
 
 	def _200_SUCCESS(String msg){
 		this.status = new ErrorCodeDescriptor(code:200,description:"[Success] : ${msg}")
@@ -81,7 +83,7 @@ class ApiStatuses{
 		this.status = new ErrorCodeDescriptor(code:302,description:"[Found] : ${msg}")
 		return this
 	}
-	
+
 	def _302_FOUND(){
 		this.status = new ErrorCodeDescriptor(code:302,description:"[Found]")
 		return this
@@ -92,18 +94,18 @@ class ApiStatuses{
 		this.status = new ErrorCodeDescriptor(code:304,description:"[Not Modified] : ${msg}")
 		return this
 	}
-	
+
 	def _304_NOT_MODIFIED(){
 		this.status = new ErrorCodeDescriptor(code:304,description:"[Not Modified]")
 		return this
 	}
 
 	// 400 bad request
-	def _400_BAD_REQUEST(String msg){
+	ApiStatuses _400_BAD_REQUEST(String msg){
 		this.status = new ErrorCodeDescriptor(code:400,description:"[Bad Request] : ${msg}")
 		return this
 	}
-	
+
 	def _400_BAD_REQUEST(){
 		this.status = new ErrorCodeDescriptor(code:400,description:"[Bad Request]")
 		return this
@@ -114,7 +116,7 @@ class ApiStatuses{
 		this.status = new ErrorCodeDescriptor(code:400,description:"[Bad Request] : ${msg}")
 		return this
 	}
-	
+
 	def _401_UNAUTHORIZED(){
 		status = new ErrorCodeDescriptor(code:400,description:"[Bad Request]")
 		return this
