@@ -77,36 +77,34 @@ abstract class ApiLayer{
 
 	LinkedHashMap parseURIDefinitions(LinkedHashMap model,List responseList){
 		//println("#### [ApiLayer : parseURIDefinitions ] ####")
-		//try{
-		//ApiStatuses errors = new ApiStatuses()
-		String msg = 'Error. Invalid variables being returned. Please see your administrator'
+		try{
+			String msg = 'Error. Invalid variables being returned. Please see your administrator'
 
-		List paramsList = model.keySet() as List
-		paramsList.removeAll(optionalParams)
-		if(!responseList.containsAll(paramsList)){
-			paramsList.removeAll(responseList)
-			//withPool {
-			paramsList.each() { it2 ->
-				model.remove("${it2}".toString())
-			}
-			//}
-			if(!paramsList){
-				ApiStatuses._400_BAD_REQUEST(msg).send()
-				return [:]
+			List paramsList = model.keySet() as List
+			paramsList.removeAll(optionalParams)
+			if(!responseList.containsAll(paramsList)){
+				paramsList.removeAll(responseList)
+				//withPool {
+				paramsList.each() { it2 ->
+					model.remove("${it2}".toString())
+				}
+				//}
+				if(!paramsList){
+					ApiStatuses._400_BAD_REQUEST(msg).send()
+					return [:]
+				}else{
+					return model
+				}
 			}else{
 				return model
 			}
-		}else{
-			return model
+		}catch(Exception e){
+			throw new Exception("[ApiLayer :: parseURIDefinitions] : Exception - full stack trace follows:",e)
 		}
-		//}catch(Exception e){
-		//	throw new Exception("[ApiLayer :: parseURIDefinitions] : Exception - full stack trace follows:",e)
-		//}
 	}
 
 	LinkedHashMap parseResponseMethod(HttpServletRequest request, GrailsParameterMap params, LinkedHashMap result){
 		//println("#### [ApiLayer : parseResponseMethods ] ####")
-
 		LinkedHashMap data = [:]
 		switch(request.method) {
 			case 'PURGE':
@@ -388,8 +386,7 @@ abstract class ApiLayer{
 
 
 		}catch(Exception e){
-			//throw new Exception("[ApiLayerService :: checkChainedMethodPosition] : Exception - full stack trace follows:",e)
-			println("[ApiLayerService :: checkChainedMethodPosition] : Exception - full stack trace follows:"+e)
+			throw new Exception("[ApiLayerService :: checkChainedMethodPosition] : Exception - full stack trace follows:",e)
 		}
 	}
 
@@ -473,25 +470,25 @@ abstract class ApiLayer{
 
 	LinkedHashMap formatDomainObject(Object data){
 		//println("#### [ApiResponseService : formatDomainObject ] ####")
-		//try{
-		List nonPersistent = ['log', 'class', 'constraints', 'properties', 'errors', 'mapping', 'metaClass','maps']
-		LinkedHashMap newMap = [:]
+		try{
+			List nonPersistent = ['log', 'class', 'constraints', 'properties', 'errors', 'mapping', 'metaClass','maps']
+			LinkedHashMap newMap = [:]
 
-		newMap.put('id',data?.id)
-		newMap.put('version',data?.version)
+			newMap.put('id',data?.id)
+			newMap.put('version',data?.version)
 
-		data.properties.each() { it ->
-			if (!nonPersistent.contains(it.key)) {
-				// no lazy mapping
-				newMap[it.key] = (grailsApplication.isDomainClass(it.value.getClass())) ? it.value.id : it.value
+			data.properties.each() { it ->
+				if (!nonPersistent.contains(it.key)) {
+					// no lazy mapping
+					newMap[it.key] = (grailsApplication.isDomainClass(it.value.getClass())) ? it.value.id : it.value
+				}
 			}
+
+
+			return newMap
+		}catch(Exception e){
+			throw new Exception("[ApiResponseService :: formatDomainObject] : Exception - full stack trace follows:",e)
 		}
-
-
-		return newMap
-		//}catch(Exception e){
-		//	throw new Exception("[ApiResponseService :: formatDomainObject] : Exception - full stack trace follows:",e)
-		//}
 	}
 
 

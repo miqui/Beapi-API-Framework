@@ -54,8 +54,7 @@ class ApiResponseService extends ApiLayer{
 				//render(view:params.action,model:model)
 			}
 		}catch(Exception e){
-			//throw new Exception("[ApiResponseService :: handleApiResponse] : Exception - full stack trace follows:",e)
-			println("[ApiResponseService :: handleApiResponse] : Exception - full stack trace follows:"+e)
+			throw new Exception("[ApiResponseService :: handleApiResponse] : Exception - full stack trace follows:",e)
 		}
 
 	}

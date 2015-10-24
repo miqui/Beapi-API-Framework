@@ -46,7 +46,7 @@ abstract class Params{
                     String json = request."${params.format}".toString()
                     def slurper = new JsonSlurper()
 
-                    withPool{
+                    withPool(20){
                         slurper.parseText(json).eachParallel { k, v ->
                             params.put(k, v)
                         }
@@ -90,29 +90,28 @@ abstract class Params{
             }
             return apiList
         }catch(Exception e){
-            //throw new Exception("[ParamsService :: getApiObjectParams] : Exception - full stack trace follows:",e)
-            println("[ParamsService :: getApiObjectParams] : Exception - full stack trace follows:"+e)
+            throw new Exception("[ParamsService :: getApiObjectParams] : Exception - full stack trace follows:",e)
         }
     }
 
     List getApiParams(LinkedHashMap definitions){
         //println("#### [ParamsService : getApiParams ] ####")
-        //try{
-        List apiList = []
-        definitions.each(){ key, val ->
-            if (request.isUserInRole(key) || key == 'permitAll') {
-                val.each(){ it2 ->
-                    if (it2) {
-                        apiList.add(it2.name)
+        try{
+            List apiList = []
+            definitions.each(){ key, val ->
+                if (request.isUserInRole(key) || key == 'permitAll') {
+                    val.each(){ it2 ->
+                        if (it2) {
+                            apiList.add(it2.name)
+                        }
                     }
                 }
             }
-        }
 
-        return apiList
-        //}catch(Exception e){
-        //    throw new Exception("[ParamsService :: getApiParams] : Exception - full stack trace follows:",e)
-        //}
+            return apiList
+        }catch(Exception e){
+            throw new Exception("[ParamsService :: getApiParams] : Exception - full stack trace follows:",e)
+        }
     }
 
     boolean checkURIDefinitions(LinkedHashMap requestDefinitions){
@@ -136,8 +135,7 @@ abstract class Params{
             }
             return false
         }catch(Exception e) {
-            //throw new Exception("[ApiLayerService :: checkURIDefinitions] : Exception - full stack trace follows:",e)
-            println("[ParamsService :: checkURIDefinitions] : Exception - full stack trace follows:"+e)
+            throw new Exception("[ApiLayerService :: checkURIDefinitions] : Exception - full stack trace follows:",e)
         }
     }
 
@@ -167,8 +165,7 @@ abstract class Params{
 
             return ['get':paramsGet,'post':paramsPost]
         }catch(Exception e){
-            //throw new Exception("[ParamsService :: getMethodParams] : Exception - full stack trace follows:",e)
-            println("[ParamsService :: getMethodParams] : Exception - full stack trace follows:"+e)
+            throw new Exception("[ParamsService :: getMethodParams] : Exception - full stack trace follows:",e)
         }
     }
 
@@ -282,19 +279,19 @@ abstract class Params{
                             String dataName = (['PKEY', 'FKEY', 'INDEX'].contains(paramDesc?.paramType?.toString())) ? 'ID' : paramDesc.paramType
                             j = (paramDesc?.mockData?.trim()) ? ["$paramDesc.name": "$paramDesc.mockData"] : ["$paramDesc.name": "$dataName"]
                         }
-                        withPool {
+                        withPool(20) { pool ->
                             j.eachParallel { key, val ->
                                 if (val instanceof List) {
                                     def child = [:]
-                                    withExistingPool {
+                                    withExistingPool(pool, {
                                         val.eachParallel { it2 ->
-                                            withExistingPool {
+                                            withExistingPool(pool, {
                                                 it2.eachParallel { key2, val2 ->
                                                     child[key2] = val2
                                                 }
-                                            }
+                                            })
                                         }
-                                    }
+                                    })
                                     json[key] = child
                                 } else {
                                     json[key] = val
