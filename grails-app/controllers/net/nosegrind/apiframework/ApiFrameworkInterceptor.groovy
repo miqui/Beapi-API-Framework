@@ -2,19 +2,13 @@ package net.nosegrind.apiframework
 
 
 import grails.core.GrailsApplication
-import grails.web.servlet.mvc.GrailsParameterMap
-import groovy.json.JsonSlurper
+
 import net.nosegrind.apiframework.comm.ApiRequestService
 import net.nosegrind.apiframework.comm.ApiResponseService
 import grails.util.Metadata
-import org.springframework.web.context.request.RequestAttributes
-import org.springframework.web.context.request.RequestContextHolder
-import org.springframework.web.context.request.ServletRequestAttributes
-import net.nosegrind.apiframework.ApiDescriptor
-import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import groovy.transform.CompileStatic
-import net.nosegrind.apiframework.Timer
+//import net.nosegrind.apiframework.Timer
 
 /* ****************************************************************************
  * Copyright 2014 Owen Rubel
@@ -45,6 +39,7 @@ class ApiFrameworkInterceptor extends Params{
 		initParams()
 
 		try{
+
 			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
 
 				LinkedHashMap cache = [:]

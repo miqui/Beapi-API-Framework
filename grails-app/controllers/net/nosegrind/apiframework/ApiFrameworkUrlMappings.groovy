@@ -18,14 +18,11 @@ package net.nosegrind.apiframework
 
 import grails.util.Metadata
 
-
-
 class ApiFrameworkUrlMappings {
 
     static mappings = {
-
-        //String apiVersion = getGrailsApplication().config.getProperty('info.app.version')
-        String apiVersion = getGrailsApplication().metadata['info.app.version']
+        //String apiVersion = getGrailsApplication().metadata['info.app.version']
+        String apiVersion = Metadata.current.getApplicationVersion()
         String api = "v${apiVersion}"
         String batchEntryPoint = "b${apiVersion}"
         String chainEntryPoint = "c${apiVersion}"
@@ -37,6 +34,17 @@ class ApiFrameworkUrlMappings {
             parseRequest: true
         }
 */
+
+        "/login/$action" {
+            controller = 'login'
+            action = action
+            parseRequest= true
+        }
+        "/logout?/$action" {
+            controller = 'logout'
+            action = action
+            parseRequest= true
+        }
 
         // REGULAR API ENDPOINTS
         "/$api/$controller/$action?/$id?(.$format)?"{

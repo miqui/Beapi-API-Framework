@@ -52,18 +52,29 @@ class GrailsApiFrameworkGrailsPlugin extends Plugin{
 	void doInitApiFrameworkInstall(applicationContext) {
 		//String basedir = applicationContext.getResource("../../..").getFile().path
 		String basedir = BuildSettings.BASE_DIR
+        def ant = new AntBuilder()
 		//basedir = basedir.substring(0,basedir.length())
+
+        println "installing API Framework ..."
 
 		writeFile("templates/iostate/Hook.json.template","${basedir}/src/iostate/Hook.json")
 		writeFile("templates/iostate/IOState.json.template","${basedir}/src/iostate/IOState.json")
-		
-		writeFile("templates/controllers/HookController.groovy.template","${basedir}/grails-app/controllers/HookController.groovy")
-		writeFile("templates/controllers/IostateController.groovy.template","${basedir}/grails-app/controllers/IostateController.groovy")
-		
-		writeFile("templates/domains/Hook.groovy.template","${basedir}/grails-app/domain/Hook.groovy")
-		writeFile("templates/domains/HookRole.groovy.template","${basedir}/grails-app/domain/HookRole.groovy")
-		writeFile("templates/domains/Role.groovy.template","${basedir}/grails-app/domain/Role.groovy")
 
+        def contDir = "${basedir}/grails-app/controllers/net/nosegrind/apiframework/"
+        def cfile = new File(contDir)
+        if(!cfile.exists()) {
+            ant.mkdir(dir: contDir)
+            writeFile("templates/controllers/HookController.groovy.template", "${contDir}HookController.groovy")
+            writeFile("templates/controllers/IostateController.groovy.template", "${contDir}IostateController.groovy")
+        }
+
+        def domainDir = "${basedir}/grails-app/domain/net/nosegrind/apiframework/"
+        def dfile = new File(domainDir)
+        if(!dfile.exists()) {
+            writeFile("templates/domains/Hook.groovy.template", "${domainDir}Hook.groovy")
+            writeFile("templates/domains/HookRole.groovy.template", "${domainDir}HookRole.groovy")
+            writeFile("templates/domains/Role.groovy.template", "${domainDir}Role.groovy")
+        }
 
         final String isBatchServer = grailsApplication.config.apitoolkit.batching.enabled
         final String isChainServer = grailsApplication.config.apitoolkit.chaining.enabled
@@ -74,6 +85,7 @@ class GrailsApiFrameworkGrailsPlugin extends Plugin{
         System.setProperty('isChainServer', isChainServer)
         //System.setProperty('isLocalAuth', isLocalAuth)
 
+        println  "... API Framework installed."
 	}
 	
     void onChange(Map<String, Object> event) {

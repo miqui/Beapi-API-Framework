@@ -28,7 +28,7 @@ abstract class Params{
         List tempType = request.getHeader('Content-Type')?.split(';')
         params.encoding = (tempType != null && tempType?.size() > 1) ? tempType[1] : 'UTF-8'
         String type = (tempType?.size() > 0) ? tempType[0] : (request.getHeader('Content-Type')) ? request.getHeader('Content-Type') : 'application/json'
-        params.contentType = (type) ? formats.find{ type.startsWith(it) }[0].toString() : type
+        params.contentType = (type) ? formats.find{ type.startsWith(it) }.toString() : type
         //String queryString = request.getQueryString()
         params.format = request.format
 

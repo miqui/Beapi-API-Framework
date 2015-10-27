@@ -1,4 +1,4 @@
-package net.nosegrind.apitoolkit
+package net.nosegrind.apiframework
 
 import java.util.Date
 

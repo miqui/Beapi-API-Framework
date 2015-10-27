@@ -1,4 +1,4 @@
-package net.nosegrind.apitoolkit
+package net.nosegrind.apiframework
 
 import org.grails.web.json.JSONObject
 

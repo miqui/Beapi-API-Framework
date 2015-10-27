@@ -1,17 +1,88 @@
-//package net.nosegrind.apiframework
-
-
-import java.io.Serializable
-import java.util.Date
+package net.nosegrind.apiframework
 
 class Person implements Serializable {
-	
+
+	//static transactional = true
+
+	transient hasBeforeInsert = false
+	transient hasBeforeValidate = false
+	transient hasBeforeUpdate = false
+	transient springSecurityService
+
 	String username
-	boolean enabled = true
+	String password
+	boolean enabled=true
+	boolean accountExpired=false
+	boolean accountLocked=false
+	boolean passwordExpired=false
+	String externalId
+	Date dateCreated = new Date()
+	Date lastVisited
+	Date lastModified = new Date()
+	String language
+	String timeZone
+	String website
 	String email
-	
+	String oauthId
+	String oauthProvider
+	String avatarUrl
+
+	static constraints = {
+		//id(nullable:true)
+		username(nullable:false,unique:true,maxSize:150)
+		password(nullable:false,maxSize:100)
+		enabled(nullable:false)
+		accountExpired(nullable:false)
+		accountLocked(nullable:false)
+		passwordExpired(nullable:false)
+		externalId(nullable:true)
+		dateCreated(nullable:false)
+		lastVisited(nullable:true)
+		lastModified(nullable:false)
+		language(nullable:true,maxSize:100)
+		timeZone(nullable:true,maxSize:100)
+		website(nullable:true,url:true)
+		email(nullable:false,email:true, unique: true,maxSize:100)
+		oauthId(nullable: true)
+		oauthProvider(nullable: true)
+		avatarUrl(nullable: true)
+	}
+
 	static mapping = {
 		datasource 'user'
+		password column: '`password`'
+	}
+
+	Set<Role> getAuthorities() {
+		PersonRole.findAllByPerson(this).collect { it.role } as Set
+	}
+
+	def beforeInsert() {
+		if (!hasBeforeInsert) {
+			hasBeforeInsert = true
+			encodePassword()
+		}
+	}
+
+	def afterInsert() {
+		hasBeforeInsert = false
+	}
+
+	def beforeUpdate() {
+		if (!hasBeforeUpdate) {
+			if (isDirty('password')) {
+				hasBeforeUpdate = true
+				encodePassword()
+			}
+		}
+	}
+
+	def afterUpdate() {
+		hasBeforeUpdate = false
+	}
+
+	protected void encodePassword() {
+		password = springSecurityService.encodePassword(password)
 	}
 
 }

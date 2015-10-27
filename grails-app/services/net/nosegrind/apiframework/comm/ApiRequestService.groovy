@@ -26,9 +26,13 @@ class ApiRequestService extends ApiLayer{
 			// CHECK IF URI HAS CACHE
 			if(cache){
 				// CHECK ACCESS TO METHOD
+				/*
 				List roles = cache['roles'] as List
-
-				// if(!checkAuth(request,roles)){ return false }
+				if(!checkAuth(request,roles)){
+					println("no auth")
+					return false
+				}
+				*/
 
 				// CHECK VERSION DEPRECATION DATE
 				List deprecated = cache['deprecated'] as List

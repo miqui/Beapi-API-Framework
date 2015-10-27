@@ -70,6 +70,7 @@ dependencies {
     //provided "org.springframework.boot:spring-boot-starter-actuator"
     compile 'org.springframework.boot:spring-boot-autoconfigure'
     provided 'org.springframework.boot:spring-boot-starter-tomcat'
+    //compile 'org.grails.plugins:spring-security-core:3.0.0.M1'
     //compile 'org.springframework.boot:spring-boot-starter-security'
     compile 'org.grails:grails-web-boot'
     compile 'org.grails:grails-dependencies'
@@ -77,7 +78,7 @@ dependencies {
 
     testCompile 'org.grails:grails-plugin-testing'
 
-    //console "org.grails:grails-console"
+    console "org.grails:grails-console"
 }
 
 task wrapper(type: Wrapper) {

@@ -35,7 +35,8 @@ import java.util.concurrent.ForkJoinPool
 abstract class ApiLayer{
 
 	static transactional = false
-	//SpringSecurityService springSecurityService
+
+	def springSecurityService
 	ApiCacheService apiCacheService
 
 
@@ -157,11 +158,16 @@ abstract class ApiLayer{
 */
 
 	boolean checkAuth(HttpServletRequest request, List roles){
-		try{
+		println("#### [ApiLayer : checkAuth ] ####")
+		try {
 			boolean hasAuth = false
-			roles.each{
-				if(request.isUserInRole(it)){
-					hasAuth = true
+			if (springSecurityService.isLoggedIn()) {
+				println("is logged in ...")
+				roles.each {
+					println(it)
+					if (request.isUserInRole(it)) {
+						hasAuth = true
+					}
 				}
 			}
 			return hasAuth
