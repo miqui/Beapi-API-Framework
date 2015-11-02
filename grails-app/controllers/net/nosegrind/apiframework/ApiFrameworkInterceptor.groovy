@@ -32,7 +32,7 @@ class ApiFrameworkInterceptor extends Params{
 	}
 
 	boolean before(){
-		//println("##### FILTER (BEFORE)")
+		println("##### FILTER (BEFORE)")
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 
@@ -40,7 +40,8 @@ class ApiFrameworkInterceptor extends Params{
 
 		try{
 
-			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
+			if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
+println(request.class.toString())
 
 				LinkedHashMap cache = [:]
 				if(params.controller){
@@ -80,7 +81,7 @@ class ApiFrameworkInterceptor extends Params{
 					boolean result = apiRequestService.handleApiRequest(cache[params.apiObject.toString()][params.action.toString()],request,params)
 					return result
 				}
-			//}
+			}
 
 			return false
 

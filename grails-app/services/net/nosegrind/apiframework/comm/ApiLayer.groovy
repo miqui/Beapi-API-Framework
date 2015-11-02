@@ -165,7 +165,7 @@ abstract class ApiLayer{
 				println("is logged in ...")
 				roles.each {
 					println(it)
-					if (request.isUserInRole(it)) {
+					if (request.isUserInRole(it) || it=='permitAll') {
 						hasAuth = true
 					}
 				}
