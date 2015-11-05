@@ -23,9 +23,8 @@ abstract class Params{
     List optionalParams = ['method','format','contentType','encoding','action','controller','v','apiCombine', 'apiObject']
 
     void initParams() {
-        println("#### [ParamsService : initParams ] ####")
-        println(params)
-        println(request.forwardURI)
+        //println("#### [ParamsService : initParams ] ####")
+
         params.method = request.method
         List tempType = request.getHeader('Content-Type')?.split(';')
         params.encoding = (tempType != null && tempType?.size() > 1) ? tempType[1] : 'UTF-8'

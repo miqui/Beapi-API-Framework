@@ -30,8 +30,5 @@ if(Environment.current == Environment.DEVELOPMENT) {
             }
         }
         logger("StackTrace", ERROR, ['FULL_STACKTRACE'], false )
-        logger("org.springframework.security",INFO,['FULL_STACKTRACE'],false)
-        logger('grails.plugin.springsecurity', INFO,['FULL_STACKTRACE'],false)
-        logger('grails.artefact.Interceptor', INFO, ['STDOUT'], false)
     }
 }

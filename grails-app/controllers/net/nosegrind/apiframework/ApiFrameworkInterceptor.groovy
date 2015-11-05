@@ -36,9 +36,11 @@ class ApiFrameworkInterceptor extends Params{
 	}
 
 	boolean before(){
-		println("##### FILTER (BEFORE)")
+		//println("##### FILTER (BEFORE)")
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
+
+		/*
 		if (springSecurityService.loggedIn) {
 			def principal = springSecurityService.principal
 			println("User is logged in")
@@ -50,6 +52,8 @@ class ApiFrameworkInterceptor extends Params{
 		}else{
 			println("User NOT LOGGED IN")
 		}
+		*/
+
 		initParams()
 
 		try{
@@ -105,7 +109,7 @@ class ApiFrameworkInterceptor extends Params{
 	}
 
 	boolean after(){
-		println("##### FILTER (AFTER)")
+		//println("##### FILTER (AFTER)")
 		try{
 			LinkedHashMap newModel = [:]
 

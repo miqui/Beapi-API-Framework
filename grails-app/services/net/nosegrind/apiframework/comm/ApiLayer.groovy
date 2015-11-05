@@ -161,10 +161,8 @@ abstract class ApiLayer{
 		//println("#### [ApiLayer : checkAuth ] ####")
 		try {
 			boolean hasAuth = false
-			if (springSecurityService.isLoggedIn()) {
-				println("is logged in ...")
+			if (springSecurityService.loggedIn) {
 				roles.each {
-					println(it)
 					if (request.isUserInRole(it) || it=='permitAll') {
 						hasAuth = true
 					}
