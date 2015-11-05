@@ -3,10 +3,12 @@ package net.nosegrind.apiframework
 
 import grails.core.GrailsApplication
 
+import grails.plugin.springsecurity.SpringSecurityService
 import net.nosegrind.apiframework.comm.ApiRequestService
 import net.nosegrind.apiframework.comm.ApiResponseService
 import grails.util.Metadata
 import javax.servlet.http.HttpServletResponse
+
 import groovy.transform.CompileStatic
 //import net.nosegrind.apiframework.Timer
 
@@ -14,7 +16,7 @@ import groovy.transform.CompileStatic
  * Copyright 2014 Owen Rubel
  *****************************************************************************/
 
-@CompileStatic
+//@CompileStatic
 class ApiFrameworkInterceptor extends Params{
 
 	int order = HIGHEST_PRECEDENCE + 999
@@ -23,6 +25,8 @@ class ApiFrameworkInterceptor extends Params{
 	ApiRequestService apiRequestService
 	ApiResponseService apiResponseService
 	ApiCacheService apiCacheService
+	SpringSecurityService springSecurityService
+
 	String entryPoint
 
 	ApiFrameworkInterceptor(){
@@ -35,13 +39,22 @@ class ApiFrameworkInterceptor extends Params{
 		println("##### FILTER (BEFORE)")
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
-
+		if (springSecurityService.loggedIn) {
+			def principal = springSecurityService.principal
+			println("User is logged in")
+			List roleNames = []
+			principal.authorities.each{
+				roleNames.add(it.authority)
+			}
+			println(roleNames)
+		}else{
+			println("User NOT LOGGED IN")
+		}
 		initParams()
 
 		try{
 
-			if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
-println(request.class.toString())
+			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
 
 				LinkedHashMap cache = [:]
 				if(params.controller){
@@ -81,7 +94,7 @@ println(request.class.toString())
 					boolean result = apiRequestService.handleApiRequest(cache[params.apiObject.toString()][params.action.toString()],request,params)
 					return result
 				}
-			}
+			//}
 
 			return false
 
@@ -92,11 +105,12 @@ println(request.class.toString())
 	}
 
 	boolean after(){
-		//println("##### FILTER (AFTER)")
+		println("##### FILTER (AFTER)")
 		try{
 			LinkedHashMap newModel = [:]
 
 			if (!model) {
+				println("no model")
 				render(status: HttpServletResponse.SC_BAD_REQUEST)
 				return false
 			} else {

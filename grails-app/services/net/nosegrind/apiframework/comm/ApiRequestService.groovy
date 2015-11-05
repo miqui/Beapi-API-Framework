@@ -20,7 +20,7 @@ class ApiRequestService extends ApiLayer{
 	static transactional = false
 	
 	boolean handleApiRequest(Object cache, HttpServletRequest request, GrailsParameterMap params){
-		println("#### [ApiRequestService : handleApiRequest ] ####")
+		//println("#### [ApiRequestService : handleApiRequest ] ####")
 		try{
 
 			// CHECK IF URI HAS CACHE
@@ -29,10 +29,8 @@ class ApiRequestService extends ApiLayer{
 
 				List roles = cache['roles'] as List
 				if(!checkAuth(request,roles)){
-					println("no auth")
 					return false
 				}
-
 
 				// CHECK VERSION DEPRECATION DATE
 				List deprecated = cache['deprecated'] as List

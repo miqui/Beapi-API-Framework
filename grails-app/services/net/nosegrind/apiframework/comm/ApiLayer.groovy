@@ -158,7 +158,7 @@ abstract class ApiLayer{
 */
 
 	boolean checkAuth(HttpServletRequest request, List roles){
-		println("#### [ApiLayer : checkAuth ] ####")
+		//println("#### [ApiLayer : checkAuth ] ####")
 		try {
 			boolean hasAuth = false
 			if (springSecurityService.isLoggedIn()) {
@@ -169,10 +169,13 @@ abstract class ApiLayer{
 						hasAuth = true
 					}
 				}
+			}else{
+				println("NOT LOGGED IN!!!")
 			}
 			return hasAuth
 		}catch(Exception e) {
-			throw new Exception("[ApiLayer :: checkAuth] : Exception - full stack trace follows:",e)
+			//throw new Exception("[ApiLayer :: checkAuth] : Exception - full stack trace follows:",e)
+			println("[ApiLayer :: checkAuth] : Exception - full stack trace follows:"+e)
 		}
 	}
 

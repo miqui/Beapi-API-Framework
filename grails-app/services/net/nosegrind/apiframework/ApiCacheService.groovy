@@ -165,7 +165,8 @@ class ApiCacheService{
 			}
 
 		}catch(Exception e){
-			throw new Exception("[ApiCacheService :: getApiCache] : Exception - full stack trace follows:",e)
+			//throw new Exception("[ApiCacheService :: getApiCache] : Exception - full stack trace follows:",e)
+			println("[ApiCacheService :: getApiCache] : Exception - full stack trace follows:"+e)
 		}
 	}
 	
