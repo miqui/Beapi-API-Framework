@@ -40,19 +40,16 @@ class ApiFrameworkInterceptor extends Params{
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 
-		/*
+/*
 		if (springSecurityService.loggedIn) {
 			def principal = springSecurityService.principal
 			println("User is logged in")
-			List roleNames = []
-			principal.authorities.each{
-				roleNames.add(it.authority)
-			}
-			println(roleNames)
+			List roleNames = principal.authorities*.authority
+			println roleNames
 		}else{
 			println("User NOT LOGGED IN")
 		}
-		*/
+*/
 
 		initParams()
 

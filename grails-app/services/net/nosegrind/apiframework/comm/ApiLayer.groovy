@@ -55,12 +55,14 @@ abstract class ApiLayer{
 		return response
 	}
 
-	List getApiParams(HttpServletRequest request,LinkedHashMap definitions){
+	List getApiParams(LinkedHashMap definitions){
 		//println("#### [ApiLayer : getApiParams ] ####")
 		//try{
 		List apiList = []
+		def principal = springSecurityService.principal
+		List roleNames = principal.authorities*.authority
 		definitions.each() { it2 ->
-			if (request.isUserInRole(it2.key) || it2.key == 'permitAll') {
+			if (roleNames.contains(it2.key) || it2.key == 'permitAll') {
 				//withPool {
 				it2.value.each() { it4 ->
 					apiList.add(it4.name)
@@ -162,13 +164,17 @@ abstract class ApiLayer{
 		try {
 			boolean hasAuth = false
 			if (springSecurityService.loggedIn) {
+				def principal = springSecurityService.principal
+				List userRoles = principal.authorities*.authority
 				roles.each {
-					if (request.isUserInRole(it) || it=='permitAll') {
+
+					if (userRoles.contains(it) || it=='permitAll') {
+
 						hasAuth = true
 					}
 				}
 			}else{
-				println("NOT LOGGED IN!!!")
+				//println("NOT LOGGED IN!!!")
 			}
 			return hasAuth
 		}catch(Exception e) {

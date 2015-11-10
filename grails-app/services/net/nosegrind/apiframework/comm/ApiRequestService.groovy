@@ -18,7 +18,8 @@ import groovy.transform.CompileStatic
 class ApiRequestService extends ApiLayer{
 
 	static transactional = false
-	
+
+
 	boolean handleApiRequest(Object cache, HttpServletRequest request, GrailsParameterMap params){
 		//println("#### [ApiRequestService : handleApiRequest ] ####")
 		try{
@@ -28,7 +29,9 @@ class ApiRequestService extends ApiLayer{
 				// CHECK ACCESS TO METHOD
 
 				List roles = cache['roles'] as List
+
 				if(!checkAuth(request,roles)){
+					println('NO AUTH')
 					return false
 				}
 
