@@ -4,7 +4,7 @@
 package net.nosegrind.apiframework
 
 import javax.servlet.http.HttpServletRequest;
-
+import org.grails.web.util.WebUtils
 import net.nosegrind.apiframework.ErrorCodeDescriptor;
 
 import org.springframework.web.context.request.RequestContextHolder as RCH
@@ -16,7 +16,7 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
 //@GrailsCompileStatic
-@Singleton
+//@Singleton
 class ApiStatuses{
 
 	def grailsApplication
@@ -26,11 +26,12 @@ class ApiStatuses{
 
 	ErrorCodeDescriptor status
 	
-	//private static final INSTANCE = new ApiStatuses()
+	private static final INSTANCE = new ApiStatuses()
 	
-	//static getInstance(){ return INSTANCE }
+	static getInstance(){ return INSTANCE }
 	
-	//private ApiStatuses() {}
+	private ApiStatuses() {}
+
 	public static final String RESPONSE_NAME_AT_ATTRIBUTES = ServletRequestAttributes.class.getName() + ".ATTRIBUTE_NAME";
 	
 	private HttpServletRequest getRequest(){
@@ -38,12 +39,10 @@ class ApiStatuses{
 		return request
 	}
 
-		/*
 	private HttpServletResponse getResponse(){
 		HttpServletResponse response = ((ServletRequestAttributes) RCH.getRequestAttributes()).getAttribute(RESPONSE_NAME_AT_ATTRIBUTES, RequestAttributes.SCOPE_REQUEST)
 		return response
 	}
-	*/
 
 	String getContentType(){
 		//HttpServletRequest request = getRequest()
@@ -58,8 +57,9 @@ class ApiStatuses{
 	 */
 	def send(){
 		String type = getContentType()
-		def response = getResponse()
+		def response = WebUtils.getCurrentResponse()
 		if(response){
+			println("response found")
 			response.sendError(this.status.code.toInteger(),this.status.description)
 		}
 	}

@@ -36,7 +36,7 @@ class ApiFrameworkInterceptor extends Params{
 	}
 
 	boolean before(){
-		//println("##### FILTER (BEFORE)")
+		println("##### FILTER (BEFORE)")
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 
@@ -62,16 +62,18 @@ class ApiFrameworkInterceptor extends Params{
 					cache = apiCacheService.getApiCache(params.controller.toString())
 				}
 
+
 				if(cache){
 					params.apiObject = (params.apiObjectVersion)?params.apiObjectVersion:cache['currentStable']['value']
 					LinkedHashMap receives = cache[params.apiObject.toString()][params.action.toString()]['receives'] as LinkedHashMap
 					boolean requestKeysMatch = checkURIDefinitions(receives)
+
 					if(!requestKeysMatch){
 						// return bad status
+println('request keys dont match')
 
-						HttpServletResponse response = getResponse()
-						//HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getAttribute(RESPONSE_NAME_AT_ATTRIBUTES, RequestAttributes.SCOPE_REQUEST)
-						response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Expected request variables do not match sent variables")
+						response.status = 400
+						response.setHeader('msg','Expected request variables do not match sent variables')
 						return false
 					}
 
@@ -92,21 +94,21 @@ class ApiFrameworkInterceptor extends Params{
 					}
 
 					// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
-					boolean result = apiRequestService.handleApiRequest(cache[params.apiObject.toString()][params.action.toString()],request,params)
+					boolean result = apiRequestService.handleApiRequest(cache[params.apiObject.toString()][params.action.toString()], request, params)
 					return result
 				}
 			//}
-
 			return false
 
 		}catch(Exception e){
-			log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e);
+			//log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
+			println("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:"+e)
 			return false
 		}
 	}
 
 	boolean after(){
-		//println("##### FILTER (AFTER)")
+		println("##### FILTER (AFTER)")
 		try{
 			LinkedHashMap newModel = [:]
 
