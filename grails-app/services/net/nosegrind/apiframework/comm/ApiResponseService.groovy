@@ -46,8 +46,12 @@ class ApiResponseService extends ApiLayer{
 					response.setHeader('Authorization', cache['roles'].toString().join(', '))
 					List responseList = getApiParams((LinkedHashMap)cache['returns'])
 					LinkedHashMap result = parseURIDefinitions(model,responseList)
-					LinkedHashMap content = parseResponseMethod(request, params, result)
-					return content
+					if(!result){
+						response.status = 400
+					}else{
+						LinkedHashMap content = parseResponseMethod(request, params, result)
+						return content
+					}
 				}
 			}else{
 				//return true

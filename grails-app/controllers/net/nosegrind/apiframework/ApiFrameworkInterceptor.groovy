@@ -36,7 +36,7 @@ class ApiFrameworkInterceptor extends Params{
 	}
 
 	boolean before(){
-		println("##### FILTER (BEFORE)")
+		//println("##### FILTER (BEFORE)")
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 
@@ -66,14 +66,12 @@ class ApiFrameworkInterceptor extends Params{
 				if(cache){
 					params.apiObject = (params.apiObjectVersion)?params.apiObjectVersion:cache['currentStable']['value']
 					LinkedHashMap receives = cache[params.apiObject.toString()][params.action.toString()]['receives'] as LinkedHashMap
-					boolean requestKeysMatch = checkURIDefinitions(receives)
+					boolean requestKeysMatch = checkURIDefinitions(params,receives)
 
 					if(!requestKeysMatch){
 						// return bad status
-println('request keys dont match')
-
 						response.status = 400
-						response.setHeader('msg','Expected request variables do not match sent variables')
+						response.setHeader('ERROR','Expected request variables do not match sent variables')
 						return false
 					}
 
@@ -94,7 +92,7 @@ println('request keys dont match')
 					}
 
 					// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
-					boolean result = apiRequestService.handleApiRequest(cache[params.apiObject.toString()][params.action.toString()], request, params)
+					boolean result = apiRequestService.handleApiRequest(cache[params.apiObject.toString()][params.action.toString()], request, response, params)
 					return result
 				}
 			//}
@@ -108,12 +106,11 @@ println('request keys dont match')
 	}
 
 	boolean after(){
-		println("##### FILTER (AFTER)")
+		//println("##### FILTER (AFTER)")
 		try{
 			LinkedHashMap newModel = [:]
 
 			if (!model) {
-				println("no model")
 				render(status: HttpServletResponse.SC_BAD_REQUEST)
 				return false
 			} else {

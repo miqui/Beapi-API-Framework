@@ -9,7 +9,7 @@ package net.nosegrind.apiframework
 import static groovyx.gpars.GParsPool.withPool
 import grails.converters.JSON
 import grails.converters.XML
-
+import grails.web.servlet.mvc.GrailsParameterMap
 import groovy.json.JsonSlurper
 import org.grails.web.util.WebUtils
 import net.nosegrind.apiframework.Timer
@@ -20,7 +20,7 @@ import org.grails.groovy.grails.commons.*
 abstract class Params{
 
     def formats = ['text/html','text/json','application/json','text/xml','application/xml']
-    List optionalParams = ['method','format','contentType','encoding','action','controller','v','apiCombine', 'apiObject']
+    List optionalParams = ['method','format','contentType','encoding','action','controller','v','apiCombine', 'apiObject','entryPoint']
 
     void initParams() {
         //println("#### [ParamsService : initParams ] ####")
@@ -31,32 +31,31 @@ abstract class Params{
         String type = (tempType?.size() > 0) ? tempType[0] : (request.getHeader('Content-Type')) ? request.getHeader('Content-Type') : 'application/json'
         params.contentType = (type) ? formats.find{ type.startsWith(it) }.toString() : type
         //String queryString = request.getQueryString()
-        params.format = request.format
 
-        if (request?."${params.format}") {
+        if (request?.format) {
             LinkedHashMap content = [:]
-            switch (params.format) {
+            switch (request.format) {
                 case 'XML':
-                    String xml = request."${params.format}".toString()
+                case 'xml':
+                    params.format = request.format.toUpperCase()
+                    String xml = request."${request.format}".toString()
                     def slurper = new XmlSlurper()
-                    slurper.parseText(json).each(){ k,v ->
+                    slurper.parseText(xml).each(){ k,v ->
                         params.put(k, v)
                     }
                     break
                 case 'JSON':
+                case 'json':
+                    params.format = request.format.toUpperCase()
                     String json = request."${params.format}".toString()
                     def slurper = new JsonSlurper()
-
-                    withPool(20){
-                        slurper.parseText(json).eachParallel { k, v ->
-                            params.put(k, v)
-                        }
+                    slurper.parseText(json).each() { k, v ->
+                        params.put(k, v)
                     }
                     break
                 default:
                     break
             }
-
         }
 
     }
@@ -115,39 +114,33 @@ abstract class Params{
         }
     }
 
-    boolean checkURIDefinitions(LinkedHashMap requestDefinitions){
+    boolean checkURIDefinitions(GrailsParameterMap params,LinkedHashMap requestDefinitions){
         //println("#### [ParamsService : checkUriDefinitions ] ####")
         // put in check to see if if app.properties allow for this check
-        try{
-            List requestList = getApiParams(requestDefinitions)
-            HashMap methodParams = getMethodParams()
+        //try{
 
-            //GrailsParameterMap params = RCH.currentRequestAttributes().params
-            //println(request.method)
-            //println(methodParams)
+            List requestList = getApiParams(requestDefinitions)
+
+            HashMap methodParams = getMethodParams(params)
             List paramsList = methodParams."${request.method.toLowerCase()}".keySet() as List
 
-            paramsList.removeAll(optionalParams)
-            if(paramsList.containsAll(requestList)){
-                paramsList.removeAll(requestList)
-                if(!paramsList){
-                    return true
-                }
+            if(paramsList.size() == requestList.intersect(paramsList).size()){
+                return true
             }
             return false
-        }catch(Exception e) {
-            throw new Exception("[ApiLayerService :: checkURIDefinitions] : Exception - full stack trace follows:",e)
-        }
+        //}catch(Exception e) {
+        //    throw new Exception("[ApiLayerService :: checkURIDefinitions] : Exception - full stack trace follows:",e)
+        //}
     }
 
-    List getRedirectParams(){
+    List getRedirectParams(GrailsParameterMap params){
         //println("#### [ParamsService : getRedirectParams ] ####")
         def uri = grailsApplication.mainContext.servletContext.getControllerActionUri(request)
         //def uri = HOLDER.getServletContext().getControllerActionUri(request)
         return uri[1..(uri.size()-1)].split('/')
     }
 
-    HashMap getMethodParams(){
+    HashMap getMethodParams(GrailsParameterMap params){
         //println("#### [ParamsService : getMethodParams ] ####")
         try{
             Map paramsRequest = [:]
@@ -265,7 +258,7 @@ abstract class Params{
  * TODO: Need to compare multiple authorities
  */
     private String processJson(LinkedHashMap returns){
-        println("#### [ParamsService : processJson ] ####")
+        //println("#### [ParamsService : processJson ] ####")
         try{
             LinkedHashMap json = [:]
             returns.each{ p ->

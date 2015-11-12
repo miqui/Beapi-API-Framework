@@ -14,24 +14,25 @@ import javax.servlet.http.HttpServletRequest
 import net.nosegrind.apiframework.*
 import groovy.transform.CompileStatic
 
+import javax.servlet.http.HttpServletResponse
+
 @CompileStatic
 class ApiRequestService extends ApiLayer{
 
 	static transactional = false
 
 
-	boolean handleApiRequest(Object cache, HttpServletRequest request, GrailsParameterMap params){
-		println("#### [ApiRequestService : handleApiRequest ] ####")
+	boolean handleApiRequest(Object cache, HttpServletRequest request, HttpServletResponse response, GrailsParameterMap params){
+		//println("#### [ApiRequestService : handleApiRequest ] ####")
 		try{
 
 			// CHECK IF URI HAS CACHE
 			if(cache){
 				// CHECK ACCESS TO METHOD
-
 				List roles = cache['roles'] as List
-
 				if(!checkAuth(request,roles)){
-					println('NO AUTH')
+					response.status = 401
+					response.setHeader('ERROR','Unauthorized Access attempted')
 					return false
 				}
 
@@ -40,9 +41,8 @@ class ApiRequestService extends ApiLayer{
 				if(deprecated?.get(0)){
 					if(checkDeprecationDate(deprecated[0].toString())){
 						String depMsg = deprecated[1].toString()
-						// replace msg with config deprecation message
-						String msg = "[ERROR] "+depMsg
-						ApiStatuses._400_BAD_REQUEST(msg)?.send()
+						response.status = 400
+						response.setHeader('ERROR',depMsg)
 						return false
 					}
 				}
@@ -51,6 +51,8 @@ class ApiRequestService extends ApiLayer{
 
 				// DOES api.methods.contains(request.method)
 				if(!isRequestMatch(method,request.method.toString())){
+					response.status = 400
+					response.setHeader('ERROR',"Request method doesn't match expected method.")
 					return false
 				}
 				return true
