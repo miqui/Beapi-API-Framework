@@ -181,7 +181,7 @@ class ApiCacheService{
  * TODO: Need to compare multiple authorities
  */
 	private String processJson(LinkedHashMap returns){
-		println("#### [ParamsService : processJson ] ####")
+		//println("#### [ApiCacheService : processJson ] ####")
 		try{
 			LinkedHashMap json = [:]
 			returns.each{ p ->

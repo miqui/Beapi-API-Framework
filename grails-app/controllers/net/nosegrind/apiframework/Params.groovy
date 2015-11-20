@@ -101,9 +101,7 @@ abstract class Params{
             definitions.each(){ key, val ->
                 if (request.isUserInRole(key) || key == 'permitAll') {
                     val.each(){ it2 ->
-                        if (it2) {
-                            apiList.add(it2.name)
-                        }
+                        apiList.add(it2.name)
                     }
                 }
             }
@@ -114,18 +112,18 @@ abstract class Params{
         }
     }
 
-    boolean checkURIDefinitions(GrailsParameterMap params,LinkedHashMap requestDefinitions){
+    boolean checkURIDefinitions(String method,GrailsParameterMap params,LinkedHashMap requestDefinitions){
         //println("#### [ParamsService : checkUriDefinitions ] ####")
         // put in check to see if if app.properties allow for this check
         //try{
-
             List requestList = getApiParams(requestDefinitions)
 
             HashMap methodParams = getMethodParams(params)
-            List paramsList = methodParams."${request.method.toLowerCase()}".keySet() as List
-
-            if(paramsList.size() == requestList.intersect(paramsList).size()){
-                return true
+            if(method==request.method.toUpperCase()) {
+                List paramsList = methodParams.keySet() as List
+                if (paramsList.size() == requestList.intersect(paramsList).size()) {
+                    return true
+                }
             }
             return false
         //}catch(Exception e) {
@@ -144,20 +142,8 @@ abstract class Params{
         //println("#### [ParamsService : getMethodParams ] ####")
         try{
             Map paramsRequest = [:]
-            //withPool(4) {
             paramsRequest = params.findAll { it2 -> !optionalParams.contains(it2.key) }
-            //}
-            Map paramsGet = [:]
-            Map paramsPost = [:]
-
-            paramsGet = WebUtils.fromQueryString(request.queryString ?: "")
-            paramsPost = paramsRequest.minus(paramsGet)
-            if(paramsPost['id']){
-                paramsGet['id'] = paramsPost['id']
-                paramsPost.remove('id')
-            }
-
-            return ['get':paramsGet,'post':paramsPost]
+            return paramsRequest
         }catch(Exception e){
             throw new Exception("[ParamsService :: getMethodParams] : Exception - full stack trace follows:",e)
         }

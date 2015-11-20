@@ -40,17 +40,6 @@ class ApiFrameworkInterceptor extends Params{
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 
-/*
-		if (springSecurityService.loggedIn) {
-			def principal = springSecurityService.principal
-			println("User is logged in")
-			List roleNames = principal.authorities*.authority
-			println roleNames
-		}else{
-			println("User NOT LOGGED IN")
-		}
-*/
-
 		initParams()
 
 		try{
@@ -66,7 +55,7 @@ class ApiFrameworkInterceptor extends Params{
 				if(cache){
 					params.apiObject = (params.apiObjectVersion)?params.apiObjectVersion:cache['currentStable']['value']
 					LinkedHashMap receives = cache[params.apiObject.toString()][params.action.toString()]['receives'] as LinkedHashMap
-					boolean requestKeysMatch = checkURIDefinitions(params,receives)
+					boolean requestKeysMatch = checkURIDefinitions(cache[params.apiObject.toString()][params.action.toString()]['method'] as String,params,receives)
 
 					if(!requestKeysMatch){
 						// return bad status
@@ -99,8 +88,7 @@ class ApiFrameworkInterceptor extends Params{
 			return false
 
 		}catch(Exception e){
-			//log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
-			println("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:"+e)
+			log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
 			return false
 		}
 	}
