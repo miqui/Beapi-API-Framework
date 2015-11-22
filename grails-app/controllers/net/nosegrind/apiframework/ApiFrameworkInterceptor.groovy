@@ -99,6 +99,7 @@ class ApiFrameworkInterceptor extends Params{
 			LinkedHashMap newModel = [:]
 
 			if (!model) {
+				println("no model")
 				render(status: HttpServletResponse.SC_BAD_REQUEST)
 				return false
 			} else {

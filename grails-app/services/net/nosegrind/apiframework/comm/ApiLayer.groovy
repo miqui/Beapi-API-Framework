@@ -484,10 +484,13 @@ abstract class ApiLayer{
 	LinkedHashMap formatDomainObject(Object data){
 		//println("#### [ApiResponseService : formatDomainObject ] ####")
 		try{
-			List nonPersistent = ['log', 'class', 'constraints', 'properties', 'errors', 'mapping', 'metaClass','maps']
+			List nonPersistent = ['log', 'class', 'constraints', 'properties', 'errors', 'mapping', 'metaClass','maps','id','version','dbo']
 			LinkedHashMap newMap = [:]
-
-			newMap.put('id',data?.id)
+			if(data.id.class.toString().contains('org.bson.types.ObjectId')){
+				newMap.put('id',data?.id.get().toString())
+			}else{
+				newMap.put('id',data?.id)
+			}
 			newMap.put('version',data?.version)
 
 			data.properties.each() { it ->
@@ -496,7 +499,6 @@ abstract class ApiLayer{
 					newMap[it.key] = (grailsApplication.isDomainClass(it.value.getClass())) ? it.value.id : it.value
 				}
 			}
-
 
 			return newMap
 		}catch(Exception e){
