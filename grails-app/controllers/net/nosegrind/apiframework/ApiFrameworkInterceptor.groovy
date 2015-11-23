@@ -39,8 +39,9 @@ class ApiFrameworkInterceptor extends Params{
 		//println("##### FILTER (BEFORE)")
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
+		String encoding = grailsApplication.config.apitoolkit.encoding
 
-		initParams()
+		initParams(encoding)
 
 		try{
 

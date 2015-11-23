@@ -72,4 +72,24 @@ config:
         maxElementsInMemory: 10000
         maxElementsOnDisk: 10000000
 
+---
+apitoolkit:
+    encoding: 'UTF-8'
+    attempts: 5
+    roles: {ROLE_USER,ROLE_ROOT,ROLE_ADMIN,ROLE_ARCH}
+    apichain:
+        limit:3
+    rest:
+        postcrement: false
+    chaining:
+        enabled: true
+    batching:
+        enabled: true
+    user:
+        roles: {ROLE_USER}
+    admin:
+        roles: {ROLE_ROOT,ROLE_ADMIN,ROLE_ARCH}
+    serverType: master
+    iostate:
+        preloadDir: /home/owenrubel/.iostate
 

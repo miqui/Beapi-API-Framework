@@ -22,12 +22,12 @@ abstract class Params{
     def formats = ['text/html','text/json','application/json','text/xml','application/xml']
     List optionalParams = ['method','format','contentType','encoding','action','controller','v','apiCombine', 'apiObject','entryPoint']
 
-    void initParams() {
+    void initParams(String encoding) {
         //println("#### [ParamsService : initParams ] ####")
 
         params.method = request.method
         List tempType = request.getHeader('Content-Type')?.split(';')
-        params.encoding = (tempType != null && tempType?.size() > 1) ? tempType[1] : 'UTF-8'
+        params.encoding = (tempType != null && tempType?.size() > 1) ? tempType[1] : encoding
         String type = (tempType?.size() > 0) ? tempType[0] : (request.getHeader('Content-Type')) ? request.getHeader('Content-Type') : 'application/json'
         params.contentType = (type) ? formats.find{ type.startsWith(it) }.toString() : type
         //String queryString = request.getQueryString()
