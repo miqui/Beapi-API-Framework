@@ -265,20 +265,60 @@ class ApiFrameworkUrlMappings {
             }
         }
 
+        "200"{
+            controller = "error"
+            parseRequest = true
+        }
+        "302"{
+            controller = "error"
+            parseRequest = true
+        }
+        "304"{
+            controller = "error"
+            parseRequest = true
+        }
+        "400"{
+            controller = "error"
+            parseRequest = true
+        }
+        "401"{
+            controller = "error"
+            parseRequest = true
+        }
         "403" {
-            controller = "errors"
+            controller = "error"
             parseRequest = true
         }
         "404" {
-            controller = "errors"
+            controller = "error"
             parseRequest = true
         }
         "405" {
-            controller = "errors"
+            controller = "error"
+            parseRequest = true
+        }
+        "409"{
+            controller = "error"
+            parseRequest = true
+        }
+        "412"{
+            controller = "error"
+            parseRequest = true
+        }
+        "413"{
+            controller = "error"
+            parseRequest = true
+        }
+        "416"{
+            controller = "error"
             parseRequest = true
         }
         "500" {
-            controller = "errors"
+            controller = "error"
+            parseRequest = true
+        }
+        "503"{
+            controller = "error"
             parseRequest = true
         }
     }
