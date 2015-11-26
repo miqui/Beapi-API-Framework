@@ -1,15 +1,13 @@
 package net.nosegrind.apiframework
 
-
 import grails.core.GrailsApplication
-
 import grails.plugin.springsecurity.SpringSecurityService
-import net.nosegrind.apiframework.comm.ApiRequestService
-import net.nosegrind.apiframework.comm.ApiResponseService
 import grails.util.Metadata
+import net.nosegrind.apiframework.comm.BatchRequestService
+import net.nosegrind.apiframework.comm.BatchResponseService
+
 import javax.servlet.http.HttpServletResponse
 
-import groovy.transform.CompileStatic
 //import net.nosegrind.apiframework.Timer
 
 /* ****************************************************************************
@@ -17,30 +15,33 @@ import groovy.transform.CompileStatic
  *****************************************************************************/
 
 //@CompileStatic
-class ApiFrameworkInterceptor extends Params{
+class BatchInterceptor extends Params{
 
 	int order = HIGHEST_PRECEDENCE + 999
 
 	GrailsApplication grailsApplication
-	ApiRequestService apiRequestService
-	ApiResponseService apiResponseService
+	BatchRequestService batchRequestService
+	BatchResponseService batchResponseService
 	ApiCacheService apiCacheService
 	SpringSecurityService springSecurityService
 
 	String entryPoint
 
-	ApiFrameworkInterceptor(){
+	BatchInterceptor(){
 		String apiVersion = Metadata.current.getApplicationVersion()
-		entryPoint = "v${apiVersion}"
+		entryPoint = "b${apiVersion}"
 		match(uri:"/${entryPoint}/**")
 	}
 
 	boolean before(){
-		//println("##### FILTER (BEFORE)")
+		//println("##### BATCHINTERCEPTOR (BEFORE)")
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 
 		initParams()
+		if (grailsApplication.config.apitoolkit.batching.enabled) {
+			params.apiBatch = content?.batch
+		}
 
 		try{
 
@@ -79,7 +80,7 @@ class ApiFrameworkInterceptor extends Params{
 					}
 
 					// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
-					boolean result = apiRequestService.handleApiRequest(cache[params.apiObject.toString()][params.action.toString()], request, response, params)
+					boolean result = batchRequestService.handleApiRequest(cache[params.apiObject.toString()][params.action.toString()], request, response, params)
 					return result
 				}
 			//}
@@ -100,11 +101,22 @@ class ApiFrameworkInterceptor extends Params{
 				render(status:HttpServletResponse.SC_NOT_FOUND , text: 'No resource returned')
 				return false
 			} else {
-				newModel = apiResponseService.convertModel(model)
+				newModel = batchResponseService.convertModel(model)
 			}
 
 			LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
-			LinkedHashMap content = apiResponseService.handleApiResponse(cache[params.apiObject.toString()][params.action.toString()],request,response,newModel,params) as LinkedHashMap
+			LinkedHashMap content
+			if(batchEnabled && params?.apiBatch){
+				forward(controller:params.controller, action:params.action,params:params)
+				return false
+			}
+
+			if(batchEnabled && params?.apiBatch){
+				forward(controller:params.controller, action:params.action,params:params)
+				return false
+			}
+
+			content = batchResponseService.handleApiResponse(cache[params.apiObject.toString()][params.action.toString()],request,response,newModel,params) as LinkedHashMap
 
 			if(content){
 				render(text:content.apiToolkitContent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)

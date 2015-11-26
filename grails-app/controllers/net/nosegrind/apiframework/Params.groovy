@@ -15,26 +15,34 @@ import org.grails.web.util.WebUtils
 import net.nosegrind.apiframework.Timer
 import javax.servlet.forward.*
 import org.grails.groovy.grails.commons.*
+import org.grails.web.util.WebUtils
 
 
 abstract class Params{
 
+    def grailsApplication
     def formats = ['text/html','text/json','application/json','text/xml','application/xml']
     List optionalParams = ['method','format','contentType','encoding','action','controller','v','apiCombine', 'apiObject','entryPoint']
+    Boolean batchEnabled
+    Boolean chainEnabled
 
-    void initParams(String encoding) {
+    void initParams(String apiAutomationType) {
         //println("#### [ParamsService : initParams ] ####")
-
+        this.batchEnabled = grailsApplication.config.apitoolkit.batching.enabled
+        this.chainEnabled = grailsApplication.config.apitoolkit.chaining.enabled
+        String encoding = grailsApplication.config.apitoolkit.encoding
         params.method = request.method
         List tempType = request.getHeader('Content-Type')?.split(';')
         params.encoding = (tempType != null && tempType?.size() > 1) ? tempType[1] : encoding
         String type = (tempType?.size() > 0) ? tempType[0] : (request.getHeader('Content-Type')) ? request.getHeader('Content-Type') : 'application/json'
         params.contentType = (type) ? formats.find{ type.startsWith(it) }.toString() : type
+        params.uri = WebUtils.FORWARD_REQUEST_URI_ATTRIBUTE
         //String queryString = request.getQueryString()
 
         if (request?.format) {
             LinkedHashMap content = [:]
-            switch (request.format) {
+            String format = request.format
+            switch (format) {
                 case 'XML':
                 case 'xml':
                     params.format = request.format.toUpperCase()
@@ -56,8 +64,48 @@ abstract class Params{
                 default:
                     break
             }
+
+            // determine automation functionality
+            switch(apiAutomationType){
+                case 'chain':
+                    setChainParams(params)
+                    if(request?."${format}"?.chain){
+                        request."${format}".remove('chain')
+                    }
+                    break
+                case 'batch':
+                    setBatchParams(params)
+                    if(request?."${format}"?.batch){
+                        request."${format}".remove('batch')
+                    }
+                    if(batchEnabled && params.apiBatch){
+                        // batch becomes temp placeholder for CURRENT vals
+                        // allows us to have easy place to check against
+                        params.batch = params.apiBatch.remove(0)
+                        params.batch.each{ k,v ->
+                            params[k] = v
+                        }
+                    }
+                    break
+            }
         }
 
+    }
+
+    void setBatchParams(GrailsParameterMap params){
+        if (batchEnabled && !params.apiBatch) {
+            params.apiBatch = []
+            params.batch.each { it ->
+                params.apiBatch.add(it)
+            }
+            params.apiBatch = params.apiBatch
+        }
+    }
+
+    void setChainParams(GrailsParameterMap params){
+        if (chainEnabled) {
+            params.apiChain = content?.chain
+        }
     }
 
     /*

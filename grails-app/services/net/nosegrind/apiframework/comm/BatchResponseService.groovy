@@ -1,5 +1,7 @@
 package net.nosegrind.apiframework.comm
 
+import grails.core.GrailsApplication
+
 /* ****************************************************************************
  * Copyright 2014 Owen Rubel
  *****************************************************************************/
@@ -7,30 +9,18 @@ package net.nosegrind.apiframework.comm
 
 
 //import grails.plugin.springsecurity.SpringSecurityService
-
-import grails.web.http.HttpHeaders
-import net.nosegrind.apiframework.comm.ApiLayer
+import grails.web.servlet.mvc.GrailsParameterMap
+import groovy.transform.CompileStatic
+import net.nosegrind.apiframework.ApiCacheService
+import org.grails.groovy.grails.commons.*
 
 import javax.servlet.forward.*
-import org.springframework.http.ResponseEntity
-
-import grails.web.servlet.mvc.GrailsParameterMap
-
-import org.grails.groovy.grails.commons.*
-import org.grails.validation.routines.UrlValidator
-import org.grails.web.util.GrailsApplicationAttributes
-//import org.grails.web.sitemesh.GrailsContentBufferingResponse
-
-import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.HttpServletRequest
-import net.nosegrind.apiframework.ApiDescriptor
-import grails.core.GrailsApplication
-import net.nosegrind.apiframework.*
-import net.nosegrind.apiframework.Timer
-import groovy.transform.CompileStatic
+import javax.servlet.http.HttpServletResponse
 
+//import org.grails.web.sitemesh.GrailsContentBufferingResponse
 @CompileStatic
-class ApiResponseService extends ApiLayer{
+class BatchResponseService extends ApiLayer{
 
 	GrailsApplication grailsApplication
 	ApiCacheService apiCacheService
@@ -46,6 +36,9 @@ class ApiResponseService extends ApiLayer{
 					response.setHeader('Authorization', cache['roles'].toString().join(', '))
 					List responseList = getApiParams((LinkedHashMap)cache['returns'])
 					LinkedHashMap result = parseURIDefinitions(model,responseList)
+					//if(params?.apiBatch.combine=='true'){
+					//	params.apiCombine["${params.uri}"] = result
+					//}
 					if(!result){
 						response.status = 400
 					}else{
