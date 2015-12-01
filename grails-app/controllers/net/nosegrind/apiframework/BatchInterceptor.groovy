@@ -34,14 +34,12 @@ class BatchInterceptor extends Params{
 	}
 
 	boolean before(){
-		//println("##### BATCHINTERCEPTOR (BEFORE)")
+		println("##### BATCHINTERCEPTOR (BEFORE)")
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 
-		initParams()
-		if (grailsApplication.config.apitoolkit.batching.enabled) {
-			params.apiBatch = content?.batch
-		}
+		initParams('batch')
+
 
 		try{
 
@@ -93,7 +91,7 @@ class BatchInterceptor extends Params{
 	}
 
 	boolean after(){
-		//println("##### FILTER (AFTER)")
+		println("##### FILTER (AFTER)")
 		try{
 			LinkedHashMap newModel = [:]
 
@@ -103,6 +101,8 @@ class BatchInterceptor extends Params{
 			} else {
 				newModel = batchResponseService.convertModel(model)
 			}
+
+			println("newmodel: "+newModel)
 
 			LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
 			LinkedHashMap content

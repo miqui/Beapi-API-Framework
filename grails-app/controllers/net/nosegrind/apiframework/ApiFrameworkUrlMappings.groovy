@@ -266,58 +266,79 @@ class ApiFrameworkUrlMappings {
         }
 
         "200"{
+            id = '200'
             controller = "error"
             parseRequest = true
         }
         "302"{
+            id = '302'
             controller = "error"
             parseRequest = true
         }
         "304"{
+            id = '304'
             controller = "error"
             parseRequest = true
         }
         "400"{
+            id = '400'
             controller = "error"
             parseRequest = true
         }
         "401"{
+            id = '401'
             controller = "error"
             parseRequest = true
         }
         "403" {
+            id = '403'
             controller = "error"
             parseRequest = true
         }
         "404" {
+            id = '404'
             controller = "error"
             parseRequest = true
         }
         "405" {
+            id = '405'
             controller = "error"
             parseRequest = true
         }
         "409"{
+            id = '409'
             controller = "error"
             parseRequest = true
         }
         "412"{
+            id = '412'
             controller = "error"
             parseRequest = true
         }
         "413"{
+            id = '413'
             controller = "error"
             parseRequest = true
         }
         "416"{
+            id = '416'
             controller = "error"
             parseRequest = true
         }
         "500" {
+            id = '500'
             controller = "error"
             parseRequest = true
         }
+        "500" {
+            id = '500'
+            exception = NullPointerException
+            controller = "error"
+            parseRequest = true
+        }
+
         "503"{
+            id = '503'
             controller = "error"
             parseRequest = true
         }
