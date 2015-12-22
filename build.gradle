@@ -1,7 +1,6 @@
-
 buildscript {
     ext {
-        grailsVersion = '3.0.5.BUILD-SNAPSHOT'
+        grailsVersion = '3.0.10'
         //grailsVersion = project.grailsVersion
     }
     repositories {
@@ -9,30 +8,32 @@ buildscript {
         maven { url "https://repo.grails.org/grails/core" }
     }
     dependencies {
+    //    classpath "org.grails:grails-gradle-application:$grailsVersion"
         classpath "org.grails:grails-gradle-plugin:$grailsVersion"
     }
 }
 
 plugins {
-    id "io.spring.dependency-management" version "0.4.0.RELEASE"
-    id "com.jfrog.bintray" version "1.1"
+    id "io.spring.dependency-management" version "0.5.2.RELEASE"
+    id "com.jfrog.bintray" version "1.2"
 }
 
 version "0.1-SNAPSHOT"
 group "org.grails.plugins"
 
+
 apply plugin: 'maven-publish'
-//apply plugin: 'eclipse'
-//apply plugin: 'idea'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
 apply plugin: "spring-boot"
 apply plugin: "org.grails.grails-plugin"
 //apply plugin: "org.grails.grails-gsp"
 // Used for publishing to central repository, remove if not needed
-apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/master/profiles/plugin/templates/grailsCentralPublishing.gradle'
-apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/master/profiles/plugin/templates/bintrayPublishing.gradle'
+//apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/master/profiles/plugin/templates/grailsCentralPublishing.gradle'
+//apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/master/profiles/plugin/templates/bintrayPublishing.gradle'
 
 ext {
-    grailsVersion = '3.0.5.BUILD-SNAPSHOT'
+    grailsVersion = '3.0.10'
     //grailsVersion = project.grailsVersion
     gradleWrapperVersion = project.gradleWrapperVersion
 }
@@ -58,7 +59,7 @@ dependencies {
     compile 'org.grails.plugins:cache:3.0.1'
     //compile("org.grails.plugins:spring-security-core:3.0.0.M1")
     //Stormpath user mgmt
-    //compile 'com.stormpath.sdk:stormpath-servlet-plugin:1.0.RC4.3'
+    //compile 'com.stormpath.sdk:stormpath-servlet-application:1.0.RC4.3'
     //compile 'com.stormpath.sdk:stormpath-sdk-api:1.0.RC3.1'
     //runtime 'com.stormpath.sdk:stormpath-sdk-impl:1.0.RC3.1'
     //runtime 'com.stormpath.sdk:stormpath-sdk-httpclient:1.0.RC3.1'
@@ -71,19 +72,20 @@ dependencies {
     compile 'org.springframework.boot:spring-boot-autoconfigure'
     provided 'org.springframework.boot:spring-boot-starter-tomcat'
     compile 'org.grails.plugins:spring-security-core:3.0.0.M1'
-    //compile 'org.springframework.boot:spring-boot-starter-security'
     compile 'org.grails:grails-web-boot'
     compile 'org.grails:grails-dependencies'
     //compile 'javax.servlet:javax.servlet-api:3.1.0'
 
-    testCompile 'org.grails:grails-plugin-testing'
+    //testCompile 'org.grails:grails-application-testing'
 
     console "org.grails:grails-console"
 }
 
+
 task wrapper(type: Wrapper) {
     gradleVersion = gradleWrapperVersion
 }
+
 
 run {
     systemProperties = System.properties
@@ -92,7 +94,3 @@ run {
 test {
     systemProperties = System.properties
 }
-
-//compileGroovy {
-//    groovyOptions.configurationScript = file("buildConfigScript.groovy")
-//}

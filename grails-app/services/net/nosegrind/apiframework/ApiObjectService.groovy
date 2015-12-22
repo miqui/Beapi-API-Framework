@@ -14,9 +14,9 @@ import grails.util.Environment
 import net.nosegrind.apiframework.ApiDescriptor
 import net.nosegrind.apiframework.ApiStatuses
 
-//import grails.plugin.cache.GrailsCacheManager
+//import grails.application.cache.GrailsCacheManager
 //import org.springframework.cache.CacheManager
-//import grails.plugin.springsecurity.SpringSecurityService
+//import grails.application.springsecurity.SpringSecurityService
 import org.grails.groovy.grails.commons.*
 
 class ApiObjectService{

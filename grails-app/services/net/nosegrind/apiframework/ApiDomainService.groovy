@@ -6,7 +6,7 @@ package net.nosegrind.apiframework
  *****************************************************************************/
 import grails.core.GrailsApplication
 
-//import grails.plugin.springsecurity.SpringSecurityService
+//import grails.application.springsecurity.SpringSecurityService
 import org.grails.groovy.grails.commons.*
 import grails.web.servlet.mvc.GrailsParameterMap
 import org.springframework.web.context.request.RequestContextHolder

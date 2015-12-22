@@ -296,11 +296,11 @@ abstract class ApiLayer{
 			boolean pathMatch = false
 
 			List keys = path.keySet() as List
-			Integer pathSize = keys.size()
+			int pathSize = keys.size()
 
 			String controller = uri[0]
 			String action = uri[1]
-			Long id = uri[2].toLong()
+			long id = uri[2].toLong()
 
 			// prematch check
 			String currentMethod = Method["${request.method.toString()}"].toString()

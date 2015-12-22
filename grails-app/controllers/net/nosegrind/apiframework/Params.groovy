@@ -22,8 +22,8 @@ abstract class Params{
 
     def formats = ['text/html','text/json','application/json','text/xml','application/xml']
     List optionalParams = ['method','format','contentType','encoding','action','controller','v','apiCombine', 'apiObject','entryPoint','uri','apiBatch','apiChain']
-    Boolean batchEnabled
-    Boolean chainEnabled
+    boolean batchEnabled
+    boolean chainEnabled
 
     void initParams(String apiAutomationType) {
         //println("#### [ParamsService : initParams ] ####")
@@ -165,9 +165,9 @@ abstract class Params{
     }
 
     boolean checkURIDefinitions(String method,GrailsParameterMap params,LinkedHashMap requestDefinitions){
-        //println("#### [ParamsService : checkUriDefinitions ] ####")
+        println("#### [ParamsService : checkUriDefinitions ] ####")
         // put in check to see if if app.properties allow for this check
-        //try{
+        try{
             List requestList = getApiParams(requestDefinitions)
 println("requestList:"+requestList)
             HashMap methodParams = getMethodParams(params)
@@ -181,9 +181,9 @@ println("requestList:"+requestList)
                 }
             }
             return false
-        //}catch(Exception e) {
-        //    throw new Exception("[ApiLayerService :: checkURIDefinitions] : Exception - full stack trace follows:",e)
-        //}
+        }catch(Exception e) {
+           throw new Exception("[ApiLayerService :: checkURIDefinitions] : Exception - full stack trace follows:",e)
+        }
     }
 
     List getRedirectParams(GrailsParameterMap params){

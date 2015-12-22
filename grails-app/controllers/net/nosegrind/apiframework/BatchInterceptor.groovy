@@ -6,6 +6,7 @@ import grails.util.Metadata
 import net.nosegrind.apiframework.comm.BatchRequestService
 import net.nosegrind.apiframework.comm.BatchResponseService
 
+import grails.artefact.controller.support.RequestForwarder
 import javax.servlet.http.HttpServletResponse
 
 //import net.nosegrind.apiframework.Timer
@@ -37,26 +38,27 @@ class BatchInterceptor extends Params{
 		println("##### BATCHINTERCEPTOR (BEFORE)")
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
-
+		println("controller : "+params.controller)
 		initParams('batch')
 
 
-		try{
+		//try{
 
 			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
-
+println("controller : "+params.controller)
 				LinkedHashMap cache = [:]
 				if(params.controller){
 					cache = apiCacheService.getApiCache(params.controller.toString())
 				}
 
-
+println("has cache : "+cache)
 				if(cache){
 					params.apiObject = (params.apiObjectVersion)?params.apiObjectVersion:cache['currentStable']['value']
 					LinkedHashMap receives = cache[params.apiObject.toString()][params.action.toString()]['receives'] as LinkedHashMap
 					boolean requestKeysMatch = checkURIDefinitions(cache[params.apiObject.toString()][params.action.toString()]['method'] as String,params,receives)
 
 					if(!requestKeysMatch){
+						println("keys dont match")
 						render(status:HttpServletResponse.SC_BAD_REQUEST, text: 'Expected request variables do not match sent variables')
 						return false
 					}
@@ -84,14 +86,15 @@ class BatchInterceptor extends Params{
 			//}
 			return false
 
-		}catch(Exception e){
-			log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
-			return false
-		}
+		//}catch(Exception e){
+			//log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
+		//	println("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:"+ e)
+		//	return false
+		//}
 	}
 
 	boolean after(){
-		println("##### FILTER (AFTER)")
+		println("##### BATCHFILTER (AFTER)")
 		try{
 			LinkedHashMap newModel = [:]
 
@@ -107,6 +110,7 @@ class BatchInterceptor extends Params{
 			LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
 			LinkedHashMap content
 			if(batchEnabled && params?.apiBatch){
+				println("forwarding....")
 				forward(controller:params.controller, action:params.action,params:params)
 				return false
 			}

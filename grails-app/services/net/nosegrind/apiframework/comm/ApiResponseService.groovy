@@ -6,7 +6,7 @@ package net.nosegrind.apiframework.comm
 
 
 
-//import grails.plugin.springsecurity.SpringSecurityService
+//import grails.application.springsecurity.SpringSecurityService
 
 import grails.web.http.HttpHeaders
 import net.nosegrind.apiframework.comm.ApiLayer

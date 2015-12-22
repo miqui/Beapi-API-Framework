@@ -1,6 +1,5 @@
 ---
 grails:
-    profile: web-plugin
     codegen:
         defaultPackage: grails.api.framework
 info:

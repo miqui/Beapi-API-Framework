@@ -8,7 +8,7 @@ import grails.core.GrailsApplication
 
 
 
-//import grails.plugin.springsecurity.SpringSecurityService
+//import grails.application.springsecurity.SpringSecurityService
 import grails.web.servlet.mvc.GrailsParameterMap
 import groovy.transform.CompileStatic
 import net.nosegrind.apiframework.ApiCacheService

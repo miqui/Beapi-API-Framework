@@ -39,6 +39,8 @@ class ApiFrameworkInterceptor extends Params{
 		println("##### FILTER (BEFORE)")
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
+println(params)
+		println("message:"+flash.message)
 
 		initParams()
 
