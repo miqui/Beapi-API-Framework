@@ -304,9 +304,9 @@ abstract class ApiLayer{
 
 			// prematch check
 			String currentMethod = Method["${request.method.toString()}"].toString()
-			println("currentMethod:"+currentMethod)
+			//println("currentMethod:"+currentMethod)
 			String methods = cache[params.apiObject][action]['method'].trim()
-			println("methods:"+methods)
+			//println("methods:"+methods)
 
 			if(currentMethod!=methods && methods=='GET'){
 				if(['prechain','postchain'].contains(params?.apiChain?.type)){
@@ -321,17 +321,17 @@ abstract class ApiLayer{
 
 			// postmatch check
 			if(pathSize>=1){
-				println("pathSize>=1")
+				//println("pathSize>=1")
 				String last=path[keys[pathSize-1]]
 				if(last && (last!='return' || last!='null')){
 					List last2 = keys[pathSize-1].split('/')
 
-					println(last2)
-					println(last2[0])
+					//println(last2)
+					//println(last2[0])
 					cache = apiCacheService.getApiCache(last2[0])
-					println(cache)
+					//println(cache)
 					methods = cache[params.apiObject][last2[1]]['method'].trim()
-					println("methods2:"+methods)
+					//println("methods2:"+methods)
 					if(methods=='GET'){
 						if(methods != currentMethod && params?.apiChain?.type=='postchain'){
 							postMatch = true
@@ -349,15 +349,15 @@ abstract class ApiLayer{
 			// path check
 			int start = 1
 			int end = pathSize-2
-			println("${start} > ${end}")
+			//println("${start} > ${end}")
 			if(start<end){
 				//println("${start} > ${end}")
 				keys[0..(pathSize-1)].each{ val ->
 					if(val){
-						println("val : "+val)
+						//println("val : "+val)
 						List temp2 = val.split('/')
-						println(temp2)
-						println(temp2[0])
+						//println(temp2)
+						//println(temp2[0])
 						cache = apiCacheService.getApiCache(temp2[0])
 						methods = cache[params.apiObject][temp2[1]]['method'].trim()
 
@@ -374,7 +374,7 @@ abstract class ApiLayer{
 				}
 			}
 
-			println("${pathMatch} / ${preMatch} / ${postMatch}")
+			//println("${pathMatch} / ${preMatch} / ${postMatch}")
 			if(pathMatch || (preMatch && postMatch)){
 				if(params?.apiChain?.type=='blankchain'){
 					return 0

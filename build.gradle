@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        grailsVersion = '3.0.10'
+        grailsVersion = '3.1.0.RC1'
         //grailsVersion = project.grailsVersion
     }
     repositories {
@@ -8,7 +8,6 @@ buildscript {
         maven { url "https://repo.grails.org/grails/core" }
     }
     dependencies {
-    //    classpath "org.grails:grails-gradle-application:$grailsVersion"
         classpath "org.grails:grails-gradle-plugin:$grailsVersion"
     }
 }
@@ -22,9 +21,7 @@ version "0.1-SNAPSHOT"
 group "org.grails.plugins"
 
 
-apply plugin: 'maven-publish'
-apply plugin: 'eclipse'
-apply plugin: 'idea'
+apply plugin: "maven-publish"
 apply plugin: "spring-boot"
 apply plugin: "org.grails.grails-plugin"
 //apply plugin: "org.grails.grails-gsp"
@@ -33,13 +30,13 @@ apply plugin: "org.grails.grails-plugin"
 //apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/master/profiles/plugin/templates/bintrayPublishing.gradle'
 
 ext {
-    grailsVersion = '3.0.10'
+    grailsVersion = '3.1.0.RC1'
     //grailsVersion = project.grailsVersion
     gradleWrapperVersion = project.gradleWrapperVersion
 }
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
 
 
 repositories {
@@ -76,7 +73,7 @@ dependencies {
     compile 'org.grails:grails-dependencies'
     //compile 'javax.servlet:javax.servlet-api:3.1.0'
 
-    //testCompile 'org.grails:grails-application-testing'
+    testCompile "org.grails:grails-plugin-testing"
 
     console "org.grails:grails-console"
 }
@@ -86,8 +83,7 @@ task wrapper(type: Wrapper) {
     gradleVersion = gradleWrapperVersion
 }
 
-
-run {
+bootRun {
     systemProperties = System.properties
 }
 

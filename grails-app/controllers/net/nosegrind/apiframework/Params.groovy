@@ -89,15 +89,13 @@ abstract class Params{
                         params[k] = v
                     }
                 }
-                println("batch params : "+params)
                 break
         }
     }
 
     void setBatchParams(GrailsParameterMap params){
-        println("#### [ParamsService : setBatchParams ] ####")
+        //println("#### [ParamsService : setBatchParams ] ####")
         if (batchEnabled && !params.apiBatch) {
-            println("... setting batch")
             params.apiBatch = []
             params.batch.each { it ->
                 params.apiBatch.add(it)
@@ -165,17 +163,14 @@ abstract class Params{
     }
 
     boolean checkURIDefinitions(String method,GrailsParameterMap params,LinkedHashMap requestDefinitions){
-        println("#### [ParamsService : checkUriDefinitions ] ####")
+        //println("#### [ParamsService : checkUriDefinitions ] ####")
         // put in check to see if if app.properties allow for this check
         try{
             List requestList = getApiParams(requestDefinitions)
-println("requestList:"+requestList)
             HashMap methodParams = getMethodParams(params)
             if(method==request.method.toUpperCase()) {
-                println("method==request.method")
 
                 List paramsList = methodParams.keySet() as List
-                println("paramsList:"+paramsList)
                 if (paramsList.size() == requestList.intersect(paramsList).size()) {
                     return true
                 }

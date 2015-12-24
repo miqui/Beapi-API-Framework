@@ -5,7 +5,7 @@ grails:
         defaultPackage: grails.api.framework
 info:
     app:
-        name: '@info.app.name@'
+        name: api
         version: '@info.app.version@'
         grailsVersion: '@info.app.grailsVersion@'
 spring:
@@ -53,11 +53,6 @@ grails:
         defaultScope: singleton
     converters:
         encoding: UTF-8
-    hibernate:  
-        cache:
-            queries: false
-            use_second_level_cache: false  
-            use_query_cache: false  
     views:
         default:
             codec: html
@@ -69,14 +64,32 @@ grails:
                 scriptlets: html
                 taglib: none
                 staticparts: none
+config:
     cache:
+        name: 'ApiCache'
+        eternal: false
+        overflowToDisk: true
+        maxElementsInMemory: 10000
+        maxElementsOnDisk: 10000000
+
+---
+apitoolkit:
+    encoding: 'UTF-8'
+    attempts: 5
+    roles: {ROLE_USER,ROLE_ROOT,ROLE_ADMIN,ROLE_ARCH}
+    apichain:
+        limit:3
+    rest:
+        postcrement: false
+    chaining:
         enabled: true
-        clearAtStartup: true
-        config:
-            cache:
-                name: 'ApiCache'
-                eternal: true
-                overflowToDisk: true
-                maxElementsInMemory: 10000
-                maxElementsOnDisk: 10000000
+    batching:
+        enabled: true
+    user:
+        roles: {ROLE_USER}
+    admin:
+        roles: {ROLE_ROOT,ROLE_ADMIN,ROLE_ARCH}
+    serverType: master
+    iostate:
+        preloadDir: /home/owenrubel/.iostate
 

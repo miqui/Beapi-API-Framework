@@ -36,11 +36,9 @@ class ApiFrameworkInterceptor extends Params{
 	}
 
 	boolean before(){
-		println("##### FILTER (BEFORE)")
+		//println("##### FILTER (BEFORE)")
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
-println(params)
-		println("message:"+flash.message)
 
 		initParams()
 
@@ -94,7 +92,7 @@ println(params)
 	}
 
 	boolean after(){
-		println("##### FILTER (AFTER)")
+		//println("##### FILTER (AFTER)")
 		try{
 			LinkedHashMap newModel = [:]
 

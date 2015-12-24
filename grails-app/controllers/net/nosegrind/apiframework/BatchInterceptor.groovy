@@ -111,6 +111,7 @@ println("has cache : "+cache)
 			LinkedHashMap content
 			if(batchEnabled && params?.apiBatch){
 				println("forwarding....")
+				println(params)
 				forward(controller:params.controller, action:params.action,params:params)
 				return false
 			}
