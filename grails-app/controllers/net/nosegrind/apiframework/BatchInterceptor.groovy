@@ -7,6 +7,8 @@ import net.nosegrind.apiframework.comm.BatchRequestService
 import net.nosegrind.apiframework.comm.BatchResponseService
 
 import grails.artefact.controller.support.RequestForwarder
+import org.grails.web.util.WebUtils
+
 import javax.servlet.http.HttpServletResponse
 
 //import net.nosegrind.apiframework.Timer
@@ -38,11 +40,18 @@ class BatchInterceptor extends Params{
 		println("##### BATCHINTERCEPTOR (BEFORE)")
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
-		println("controller : "+params.controller)
+
+		// Make sure GET params do not overlap with POST params
+		Map paramsRequest = params.findAll { return !globalParams.contains(it.key) }
+		Map paramsGet = WebUtils.fromQueryString(request.getQueryString() ?: "")
+		Map paramsPost = paramsRequest.minus(paramsGet)
+		request.setAttribute('paramsGet', paramsGet)
+		request.setAttribute('paramsPost', paramsPost)
+
 		initParams('batch')
 
 
-		//try{
+		try{
 
 			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
 println("controller : "+params.controller)
@@ -86,11 +95,11 @@ println("has cache : "+cache)
 			//}
 			return false
 
-		//}catch(Exception e){
+		}catch(Exception e) {
 			//log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
-		//	println("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:"+ e)
-		//	return false
-		//}
+			println("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:" + e)
+			return false
+		}
 	}
 
 	boolean after(){

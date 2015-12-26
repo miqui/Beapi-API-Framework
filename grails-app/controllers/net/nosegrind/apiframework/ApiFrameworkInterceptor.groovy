@@ -7,6 +7,8 @@ import grails.plugin.springsecurity.SpringSecurityService
 import net.nosegrind.apiframework.comm.ApiRequestService
 import net.nosegrind.apiframework.comm.ApiResponseService
 import grails.util.Metadata
+import org.grails.web.util.WebUtils
+
 import javax.servlet.http.HttpServletResponse
 
 import groovy.transform.CompileStatic
@@ -39,6 +41,13 @@ class ApiFrameworkInterceptor extends Params{
 		//println("##### FILTER (BEFORE)")
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
+
+		// Make sure GET params do not overlap with POST params
+		Map paramsRequest = params.findAll { return !globalParams.contains(it.key) }
+		Map paramsGet = WebUtils.fromQueryString(request.getQueryString() ?: "")
+		Map paramsPost = paramsRequest.minus(paramsGet)
+		request.setAttribute('paramsGet', paramsGet)
+		request.setAttribute('paramsPost', paramsPost)
 
 		initParams()
 

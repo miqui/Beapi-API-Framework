@@ -26,8 +26,8 @@ apply plugin: "spring-boot"
 apply plugin: "org.grails.grails-plugin"
 //apply plugin: "org.grails.grails-gsp"
 // Used for publishing to central repository, remove if not needed
-//apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/master/profiles/plugin/templates/grailsCentralPublishing.gradle'
-//apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/master/profiles/plugin/templates/bintrayPublishing.gradle'
+apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/master/profiles/plugin/templates/grailsCentralPublishing.gradle'
+apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/master/profiles/plugin/templates/bintrayPublishing.gradle'
 
 ext {
     grailsVersion = '3.1.0.RC1'
@@ -35,8 +35,8 @@ ext {
     gradleWrapperVersion = project.gradleWrapperVersion
 }
 
-sourceCompatibility = 1.7
-targetCompatibility = 1.7
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 
 repositories {
@@ -68,7 +68,12 @@ dependencies {
     //provided "org.springframework.boot:spring-boot-starter-actuator"
     compile 'org.springframework.boot:spring-boot-autoconfigure'
     provided 'org.springframework.boot:spring-boot-starter-tomcat'
+
     compile 'org.grails.plugins:spring-security-core:3.0.0.M1'
+    // 3.1.0RC1
+    compile 'org.springframework.security:spring-security-core:3.2.9.RELEASE'
+    compile 'org.springframework.security:spring-security-web:3.2.9.RELEASE'
+
     compile 'org.grails:grails-web-boot'
     compile 'org.grails:grails-dependencies'
     //compile 'javax.servlet:javax.servlet-api:3.1.0'
