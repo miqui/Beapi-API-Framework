@@ -1,3 +1,30 @@
+/*
+ * The MIT License (MIT)
+ * Copyright 2014 Owen Rubel
+ *
+ * IO State (tm) Owen Rubel 2014
+ * API Chaining (tm) Owen Rubel 2013
+ *
+ *   https://opensource.org/licenses/MIT
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the Software
+ * is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright/trademark notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
+ * THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package net.nosegrind.apiframework
 
 
@@ -13,10 +40,6 @@ import javax.servlet.http.HttpServletResponse
 
 import groovy.transform.CompileStatic
 //import net.nosegrind.apiframework.Timer
-
-/* ****************************************************************************
- * Copyright 2014 Owen Rubel
- *****************************************************************************/
 
 //@CompileStatic
 class ApiFrameworkInterceptor extends Params{
@@ -38,16 +61,9 @@ class ApiFrameworkInterceptor extends Params{
 	}
 
 	boolean before(){
-		//println("##### FILTER (BEFORE)")
+		println("##### FILTER (BEFORE)")
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
-
-		// Make sure GET params do not overlap with POST params
-		Map paramsRequest = params.findAll { return !globalParams.contains(it.key) }
-		Map paramsGet = WebUtils.fromQueryString(request.getQueryString() ?: "")
-		Map paramsPost = paramsRequest.minus(paramsGet)
-		request.setAttribute('paramsGet', paramsGet)
-		request.setAttribute('paramsPost', paramsPost)
 
 		initParams()
 
@@ -101,7 +117,7 @@ class ApiFrameworkInterceptor extends Params{
 	}
 
 	boolean after(){
-		//println("##### FILTER (AFTER)")
+		println("##### FILTER (AFTER)")
 		try{
 			LinkedHashMap newModel = [:]
 

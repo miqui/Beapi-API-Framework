@@ -1,21 +1,42 @@
-package net.nosegrind.apiframework
-
-
-
-/* ****************************************************************************
+/*
+ * The MIT License (MIT)
  * Copyright 2014 Owen Rubel
- *****************************************************************************/
+ *
+ * IO State (tm) Owen Rubel 2014
+ * API Chaining (tm) Owen Rubel 2013
+ *
+ *   https://opensource.org/licenses/MIT
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the Software
+ * is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright/trademark notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
+ * THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package net.nosegrind.apiframework
 
 import static groovyx.gpars.GParsPool.withPool
 import grails.converters.JSON
 import grails.converters.XML
 import grails.web.servlet.mvc.GrailsParameterMap
 import groovy.json.JsonSlurper
-import org.grails.web.util.WebUtils
+
 import net.nosegrind.apiframework.Timer
 import javax.servlet.forward.*
 import org.grails.groovy.grails.commons.*
-import org.grails.web.util.WebUtils
+
 import grails.util.Holders
 
 abstract class Params{
@@ -35,7 +56,7 @@ abstract class Params{
         params.encoding = (tempType != null && tempType?.size() > 1) ? tempType[1] : encoding
         String type = (tempType?.size() > 0) ? tempType[0] : (request.getHeader('Content-Type')) ? request.getHeader('Content-Type') : 'application/json'
         params.contentType = (type) ? formats.find{ type.startsWith(it) }.toString() : type
-        params.uri = WebUtils.FORWARD_REQUEST_URI_ATTRIBUTE
+        params.uri = request.forwardURI
         //String queryString = request.getQueryString()
 
         String format = request.format
@@ -164,13 +185,16 @@ abstract class Params{
 
     boolean checkURIDefinitions(String method,GrailsParameterMap params,LinkedHashMap requestDefinitions){
         //println("#### [ParamsService : checkUriDefinitions ] ####")
+        List varNamespaces = ['batch']
         // put in check to see if if app.properties allow for this check
         try{
             List requestList = getApiParams(requestDefinitions)
+
             HashMap methodParams = getMethodParams(params)
             if(method==request.method.toUpperCase()) {
-
                 List paramsList = methodParams.keySet() as List
+                // remove constants from check
+                varNamespaces.each(){ paramsList.remove(it) }
                 if (paramsList.size() == requestList.intersect(paramsList).size()) {
                     return true
                 }

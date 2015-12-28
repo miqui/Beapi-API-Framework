@@ -1,17 +1,38 @@
-package net.nosegrind.apiframework.comm
-
-/* ****************************************************************************
+/*
+ * The MIT License (MIT)
  * Copyright 2014 Owen Rubel
- ****************************************************************************
-*/
+ *
+ * IO State (tm) Owen Rubel 2014
+ * API Chaining (tm) Owen Rubel 2013
+ *
+ *   https://opensource.org/licenses/MIT
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the Software
+ * is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright/trademark notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
+ * THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 
+package net.nosegrind.apiframework.comm
 
 import grails.converters.JSON
 import grails.converters.XML
 import org.grails.validation.routines.UrlValidator
 import org.grails.web.util.GrailsApplicationAttributes
 import org.springframework.web.context.request.RequestAttributes
-
+import org.grails.core.DefaultGrailsDomainClass
 import javax.servlet.http.HttpServletResponse
 
 //import java.lang.reflect.Method
@@ -484,22 +505,19 @@ abstract class ApiLayer{
 	LinkedHashMap formatDomainObject(Object data){
 		//println("#### [ApiResponseService : formatDomainObject ] ####")
 		try{
-			List nonPersistent = ['log', 'class', 'constraints', 'properties', 'errors', 'mapping', 'metaClass','maps','id','version','dbo']
 			LinkedHashMap newMap = [:]
-			if(data.id.class.toString().contains('org.bson.types.ObjectId')){
-				newMap.put('id',data?.id.get().toString())
-			}else{
-				newMap.put('id',data?.id)
-			}
+
+			//if(data.id.class.toString().contains('org.bson.types.ObjectId')){
+			//	newMap.put('id',data?.id.get().toString())
+			//}else{}
+
+			newMap.put('id',data?.id)
 			newMap.put('version',data?.version)
 
-			data.properties.each() { it ->
-				if (!nonPersistent.contains(it.key)) {
-					// no lazy mapping
-					newMap[it.key] = (grailsApplication.isDomainClass(it.value.getClass())) ? it.value.id : it.value
-				}
+			def d = new DefaultGrailsDomainClass(data.class)
+			d.persistentProperties.each() { it ->
+				newMap[it.name] = (grailsApplication.isDomainClass(data[it.name].getClass())) ? data."${it.name}".id : data[it.name]
 			}
-
 			return newMap
 		}catch(Exception e){
 			throw new Exception("[ApiResponseService :: formatDomainObject] : Exception - full stack trace follows:",e)

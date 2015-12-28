@@ -1,3 +1,30 @@
+/*
+ * The MIT License (MIT)
+ * Copyright 2014 Owen Rubel
+ *
+ * IO State (tm) Owen Rubel 2014
+ * API Chaining (tm) Owen Rubel 2013
+ *
+ *   https://opensource.org/licenses/MIT
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the Software
+ * is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright/trademark notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
+ * THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package net.nosegrind.apiframework
 
 import grails.core.GrailsApplication
@@ -12,10 +39,6 @@ import org.grails.web.util.WebUtils
 import javax.servlet.http.HttpServletResponse
 
 //import net.nosegrind.apiframework.Timer
-
-/* ****************************************************************************
- * Copyright 2014 Owen Rubel
- *****************************************************************************/
 
 //@CompileStatic
 class BatchInterceptor extends Params{
@@ -41,17 +64,18 @@ class BatchInterceptor extends Params{
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 
-		// Make sure GET params do not overlap with POST params
+/*
 		Map paramsRequest = params.findAll { return !globalParams.contains(it.key) }
 		Map paramsGet = WebUtils.fromQueryString(request.getQueryString() ?: "")
 		Map paramsPost = paramsRequest.minus(paramsGet)
 		request.setAttribute('paramsGet', paramsGet)
 		request.setAttribute('paramsPost', paramsPost)
+*/
 
 		initParams('batch')
 
 
-		try{
+		//try{
 
 			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
 println("controller : "+params.controller)
@@ -95,16 +119,16 @@ println("has cache : "+cache)
 			//}
 			return false
 
-		}catch(Exception e) {
+		//}catch(Exception e) {
 			//log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
-			println("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:" + e)
-			return false
-		}
+		//	println("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:" + e)
+		//	return false
+		//}
 	}
 
 	boolean after(){
 		println("##### BATCHFILTER (AFTER)")
-		try{
+		//try{
 			LinkedHashMap newModel = [:]
 
 			if (!model) {
@@ -114,19 +138,11 @@ println("has cache : "+cache)
 				newModel = batchResponseService.convertModel(model)
 			}
 
-			println("newmodel: "+newModel)
-
 			LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
 			LinkedHashMap content
 			if(batchEnabled && params?.apiBatch){
 				println("forwarding....")
-				println(params)
-				forward(controller:params.controller, action:params.action,params:params)
-				return false
-			}
-
-			if(batchEnabled && params?.apiBatch){
-				forward(controller:params.controller, action:params.action,params:params)
+				forward(params:params)
 				return false
 			}
 
@@ -138,10 +154,10 @@ println("has cache : "+cache)
 			}
 
 			return false
-		}catch(Exception e){
-			log.error("[ApiToolkitFilters :: apitoolkit.after] : Exception - full stack trace follows:", e);
-			return false
-		}
+		//}catch(Exception e){
+		//	log.error("[ApiToolkitFilters :: apitoolkit.after] : Exception - full stack trace follows:", e);
+		//	return false
+		//}
 
 	}
 
