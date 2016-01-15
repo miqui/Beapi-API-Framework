@@ -56,25 +56,19 @@ class ApiResponseService extends ApiLayer{
 	GrailsApplication grailsApplication
 	ApiCacheService apiCacheService
 
+
 	def handleApiResponse(Object cache, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
 		//println("#### [ApiResponseService : handleApiResponse ] ####")
-
 		try{
-			if(cache){
-				// make 'application/json' default
-
-				if(params.contentType){
-					response.setHeader('Authorization', cache['roles'].toString().join(', '))
-					List responseList = getApiParams((LinkedHashMap)cache['returns'])
-					LinkedHashMap result = parseURIDefinitions(model,responseList)
-					if(!result){
-						response.status = 400
-					}else{
-						LinkedHashMap content = parseResponseMethod(request, params, result)
-						return content
-					}
-				}else{
+			if(!cache.equals(null)){
+				response.setHeader('Authorization', cache['roles'].toString().join(', '))
+				List responseList = getApiParams((LinkedHashMap)cache['returns'])
+				LinkedHashMap result = parseURIDefinitions(model,responseList)
+				if(!result){
 					response.status = 400
+				}else{
+					LinkedHashMap content = parseResponseMethod(request, params, result)
+					return content
 				}
 			}else{
 				//return true

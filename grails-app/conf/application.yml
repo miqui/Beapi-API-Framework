@@ -5,8 +5,8 @@ grails:
         defaultPackage: grails.api.framework
 info:
     app:
-        name: api
-        version: '@info.app.version@'
+        name: api-framework
+        version: 0.1.RC1
         grailsVersion: '@info.app.grailsVersion@'
 spring:
     groovy:

@@ -41,85 +41,82 @@ import grails.util.Holders
 
 abstract class Params{
 
-    def formats = ['text/html','text/json','application/json','text/xml','application/xml']
-    List optionalParams = ['method','format','contentType','encoding','action','controller','v','apiCombine', 'apiObject','entryPoint','uri','apiBatch','apiChain']
+    List formats = ['text/html','text/json','application/json','text/xml','application/xml']
+    List optionalParams = ['method','format','contentType','encoding','action','controller','v','apiCombine', 'apiObject','entryPoint','uri','testvar']
     boolean batchEnabled
     boolean chainEnabled
+    String apiAutomationType
+    String format = ""
+    String uri = ""
+    String method = ""
 
     void initParams(String apiAutomationType) {
         //println("#### [ParamsService : initParams ] ####")
+
+
+        // modify request headers
+        this.apiAutomationType = apiAutomationType
         this.batchEnabled = Holders.grailsApplication.config.apitoolkit.batching.enabled
         this.chainEnabled = Holders.grailsApplication.config.apitoolkit.chaining.enabled
-        String encoding = Holders.grailsApplication.config.apitoolkit.encoding
-        params.method = request.method
-        List tempType = request.getHeader('Content-Type')?.split(';')
-        params.encoding = (tempType != null && tempType?.size() > 1) ? tempType[1] : encoding
-        String type = (tempType?.size() > 0) ? tempType[0] : (request.getHeader('Content-Type')) ? request.getHeader('Content-Type') : 'application/json'
-        params.contentType = (type) ? formats.find{ type.startsWith(it) }.toString() : type
-        params.uri = request.forwardURI
-        //String queryString = request.getQueryString()
 
-        String format = request.format
+        format =request.format.toUpperCase()
+        uri = request.forwardURI.toString()
+        method = request.method
 
 
-
-        if (request?.format) {
-            LinkedHashMap content = [:]
-            //String format = request.format
+        if(!request.getAttribute(format)) {
+            LinkedHashMap dataParams = [:]
             switch (format) {
                 case 'XML':
-                case 'xml':
-                    params.format = request.format.toUpperCase()
-                    String xml = request."${request.format}".toString()
+                    String xml = request."${request.getAttribute('format')}".toString()
                     def slurper = new XmlSlurper()
-                    slurper.parseText(xml).each(){ k,v ->
-                        params.put(k, v)
+                    slurper.parseText(xml).each() { k, v ->
+                        dataParams.put(k, v)
                     }
+                    request.setAttribute(format, dataParams)
                     break
                 case 'JSON':
-                case 'json':
-                    params.format = request.format.toUpperCase()
-                    String json = request."${params.format}".toString()
+                    String json = request."${request.getAttribute('format')}".toString()
                     def slurper = new JsonSlurper()
                     slurper.parseText(json).each() { k, v ->
-                        params.put(k, v)
+                        dataParams.put(k, v)
                     }
+                    request.setAttribute(format, dataParams)
                     break
                 default:
                     break
             }
-
         }
 
-        // determine automation functionality
-        switch(apiAutomationType){
+
+        // SET BATCH/CHAIN PARAMS FOR FORWARDS
+        switch(this.apiAutomationType) {
             case 'chain':
                 setChainParams(params)
-                if(request?."${format}"?.chain){
+                if (request?."${format}"?.chain) {
                     request."${format}".remove('chain')
                 }
                 break
             case 'batch':
+                // init batchInc if doesnt exist else increment; used for popping batch vars with each forward
+                if (!request.getAttribute('batchInc')) {
+                    request.setAttribute('batchInc',0)
+                }else{
+                    request.setAttribute('batchInc',request.getAttribute('batchInc').toInteger().toInteger() + 1)
+                    request.setAttribute('batchLength',request.getAttribute('batch').size())
+                }
                 setBatchParams(params)
-                if(request?."${format}"?.batch){
-                    request."${format}".remove('batch')
-                }
-                if(batchEnabled && params.apiBatch){
-                    def temp = params.apiBatch.remove(0)
-                    temp.each{ k,v ->
-                        params[k] = v
-                    }
-                }
                 break
         }
     }
 
     void setBatchParams(GrailsParameterMap params){
         //println("#### [ParamsService : setBatchParams ] ####")
-        if (batchEnabled && !params.apiBatch) {
-            params.apiBatch = []
-            params.batch.each { it ->
-                params.apiBatch.add(it)
+        if (batchEnabled) {
+            def batchVars = request.getAttribute('batch')
+            batchVars[request.getAttribute('batchInc').toInteger()].each() { k,v ->
+                params.remove(k)
+                request.setAttribute(k,v)
             }
             params.remove('batch')
         }
@@ -185,16 +182,19 @@ abstract class Params{
 
     boolean checkURIDefinitions(String method,GrailsParameterMap params,LinkedHashMap requestDefinitions){
         //println("#### [ParamsService : checkUriDefinitions ] ####")
-        List varNamespaces = ['batch']
+        List reservedNames = ['batchLength','batchInc',]
         // put in check to see if if app.properties allow for this check
         try{
             List requestList = getApiParams(requestDefinitions)
 
-            HashMap methodParams = getMethodParams(params)
+            Map methodParams = getMethodParams(params)
             if(method==request.method.toUpperCase()) {
                 List paramsList = methodParams.keySet() as List
                 // remove constants from check
-                varNamespaces.each(){ paramsList.remove(it) }
+                reservedNames.each(){
+                    paramsList.remove(it)
+                }
+
                 if (paramsList.size() == requestList.intersect(paramsList).size()) {
                     return true
                 }
@@ -212,7 +212,7 @@ abstract class Params{
         return uri[1..(uri.size()-1)].split('/')
     }
 
-    HashMap getMethodParams(GrailsParameterMap params){
+    Map getMethodParams(GrailsParameterMap params){
         //println("#### [ParamsService : getMethodParams ] ####")
         try{
             Map paramsRequest = [:]

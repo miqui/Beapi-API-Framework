@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        grailsVersion = '3.1.0.RC1'
+        grailsVersion = '3.0.10'
         //grailsVersion = project.grailsVersion
     }
     repositories {
@@ -30,7 +30,7 @@ apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/m
 apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/master/profiles/plugin/templates/bintrayPublishing.gradle'
 
 ext {
-    grailsVersion = '3.1.0.RC1'
+    grailsVersion = '3.0.10'
     //grailsVersion = project.grailsVersion
     gradleWrapperVersion = project.gradleWrapperVersion
 }
@@ -71,14 +71,14 @@ dependencies {
 
     compile 'org.grails.plugins:spring-security-core:3.0.0.M1'
     // 3.1.0RC1
-    compile 'org.springframework.security:spring-security-core:3.2.9.RELEASE'
-    compile 'org.springframework.security:spring-security-web:3.2.9.RELEASE'
+    //compile 'org.springframework.security:spring-security-core:3.2.9.RELEASE'
+    //compile 'org.springframework.security:spring-security-web:3.2.9.RELEASE'
 
     compile 'org.grails:grails-web-boot'
     compile 'org.grails:grails-dependencies'
     //compile 'javax.servlet:javax.servlet-api:3.1.0'
 
-    testCompile "org.grails:grails-plugin-testing"
+    //testCompile "org.grails:grails-plugin-testing"
 
     console "org.grails:grails-console"
 }

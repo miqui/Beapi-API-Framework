@@ -17,6 +17,8 @@ import grails.compiler.GrailsCompileStatic
 //@Validateable
 //@GrailsCompileStatic
 class ApiDescriptor implements Validateable {
+
+	boolean empty = false
 	String defaultAction
 	List deprecated
 	String method
@@ -29,6 +31,7 @@ class ApiDescriptor implements Validateable {
     LinkedHashMap<String,ParamsDescriptor> receives
     LinkedHashMap<String,ParamsDescriptor> returns
     ErrorCodeDescriptor[] errorcodes
+
 
 	static constraints = { 
 		method(nullable:false,inList: ["GET","POST","PUT","DELETE"])

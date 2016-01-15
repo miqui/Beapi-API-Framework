@@ -59,7 +59,7 @@ class BatchResponseService extends ApiLayer{
 			if(cache){
 				// make 'application/json' default
 
-				if(params.contentType){
+				if(request.getAttribute('contentType')){
 					response.setHeader('Authorization', cache['roles'].toString().join(', '))
 					List responseList = getApiParams((LinkedHashMap)cache['returns'])
 					LinkedHashMap result = parseURIDefinitions(model,responseList)

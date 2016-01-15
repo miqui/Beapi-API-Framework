@@ -48,7 +48,7 @@ class BatchRequestService extends ApiLayer{
 
 
 	boolean handleApiRequest(Object cache, HttpServletRequest request, HttpServletResponse response, GrailsParameterMap params){
-		println("#### [ApiRequestService : handleApiRequest ] ####")
+		//println("#### [ApiRequestService : handleApiRequest ] ####")
 		try{
 
 			// CHECK IF URI HAS CACHE
@@ -56,7 +56,6 @@ class BatchRequestService extends ApiLayer{
 				// CHECK ACCESS TO METHOD
 				List roles = cache['roles'] as List
 				if(!checkAuth(request,roles)){
-					println("no roles")
 					response.status = 401
 					response.setHeader('ERROR','Unauthorized Access attempted')
 					return false
@@ -66,7 +65,6 @@ class BatchRequestService extends ApiLayer{
 				List deprecated = cache['deprecated'] as List
 				if(deprecated?.get(0)){
 					if(checkDeprecationDate(deprecated[0].toString())){
-						println("is deprecated")
 						String depMsg = deprecated[1].toString()
 						response.status = 400
 						response.setHeader('ERROR',depMsg)

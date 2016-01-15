@@ -37,8 +37,7 @@ class ApiFrameworkUrlMappings {
         String api = "v${apiVersion}"
         String batchEntryPoint = "b${apiVersion}"
         String chainEntryPoint = "c${apiVersion}"
-        String tracertEntryPoint = "t${apiVersion}"
-        String domainEntryPoint = "d${apiVersion}"
+        String metricsEntryPoint = "m${apiVersion}"
 
 /*
 		"/apidoc/show" {
@@ -59,39 +58,20 @@ class ApiFrameworkUrlMappings {
 
 
         // REGULAR API ENDPOINTS
-        "/$api/$controller/$action?/$id?(.$format)?"{
+        "/$api/$controller/$action?/$id**"{
+            testvar = "api/controller/action/id(format)"
             entryPoint = api
             parseRequest = true
         }
 
-        "/$api/$controller/$action/$id**" {
+        "/$api/$controller/$id" {
+            testvar = "api/controller/id"
             entryPoint = api
             parseRequest = true
         }
 
-        "/${api}-$apiObjectVersion/$controller/$action/$id**" {
-            entryPoint = api
-            apiObject = apiObjectVersion
-            parseRequest = true
-            constraints {
-                apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
-            }
-        }
-
-        "/$api/$controller/$action" {
-            if(action?.toInteger()==action && action!=null){
-                id=action
-                action = null
-            }
-            entryPoint = api
-            parseRequest = true
-        }
-
-        "/${api}-$apiObjectVersion/$controller/$action" {
-            if(action?.toInteger()==action && action!=null){
-                id=action
-                action = null
-            }
+        /*
+        "/${api}-$apiObjectVersion/$controller/$action?/$id?(.$format)?**" {
             entryPoint = api
             apiObject = apiObjectVersion
             parseRequest = true
@@ -100,7 +80,15 @@ class ApiFrameworkUrlMappings {
             }
         }
 
-
+        "/${api}-$apiObjectVersion/$controller/$id" {
+            entryPoint = api
+            apiObject = apiObjectVersion
+            parseRequest = true
+            constraints {
+                apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
+            }
+        }
+*/
 
         // BATCH API ENDPOINTS
         "/$batchEntryPoint/$controller/$action?/$id?(.$format)?"{
@@ -108,14 +96,16 @@ class ApiFrameworkUrlMappings {
             parseRequest = true
         }
 
+        /*
         "/$batchEntryPoint/$controller/$action/$id**" {
             entryPoint = batchEntryPoint
             parseRequest = true
         }
+        */
 
         "/${batchEntryPoint}-$apiObjectVersion/$controller/$action/$id**" {
             entryPoint = batchEntryPoint
-            apiObject = apiObjectVersion
+            apiObjectVersion = apiObjectVersion
             parseRequest = true
             constraints {
                 apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
@@ -137,51 +127,7 @@ class ApiFrameworkUrlMappings {
                 action = null
             }
             entryPoint = batchEntryPoint
-            apiObject = apiObjectVersion
-            parseRequest = true
-            constraints {
-                apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
-            }
-        }
-
-
-
-        // DOMAIN API ENDPOINTS
-        "/$domainEntryPoint/$controller/$action?/$id?(.$format)?"{
-            entryPoint = domainEntryPoint
-            parseRequest = true
-        }
-
-        "/$domainEntryPoint/$controller/$action/$id**" {
-            entryPoint = domainEntryPoint
-            parseRequest = true
-        }
-
-        "/${domainEntryPoint}-$apiObjectVersion/$controller/$action/$id**" {
-            entryPoint = domainEntryPoint
-            apiObject = apiObjectVersion
-            parseRequest = true
-            constraints {
-                apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
-            }
-        }
-
-        "/$domainEntryPoint/$controller/$action" {
-            if(action?.toInteger()==action && action!=null){
-                id=action
-                action = null
-            }
-            entryPoint = domainEntryPoint
-            parseRequest = true
-        }
-
-        "/${domainEntryPoint}-$apiObjectVersion/$controller/$action" {
-            if(action?.toInteger()==action && action!=null){
-                id=action
-                action = null
-            }
-            entryPoint = domainEntryPoint
-            apiObject = apiObjectVersion
+            apiObjectVersion = apiObjectVersion
             parseRequest = true
             constraints {
                 apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
@@ -191,41 +137,43 @@ class ApiFrameworkUrlMappings {
 
 
         // TRACERT API ENDPOINTS
-        "/$tracertEntryPoint/$controller/$action?/$id?(.$format)?"{
-            entryPoint = tracertEntryPoint
+        "/$metricsEntryPoint/$controller/$action?/$id?(.$format)?"{
+            entryPoint = metricsEntryPoint
             parseRequest = true
         }
 
-        "/$tracertEntryPoint/$controller/$action/$id**" {
-            entryPoint = tracertEntryPoint
+        /*
+        "/$metricsEntryPoint/$controller/$action/$id**" {
+            entryPoint = metricsEntryPoint
             parseRequest = true
         }
+        */
 
-        "/${tracertEntryPoint}-$apiObjectVersion/$controller/$action/$id**" {
-            entryPoint = tracertEntryPoint
-            apiObject = apiObjectVersion
+        "/${metricsEntryPoint}-$apiObjectVersion/$controller/$action/$id**" {
+            entryPoint = metricsEntryPoint
+            apiObjectVersion = apiObjectVersion
             parseRequest = true
             constraints {
                 apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
             }
         }
 
-        "/$tracertEntryPoint/$controller/$action" {
+        "/$metricsEntryPoint/$controller/$action" {
             if(action?.toInteger()==action && action!=null){
                 id=action
                 action = null
             }
-            entryPoint = tracertEntryPoint
+            entryPoint = metricsEntryPoint
             parseRequest = true
         }
 
-        "/${tracertEntryPoint}-$apiObjectVersion/$controller/$action" {
+        "/${metricsEntryPoint}-$apiObjectVersion/$controller/$action" {
             if(action?.toInteger()==action && action!=null){
                 id=action
                 action = null
             }
-            entryPoint = tracertEntryPoint
-            apiObject = apiObjectVersion
+            entryPoint = metricsEntryPoint
+            apiObjectVersion = apiObjectVersion
             parseRequest = true
             constraints {
                 apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
@@ -247,7 +195,7 @@ class ApiFrameworkUrlMappings {
 
         "/${chainEntryPoint}-$apiObjectVersion/$controller/$action/$id**" {
             entryPoint = chainEntryPoint
-            apiObject = apiObjectVersion
+            apiObjectVersion = apiObjectVersion
             parseRequest = true
             constraints {
                 apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
@@ -269,7 +217,7 @@ class ApiFrameworkUrlMappings {
                 action = null
             }
             entryPoint = chainEntryPoint
-            apiObject = apiObjectVersion
+            apiObjectVersion = apiObjectVersion
             parseRequest = true
             constraints {
                 apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)

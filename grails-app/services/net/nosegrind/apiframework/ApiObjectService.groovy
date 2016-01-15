@@ -89,8 +89,7 @@ class ApiObjectService{
 			
 			String apiObjectSrc = grailsApplication.config.apitoolkit.iostate.preloadDir
 			parseFiles(apiObjectSrc.toString())
-			
-			
+
 		} catch (Exception e) {
 			throw new Exception("[ApiObjectService :: initialize] : Exception - full stack trace follows:",e)
 		}
@@ -199,6 +198,7 @@ class ApiObjectService{
 		LinkedHashMap returns = getIOSet(json.URI[uri]?.RESPONSE,apiObject)
 
 		ApiDescriptor service = new ApiDescriptor(
+				'empty':false,
 			'method':"$apiMethod",
 			'fkeys':fkeys,
 			'description':"$apiDescription",

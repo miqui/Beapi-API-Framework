@@ -34,6 +34,7 @@ import grails.plugin.springsecurity.SpringSecurityService
 import net.nosegrind.apiframework.comm.ApiRequestService
 import net.nosegrind.apiframework.comm.ApiResponseService
 import grails.util.Metadata
+import net.nosegrind.apiframework.ApiDescriptor
 import org.grails.web.util.WebUtils
 
 import javax.servlet.http.HttpServletResponse
@@ -52,16 +53,18 @@ class ApiFrameworkInterceptor extends Params{
 	ApiCacheService apiCacheService
 	SpringSecurityService springSecurityService
 
-	String entryPoint
+	// TODO: detect and assign apiObjectVersion from uri
+	String entryPoint = "v${Metadata.current.getProperty(Metadata.APPLICATION_VERSION, String.class)}"
+	String apiObjectVersion = ''
+	String apiObject = ''
 
 	ApiFrameworkInterceptor(){
-		String apiVersion = Metadata.current.getApplicationVersion()
-		entryPoint = "v${apiVersion}"
+		// TODO: detect and assign apiObjectVersion from uri
 		match(uri:"/${entryPoint}/**")
 	}
 
 	boolean before(){
-		println("##### FILTER (BEFORE)")
+		//println("##### FILTER (BEFORE) - ${params.testvar}")
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 
@@ -76,11 +79,11 @@ class ApiFrameworkInterceptor extends Params{
 					cache = apiCacheService.getApiCache(params.controller.toString())
 				}
 
-
-				if(cache){
+				if(!cache.equals(null)) {
 					params.apiObject = (params.apiObjectVersion)?params.apiObjectVersion:cache['currentStable']['value']
-					LinkedHashMap receives = cache[params.apiObject.toString()][params.action.toString()]['receives'] as LinkedHashMap
-					boolean requestKeysMatch = checkURIDefinitions(cache[params.apiObject.toString()][params.action.toString()]['method'] as String,params,receives)
+
+					LinkedHashMap receives = cache[params.apiObject][params.action.toString()]['receives'] as LinkedHashMap
+					boolean requestKeysMatch = checkURIDefinitions(cache[params.apiObject][params.action.toString()]['method'] as String,params,receives)
 
 					if(!requestKeysMatch){
 						render(status:HttpServletResponse.SC_BAD_REQUEST, text: 'Expected request variables do not match sent variables')
@@ -104,7 +107,7 @@ class ApiFrameworkInterceptor extends Params{
 					}
 
 					// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
-					boolean result = apiRequestService.handleApiRequest(cache[params.apiObject.toString()][params.action.toString()], request, response, params)
+					boolean result = apiRequestService.handleApiRequest(cache[params.apiObject][params.action], request, response, params)
 					return result
 				}
 			//}
@@ -117,7 +120,7 @@ class ApiFrameworkInterceptor extends Params{
 	}
 
 	boolean after(){
-		println("##### FILTER (AFTER)")
+		//println("##### FILTER (AFTER) - ${params.testvar}")
 		try{
 			LinkedHashMap newModel = [:]
 
@@ -129,7 +132,7 @@ class ApiFrameworkInterceptor extends Params{
 			}
 
 			LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
-			LinkedHashMap content = apiResponseService.handleApiResponse(cache[params.apiObject.toString()][params.action.toString()],request,response,newModel,params) as LinkedHashMap
+			LinkedHashMap content = apiResponseService.handleApiResponse(cache[params.apiObject][params.action],request,response,newModel,params) as LinkedHashMap
 
 			if(content){
 				render(text:content.apiToolkitContent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)

@@ -30,61 +30,41 @@ package net.nosegrind.apiframework
 import grails.core.GrailsApplication
 import grails.plugin.springsecurity.SpringSecurityService
 import grails.util.Metadata
-import net.nosegrind.apiframework.comm.BatchRequestService
-import net.nosegrind.apiframework.comm.BatchResponseService
-import org.grails.web.util.WebUtils
-
-import grails.artefact.controller.support.RequestForwarder
-import org.grails.web.util.WebUtils
+import net.nosegrind.apiframework.comm.ApiRequestService
+import net.nosegrind.apiframework.comm.ApiResponseService
 
 import javax.servlet.http.HttpServletResponse
-
-//import net.nosegrind.apiframework.Timer
+import net.nosegrind.apiframework.Timer
 
 //@CompileStatic
-class BatchInterceptor extends Params{
+class MetricsInterceptor extends Params{
 
 	int order = HIGHEST_PRECEDENCE + 999
 
 	GrailsApplication grailsApplication
-	BatchRequestService batchRequestService
-	BatchResponseService batchResponseService
+	ApiRequestService apiRequestService
+	ApiResponseService apiResponseService
 	ApiCacheService apiCacheService
 	SpringSecurityService springSecurityService
 
-	String entryPoint
-	// TODO: detect and assign apiObjectVersion from uri
-	String apiObjectVersion = ''
-	String apiObject = ''
 
-	BatchInterceptor(){
-		// TODO: detect and assign apiObjectVersion from uri
-		String apiVersion = Metadata.current.getApplicationVersion()
-		entryPoint = "b${apiVersion}"
+	String entryPoint = "m${Metadata.current.getProperty(Metadata.APPLICATION_VERSION, String.class)}"
+
+	MetricsInterceptor(){
 		match(uri:"/${entryPoint}/**")
 	}
 
 	boolean before(){
-		println("##### BATCHINTERCEPTOR (BEFORE)")
+		//println("##### FILTER (BEFORE)")
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
-		apiObject = request.getAttribute('apiObject')
 
-/*
-		Map paramsRequest = params.findAll { return !globalParams.contains(it.key) }
-		Map paramsGet = WebUtils.fromQueryString(request.getQueryString() ?: "")
-		Map paramsPost = paramsRequest.minus(paramsGet)
-		request.setAttribute('paramsGet', paramsGet)
-		request.setAttribute('paramsPost', paramsPost)
-*/
+		initParams()
 
-
-		initParams('batch')
-
-		//try{
+		try{
 
 			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
-println("controller : "+params.controller)
+
 				LinkedHashMap cache = [:]
 				if(params.controller){
 					cache = apiCacheService.getApiCache(params.controller.toString())
@@ -92,10 +72,7 @@ println("controller : "+params.controller)
 
 
 				if(cache){
-					if (!apiObject) {
-						apiObject = (apiObjectVersion) ? apiObjectVersion : cache['currentStable']['value']
-						request.setAttribute('apiObject', apiObject)
-					}
+					params.apiObject = (params.apiObjectVersion)?params.apiObjectVersion:cache['currentStable']['value']
 					LinkedHashMap receives = cache[params.apiObject.toString()][params.action.toString()]['receives'] as LinkedHashMap
 					boolean requestKeysMatch = checkURIDefinitions(cache[params.apiObject.toString()][params.action.toString()]['method'] as String,params,receives)
 
@@ -121,42 +98,32 @@ println("controller : "+params.controller)
 					}
 
 					// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
-					boolean result = batchRequestService.handleApiRequest(cache[params.apiObject.toString()][params.action.toString()], request, response, params)
+					boolean result = apiRequestService.handleApiRequest(cache[params.apiObject.toString()][params.action.toString()], request, response, params)
 					return result
 				}
 			//}
 			return false
 
-		//}catch(Exception e) {
-			//log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
-		//	println("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:" + e)
-		//	return false
-		//}
+		}catch(Exception e){
+			log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
+			return false
+		}
 	}
 
 	boolean after(){
-		println("##### BATCHFILTER (AFTER)")
-		//try{
+		//println("##### FILTER (AFTER)")
+		try{
 			LinkedHashMap newModel = [:]
-		println(params)
+
 			if (!model) {
 				render(status:HttpServletResponse.SC_NOT_FOUND , text: 'No resource returned')
 				return false
 			} else {
-				newModel = batchResponseService.convertModel(model)
+				newModel = apiResponseService.convertModel(model)
 			}
 
 			LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
-			LinkedHashMap content
-
-			if(batchEnabled && (params.batchLength>(params.batchInc.toInteger()+1))){
-				println("forwarding....")
-				WebUtils.exposeRequestAttributes(request, params);
-				forward(uri:uri)
-				return false
-			}
-
-			content = batchResponseService.handleApiResponse(cache["${request.getAttribute('apiObject')}"][params.action.toString()],request,response,newModel,params) as LinkedHashMap
+			LinkedHashMap content = apiResponseService.handleApiResponse(cache[params.apiObject.toString()][params.action.toString()],request,response,newModel,params) as LinkedHashMap
 
 			if(content){
 				render(text:content.apiToolkitContent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)
@@ -164,10 +131,10 @@ println("controller : "+params.controller)
 			}
 
 			return false
-		//}catch(Exception e){
-		//	log.error("[ApiToolkitFilters :: apitoolkit.after] : Exception - full stack trace follows:", e);
-		//	return false
-		//}
+		}catch(Exception e){
+			log.error("[ApiToolkitFilters :: apitoolkit.after] : Exception - full stack trace follows:", e);
+			return false
+		}
 
 	}
 

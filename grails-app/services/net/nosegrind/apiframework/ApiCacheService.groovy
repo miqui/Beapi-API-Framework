@@ -178,6 +178,7 @@ class ApiCacheService{
 	}
 	
 	LinkedHashMap getApiCache(String controllername){
+		//println("#### [ApiCacheService : getApiCache ] ####")
 		try{
 			def cache = grailsCacheManager?.getCache('ApiCache')?.get(controllername)
 			if(cache?.get()){

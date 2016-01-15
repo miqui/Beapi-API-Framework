@@ -29,6 +29,7 @@ package net.nosegrind.apiframework.comm
 
 import grails.converters.JSON
 import grails.converters.XML
+import grails.util.Holders
 import org.grails.validation.routines.UrlValidator
 import org.grails.web.util.GrailsApplicationAttributes
 import org.springframework.web.context.request.RequestAttributes
@@ -61,7 +62,7 @@ abstract class ApiLayer{
 	ApiCacheService apiCacheService
 
 
-	List optionalParams = ['method','format','contentType','encoding','action','controller','v','apiCombine', 'apiObject']
+	List optionalParams = ['action','controller','v','apiCombine', 'apiObject']
 
 	//ApiStatuses error = ApiStatuses.instance
 
@@ -123,13 +124,16 @@ abstract class ApiLayer{
 				return model
 			}
 		}catch(Exception e){
-			throw new Exception("[ApiLayer :: parseURIDefinitions] : Exception - full stack trace follows:",e)
+			//throw new Exception("[ApiLayer :: parseURIDefinitions] : Exception - full stack trace follows:",e)
+			println("[ApiLayer :: parseURIDefinitions] : Exception - full stack trace follows:"+e)
 		}
 	}
 
 	LinkedHashMap parseResponseMethod(HttpServletRequest request, GrailsParameterMap params, LinkedHashMap result){
 		//println("#### [ApiLayer : parseResponseMethods ] ####")
 		LinkedHashMap data = [:]
+		String defaultEncoding = Holders.grailsApplication.config.apitoolkit.encoding
+		String encoding = request.getHeader('accept-encoding')?request.getHeader('accept-encoding'):defaultEncoding
 		switch(request.method) {
 			case 'PURGE':
 				// cleans cache; disabled for now
@@ -140,7 +144,7 @@ abstract class ApiLayer{
 				break;
 			case 'OPTIONS':
 				LinkedHashMap doc = getApiDoc(params)
-				data = ['content':doc,'contentType':params.contentType,'encoding':params.encoding]
+				data = ['content':doc,'contentType':request.getAttribute('contentType'),'encoding':encoding]
 				break;
 			case 'GET':
 			case 'PUT':
@@ -148,8 +152,7 @@ abstract class ApiLayer{
 			case 'DELETE':
 				if(!result.isEmpty()){
 					String content
-					String encoding = (params.encoding)?params.encoding:"UTF-8"
-					switch(params.format){
+					switch(request.format.toUpperCase()){
 						case 'XML':
 							content = result as XML
 							break
@@ -157,13 +160,12 @@ abstract class ApiLayer{
 						default:
 							content = result as JSON
 					}
-
-					data = ['content':content,'contentType':params.contentType,'encoding':encoding]
+					data = ['content':content,'contentType':request.getAttribute('contentType'),'encoding':encoding]
 				}
 				break;
 		}
 
-		return ['apiToolkitContent':data.content,'apiToolkitType':data.contentType,'apiToolkitEncoding':data.encoding]
+		return ['apiToolkitContent':data.content,'apiToolkitType':request.getAttribute('contentType'),'apiToolkitEncoding':encoding]
 	}
 
 	/*
@@ -178,7 +180,7 @@ abstract class ApiLayer{
 			throw new Exception("[ApiLayer :: getParams] : Exception - full stack trace follows:",e)
 		}
 	}
-*/
+	*/
 
 	boolean checkAuth(HttpServletRequest request, List roles){
 		//println("#### [ApiLayer : checkAuth ] ####")
@@ -188,9 +190,7 @@ abstract class ApiLayer{
 				def principal = springSecurityService.principal
 				List userRoles = principal.authorities*.authority
 				roles.each {
-
 					if (userRoles.contains(it) || it=='permitAll') {
-
 						hasAuth = true
 					}
 				}
@@ -293,8 +293,8 @@ abstract class ApiLayer{
 
 	protected void setParams(HttpServletRequest request,GrailsParameterMap params){
 		try{
-			String type = params.format
-			request."$type"?.each() { key,value ->
+			String format = request.format.toUpperCase()
+			request."$format"?.each() { key,value ->
 				params.put(key,value)
 			}
 		}catch(Exception e){
@@ -425,6 +425,7 @@ abstract class ApiLayer{
 	}
 
 	boolean isRequestMatch(String protocol,String method){
+		//println("#### [ApiLayer : isRequestMatch ] ####")
 		if(['TRACERT','OPTIONS','HEAD'].contains(method)){
 			return true
 		}else{

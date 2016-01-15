@@ -48,9 +48,9 @@ class ApiRequestService extends ApiLayer{
 	boolean handleApiRequest(Object cache, HttpServletRequest request, HttpServletResponse response, GrailsParameterMap params){
 		//println("#### [ApiRequestService : handleApiRequest ] ####")
 		try{
-
 			// CHECK IF URI HAS CACHE
-			if(cache){
+			if(!cache.equals(null)){
+
 				// CHECK ACCESS TO METHOD
 				List roles = cache['roles'] as List
 				if(!checkAuth(request,roles)){
@@ -61,6 +61,7 @@ class ApiRequestService extends ApiLayer{
 
 				// CHECK VERSION DEPRECATION DATE
 				List deprecated = cache['deprecated'] as List
+
 				if(deprecated?.get(0)){
 					if(checkDeprecationDate(deprecated[0].toString())){
 						String depMsg = deprecated[1].toString()
@@ -70,7 +71,7 @@ class ApiRequestService extends ApiLayer{
 					}
 				}
 
-				def method = cache['method']?.toString().trim()
+				String method = cache['method'] as String
 
 				// DOES api.methods.contains(request.method)
 				if(!isRequestMatch(method,request.method.toString())){
@@ -80,9 +81,11 @@ class ApiRequestService extends ApiLayer{
 				}
 				return true
 			}
+
 			return false
 		}catch(Exception e){
-			throw new Exception("[ApiRequestService :: handleApiRequest] : Exception - full stack trace follows:",e)
+			//throw new Exception("[ApiRequestService :: handleApiRequest] : Exception - full stack trace follows:",e)
+			println("[ApiRequestService :: handleApiRequest] : Exception - full stack trace follows:"+e)
 		}
 	}
 }
