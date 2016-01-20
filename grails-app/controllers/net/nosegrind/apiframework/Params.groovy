@@ -71,19 +71,20 @@ abstract class Params{
                     String xml = request."${request.getAttribute('format')}".toString()
                     def slurper = new XmlSlurper()
                     slurper.parseText(xml).each() { k, v ->
-                        dataParams.put(k, v)
+                        dataParams[k] = v
                     }
-                    request.setAttribute(format, dataParams)
+                    request.setAttribute("${format}", dataParams)
                     break
                 case 'JSON':
-                    String json = request."${request.getAttribute('format')}".toString()
+                    String json = request."${format}".toString()
                     def slurper = new JsonSlurper()
                     slurper.parseText(json).each() { k, v ->
-                        dataParams.put(k, v)
+                        dataParams[k] = v
                     }
-                    request.setAttribute(format, dataParams)
+                    request.setAttribute("${format}", dataParams)
                     break
                 default:
+                    println"format : "+format
                     break
             }
         }
@@ -103,22 +104,23 @@ abstract class Params{
                     request.setAttribute('batchInc',0)
                 }else{
                     request.setAttribute('batchInc',request.getAttribute('batchInc').toInteger().toInteger() + 1)
-                    request.setAttribute('batchLength',request.getAttribute('batch').size())
                 }
                 setBatchParams(params)
                 break
         }
     }
 
+    /* set params for this 'loop'; these will NOT forward
+    *
+     */
     void setBatchParams(GrailsParameterMap params){
         //println("#### [ParamsService : setBatchParams ] ####")
         if (batchEnabled) {
-            def batchVars = request.getAttribute('batch')
-            batchVars[request.getAttribute('batchInc').toInteger()].each() { k,v ->
-                params.remove(k)
-                request.setAttribute(k,v)
+            def batchVars = request.getAttribute(format)
+            if(!request.getAttribute('batchLength')){ request.setAttribute('batchLength',batchVars['batch'].size()) }
+            batchVars['batch'][request.getAttribute('batchInc').toInteger()].each() { k,v ->
+                params."${k}" = v
             }
-            params.remove('batch')
         }
     }
 

@@ -51,8 +51,6 @@ import net.nosegrind.apiframework.ApiDescriptor
 import net.nosegrind.apiframework.*
 
 import static groovyx.gpars.GParsPool.withPool
-import static groovyx.gpars.GParsPool.withPool
-import static groovyx.gpars.GParsPool.withPool
 
 class ApiCacheService{
 

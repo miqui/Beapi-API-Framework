@@ -55,8 +55,6 @@ class ApiFrameworkInterceptor extends Params{
 
 	// TODO: detect and assign apiObjectVersion from uri
 	String entryPoint = "v${Metadata.current.getProperty(Metadata.APPLICATION_VERSION, String.class)}"
-	String apiObjectVersion = ''
-	String apiObject = ''
 
 	ApiFrameworkInterceptor(){
 		// TODO: detect and assign apiObjectVersion from uri
@@ -79,7 +77,7 @@ class ApiFrameworkInterceptor extends Params{
 					cache = apiCacheService.getApiCache(params.controller.toString())
 				}
 
-				if(!cache.equals(null)) {
+				if(cache) {
 					params.apiObject = (params.apiObjectVersion)?params.apiObjectVersion:cache['currentStable']['value']
 
 					LinkedHashMap receives = cache[params.apiObject][params.action.toString()]['receives'] as LinkedHashMap
@@ -100,7 +98,7 @@ class ApiFrameworkInterceptor extends Params{
 							// FORWARD FOR REST DEFAULTS WITH NO ACTION
 							String[] tempUri = request.getRequestURI().split("/")
 							if(tempUri[2].contains('dispatch') && "${params.controller}.dispatch" == tempUri[2] && !cache[params.apiObject]['domainPackage']){
-								forward(controller:params.controller,action:params.action,params:params)
+								forward(controller:params.controller,action:params.action)
 								return false
 							}
 						}

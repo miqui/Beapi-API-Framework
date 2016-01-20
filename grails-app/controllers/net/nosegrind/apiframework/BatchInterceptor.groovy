@@ -79,7 +79,6 @@ class BatchInterceptor extends Params{
 */
 
 
-		initParams('batch')
 
 		//try{
 
@@ -91,13 +90,18 @@ println("controller : "+params.controller)
 				}
 
 
-				if(cache){
+				if(cache) {
 					if (!apiObject) {
 						apiObject = (apiObjectVersion) ? apiObjectVersion : cache['currentStable']['value']
 						request.setAttribute('apiObject', apiObject)
 					}
-					LinkedHashMap receives = cache[params.apiObject.toString()][params.action.toString()]['receives'] as LinkedHashMap
-					boolean requestKeysMatch = checkURIDefinitions(cache[params.apiObject.toString()][params.action.toString()]['method'] as String,params,receives)
+
+					if (!request.getAttribute('batchInc')) {
+						initParams('batch')
+					}
+
+					LinkedHashMap receives = cache[apiObject.toString()][params.action.toString()]['receives'] as LinkedHashMap
+					boolean requestKeysMatch = checkURIDefinitions(cache[apiObject.toString()][params.action.toString()]['method'] as String,params,receives)
 
 					if(!requestKeysMatch){
 						render(status:HttpServletResponse.SC_BAD_REQUEST, text: 'Expected request variables do not match sent variables')
@@ -106,14 +110,14 @@ println("controller : "+params.controller)
 
 					if(!params.action){
 						String methodAction = methods[request.method]
-						if(!cache[params.apiObject][methodAction]){
-							params.action = cache[params.apiObject]['defaultAction']
+						if(!cache[apiObject][methodAction]){
+							params.action = cache[apiObject]['defaultAction']
 						}else{
 							params.action = methods[request.method]
 
 							// FORWARD FOR REST DEFAULTS WITH NO ACTION
 							String[] tempUri = request.getRequestURI().split("/")
-							if(tempUri[2].contains('dispatch') && "${params.controller}.dispatch" == tempUri[2] && !cache[params.apiObject]['domainPackage']){
+							if(tempUri[2].contains('dispatch') && "${params.controller}.dispatch" == tempUri[2] && !cache[apiObject]['domainPackage']){
 								forward(controller:params.controller,action:params.action,params:params)
 								return false
 							}
@@ -121,7 +125,7 @@ println("controller : "+params.controller)
 					}
 
 					// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
-					boolean result = batchRequestService.handleApiRequest(cache[params.apiObject.toString()][params.action.toString()], request, response, params)
+					boolean result = batchRequestService.handleApiRequest(cache[apiObject.toString()][params.action.toString()], request, response, params)
 					return result
 				}
 			//}
@@ -138,7 +142,7 @@ println("controller : "+params.controller)
 		println("##### BATCHFILTER (AFTER)")
 		//try{
 			LinkedHashMap newModel = [:]
-		println(params)
+
 			if (!model) {
 				render(status:HttpServletResponse.SC_NOT_FOUND , text: 'No resource returned')
 				return false
@@ -149,9 +153,10 @@ println("controller : "+params.controller)
 			LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
 			LinkedHashMap content
 
-			if(batchEnabled && (params.batchLength>(params.batchInc.toInteger()+1))){
+			if(batchEnabled && (request.getAttribute('batchLength')>(request.getAttribute('batchInc')+1))){
 				println("forwarding....")
 				WebUtils.exposeRequestAttributes(request, params);
+				// this will work fine when we upgrade to newer version that has fix in iut
 				forward(uri:uri)
 				return false
 			}

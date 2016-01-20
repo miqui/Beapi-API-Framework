@@ -60,19 +60,14 @@ class ApiResponseService extends ApiLayer{
 	def handleApiResponse(Object cache, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
 		//println("#### [ApiResponseService : handleApiResponse ] ####")
 		try{
-			if(!cache.equals(null)){
-				response.setHeader('Authorization', cache['roles'].toString().join(', '))
-				List responseList = getApiParams((LinkedHashMap)cache['returns'])
-				LinkedHashMap result = parseURIDefinitions(model,responseList)
-				if(!result){
-					response.status = 400
-				}else{
-					LinkedHashMap content = parseResponseMethod(request, params, result)
-					return content
-				}
+			response.setHeader('Authorization', cache['roles'].toString().join(', '))
+			List responseList = getApiParams((LinkedHashMap)cache['returns'])
+			LinkedHashMap result = parseURIDefinitions(model,responseList)
+			if(!result){
+				response.status = 400
 			}else{
-				//return true
-				//render(view:params.action,model:model)
+				LinkedHashMap content = parseResponseMethod(request, params, result)
+				return content
 			}
 		}catch(Exception e){
 			throw new Exception("[ApiResponseService :: handleApiResponse] : Exception - full stack trace follows:",e)

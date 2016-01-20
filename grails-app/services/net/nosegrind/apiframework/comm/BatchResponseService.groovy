@@ -56,28 +56,20 @@ class BatchResponseService extends ApiLayer{
 		//println("#### [ApiResponseService : handleApiResponse ] ####")
 
 		try{
-			if(cache){
-				// make 'application/json' default
+			response.setHeader('Authorization', cache['roles'].toString().join(', '))
+			List responseList = getApiParams((LinkedHashMap)cache['returns'])
+			LinkedHashMap result = parseURIDefinitions(model,responseList)
 
-				if(request.getAttribute('contentType')){
-					response.setHeader('Authorization', cache['roles'].toString().join(', '))
-					List responseList = getApiParams((LinkedHashMap)cache['returns'])
-					LinkedHashMap result = parseURIDefinitions(model,responseList)
-					//if(params?.apiBatch.combine=='true'){
-					//	params.apiCombine["${params.uri}"] = result
-					//}
-					if(!result){
-						response.status = 400
-					}else{
-						LinkedHashMap content = parseResponseMethod(request, params, result)
-						return content
-					}
-				}else{
-					response.status = 400
-				}
+			// TODO : add combine functionality for batching
+			//if(params?.apiBatch.combine=='true'){
+			//	params.apiCombine["${params.uri}"] = result
+			//}
+
+			if(!result){
+				response.status = 400
 			}else{
-				//return true
-				//render(view:params.action,model:model)
+				LinkedHashMap content = parseResponseMethod(request, params, result)
+				return content
 			}
 		}catch(Exception e){
 			throw new Exception("[ApiResponseService :: handleApiResponse] : Exception - full stack trace follows:",e)

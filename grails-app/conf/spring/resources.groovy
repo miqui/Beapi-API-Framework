@@ -2,7 +2,6 @@
 import net.nosegrind.apiframework.GormUserDetailsService
 import net.nosegrind.apiframework.SecurityConfiguration
 
-
 beans = {
     webSecurityConfiguration(SecurityConfiguration)
     userDetailsService(GormUserDetailsService)
