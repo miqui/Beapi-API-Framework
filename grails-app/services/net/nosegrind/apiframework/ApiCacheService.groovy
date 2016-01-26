@@ -100,6 +100,7 @@ class ApiCacheService{
 	
 	@CachePut(value="ApiCache",key="#controllername")
 	LinkedHashMap setApiCache(String controllername,String methodname, ApiDescriptor apidoc, String apiversion){
+		//println("#### ApiCacheService > setApiCache")
 		try{
 			def cache = getApiCache(controllername)
 			if(!cache[apiversion][methodname]){
@@ -178,7 +179,8 @@ class ApiCacheService{
 	LinkedHashMap getApiCache(String controllername){
 		//println("#### [ApiCacheService : getApiCache ] ####")
 		try{
-			def cache = grailsCacheManager?.getCache('ApiCache')?.get(controllername)
+			def temp = grailsCacheManager?.getCache('ApiCache')
+			def cache = temp?.get(controllername)
 			if(cache?.get()){
 				return cache.get() as LinkedHashMap
 			}else{ 
@@ -186,8 +188,7 @@ class ApiCacheService{
 			}
 
 		}catch(Exception e){
-			//throw new Exception("[ApiCacheService :: getApiCache] : Exception - full stack trace follows:",e)
-			println("[ApiCacheService :: getApiCache] : Exception - full stack trace follows:"+e)
+			throw new Exception("[ApiCacheService :: getApiCache] : Exception - full stack trace follows:",e)
 		}
 	}
 	

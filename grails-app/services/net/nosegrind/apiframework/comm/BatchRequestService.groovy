@@ -49,7 +49,7 @@ class BatchRequestService extends ApiLayer{
 
 	boolean handleApiRequest(Object cache, HttpServletRequest request, HttpServletResponse response, GrailsParameterMap params){
 		//println("#### [ApiRequestService : handleApiRequest ] ####")
-		try{
+		//try{
 			// CHECK ACCESS TO METHOD
 			List roles = cache['roles'] as List
 			if(!checkAuth(request,roles)){
@@ -78,8 +78,8 @@ class BatchRequestService extends ApiLayer{
 				return false
 			}
 			return true
-		}catch(Exception e){
-			throw new Exception("[ApiRequestService :: handleApiRequest] : Exception - full stack trace follows:",e)
-		}
+		//}catch(Exception e){
+		//	throw new Exception("[ApiRequestService :: handleApiRequest] : Exception - full stack trace follows:",e)
+		//}
 	}
 }

@@ -29,7 +29,8 @@ package grails.api.framework
 
 import grails.boot.GrailsApp
 import grails.boot.config.GrailsAutoConfiguration
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration
+
+//import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 //import org.springframework.boot.autoconfigure.security.SecurityFilterAutoConfiguration
 
 import org.springframework.context.annotation.ComponentScan

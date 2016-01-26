@@ -30,6 +30,7 @@ package net.nosegrind.apiframework
 import grails.core.GrailsApplication
 import grails.plugin.springsecurity.SpringSecurityService
 import grails.util.Metadata
+import groovy.json.JsonSlurper
 import net.nosegrind.apiframework.comm.BatchRequestService
 import net.nosegrind.apiframework.comm.BatchResponseService
 import org.grails.web.util.WebUtils
@@ -52,15 +53,10 @@ class BatchInterceptor extends Params{
 	ApiCacheService apiCacheService
 	SpringSecurityService springSecurityService
 
-	String entryPoint
-	// TODO: detect and assign apiObjectVersion from uri
-	String apiObjectVersion = ''
-	String apiObject = ''
+	String entryPoint = "b${Metadata.current.getProperty(Metadata.APPLICATION_VERSION, String.class)}"
+
 
 	BatchInterceptor(){
-		// TODO: detect and assign apiObjectVersion from uri
-		String apiVersion = Metadata.current.getApplicationVersion()
-		entryPoint = "b${apiVersion}"
 		match(uri:"/${entryPoint}/**")
 	}
 
@@ -68,56 +64,72 @@ class BatchInterceptor extends Params{
 		println("##### BATCHINTERCEPTOR (BEFORE)")
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
-		apiObject = request.getAttribute('apiObject')
 
-/*
-		Map paramsRequest = params.findAll { return !globalParams.contains(it.key) }
-		Map paramsGet = WebUtils.fromQueryString(request.getQueryString() ?: "")
-		Map paramsPost = paramsRequest.minus(paramsGet)
-		request.setAttribute('paramsGet', paramsGet)
-		request.setAttribute('paramsPost', paramsPost)
-*/
+		// Init params
+		String format =request.format.toUpperCase()
 
+		if(['XML','JSON'].contains(format)) {
+			LinkedHashMap dataParams = [:]
+			switch (format) {
+				case 'XML':
 
-
-		//try{
-
-			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
-println("controller : "+params.controller)
-				LinkedHashMap cache = [:]
-				if(params.controller){
-					cache = apiCacheService.getApiCache(params.controller.toString())
-				}
-
-
-				if(cache) {
-					if (!apiObject) {
-						apiObject = (apiObjectVersion) ? apiObjectVersion : cache['currentStable']['value']
-						request.setAttribute('apiObject', apiObject)
+					String xml = request."${request.getAttribute('format')}".toString()
+					def slurper = new XmlSlurper()
+					slurper.parseText(xml).each() { k, v ->
+						dataParams[k] = v
 					}
+					request.setAttribute("${format}", dataParams)
+					break
+				case 'JSON':
+					String json = request."${format}".toString()
+					def slurper = new JsonSlurper()
+					slurper.parseText(json).each() { k, v ->
+						dataParams[k] = v
+					}
+					request.setAttribute("${format}", dataParams)
+					break
+			}
+		}
+		
+
+		try{
+			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
+
+			LinkedHashMap cache = (params.controller)? apiCacheService.getApiCache(params.controller.toString()):[:]
+				if(cache) {
+					println("hacve cache")
+					params.apiObject = (params.apiObjectVersion)?params.apiObjectVersion:cache['currentStable']['value']
 
 					if (!request.getAttribute('batchInc')) {
-						initParams('batch')
+						request.setAttribute('batchInc',0)
+					}else{
+						request.setAttribute('batchInc',request.getAttribute('batchInc').toInteger().toInteger() + 1)
 					}
+					println("setting batch params...")
+					setBatchParams(params)
+					println("after setting batch params...")
 
-					LinkedHashMap receives = cache[apiObject.toString()][params.action.toString()]['receives'] as LinkedHashMap
-					boolean requestKeysMatch = checkURIDefinitions(cache[apiObject.toString()][params.action.toString()]['method'] as String,params,receives)
+					LinkedHashMap receives = cache[params.apiObject.toString()][params.action.toString()]['receives'] as LinkedHashMap
+					boolean requestKeysMatch = checkURIDefinitions(cache[params.apiObject.toString()][params.action.toString()]['method'] as String,params,receives)
 
 					if(!requestKeysMatch){
 						render(status:HttpServletResponse.SC_BAD_REQUEST, text: 'Expected request variables do not match sent variables')
 						return false
 					}
 
+					println('keys matched...')
+
 					if(!params.action){
 						String methodAction = methods[request.method]
-						if(!cache[apiObject][methodAction]){
-							params.action = cache[apiObject]['defaultAction']
+						if(!cache[params.apiObject][methodAction]){
+							params.action = cache[params.apiObject]['defaultAction']
 						}else{
 							params.action = methods[request.method]
 
 							// FORWARD FOR REST DEFAULTS WITH NO ACTION
 							String[] tempUri = request.getRequestURI().split("/")
-							if(tempUri[2].contains('dispatch') && "${params.controller}.dispatch" == tempUri[2] && !cache[apiObject]['domainPackage']){
+							if(tempUri[2].contains('dispatch') && "${params.controller}.dispatch" == tempUri[2] && !cache[params.apiObject]['domainPackage']){
+								println("tempUri : "+tempUri)
 								forward(controller:params.controller,action:params.action,params:params)
 								return false
 							}
@@ -125,17 +137,17 @@ println("controller : "+params.controller)
 					}
 
 					// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
-					boolean result = batchRequestService.handleApiRequest(cache[apiObject.toString()][params.action.toString()], request, response, params)
+					boolean result = batchRequestService.handleApiRequest(cache[params.apiObject.toString()][params.action.toString()], request, response, params)
 					return result
 				}
 			//}
 			return false
 
-		//}catch(Exception e) {
+		}catch(Exception e) {
 			//log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
-		//	println("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:" + e)
-		//	return false
-		//}
+			println("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:"+ e)
+			return false
+		}
 	}
 
 	boolean after(){
@@ -157,11 +169,13 @@ println("controller : "+params.controller)
 				println("forwarding....")
 				WebUtils.exposeRequestAttributes(request, params);
 				// this will work fine when we upgrade to newer version that has fix in iut
-				forward(uri:uri)
+				params.uri = request.forwardURI.toString()
+				println params.uri
+				forward(params)
 				return false
 			}
 
-			content = batchResponseService.handleApiResponse(cache["${request.getAttribute('apiObject')}"][params.action.toString()],request,response,newModel,params) as LinkedHashMap
+			content = batchResponseService.handleApiResponse(cache[params.apiObject][params.action.toString()],request,response,newModel,params) as LinkedHashMap
 
 			if(content){
 				render(text:content.apiToolkitContent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)

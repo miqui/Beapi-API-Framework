@@ -55,6 +55,7 @@ class ApiObjectService{
 	static transactional = false
 	
 	public initialize(){
+		//println("#### ApiObjectService > initialize")
 		//Object version = 0.1
 
 		try {
@@ -101,8 +102,10 @@ class ApiObjectService{
 	}
 	
 	private parseFiles(String path){
+		//println("#### ApiObjectService > parseFiles : "+path)
 		new File(path).eachFile() { file ->
 			def tmp = file.name.toString().split('\\.')
+
 			if(tmp[1]=='json'){
 				try{
 					JSONObject json = JSON.parse(file.text)
@@ -216,10 +219,11 @@ class ApiObjectService{
 	}
 	
 	Boolean parseJson(String apiName,JSONObject json){
+		//println("#### ApiObjectService > parseJson")
 		LinkedHashMap methods = [:]
 		json.VERSION.each() { vers ->
 			def versKey = vers.key
-			String defaultAction = (vers.value.DEFAULTACTION)?vers.value.DEFAULTACTION:'index'
+			String defaultAction = (vers.value['DEFAULTACTION'])?vers.value.DEFAULTACTION:'index'
 			List deprecated = (vers.value.DEPRECATED)?vers.value.DEPRECATED:[]
 			String domainPackage = (vers.value.DOMAINPACKAGE!=null || vers.value.DOMAINPACKAGE?.size()>0)?vers.value.DOMAINPACKAGE:null
 
@@ -262,18 +266,13 @@ class ApiObjectService{
 					methods[vers.key]['defaultAction'] = defaultAction
 				}
 
-				if(!methods[vers.key]['domainPackage']){
-					methods[vers.key]['domainPackage'] = domainPackage
-				}
 
 				methods[vers.key][actionname] = apiDescriptor
 
 			}
-			
-			if(methods){
-				apiCacheService.setApiCache(apiName,methods)
 
-				def cache = apiCacheService.getApiCache(apiName)
+			if(methods){
+				def cache = apiCacheService.setApiCache(apiName,methods)
 
 				cache[vers.key].each(){ key1,val1 ->
 					if(!['deprecated','defaultAction','domainPackage'].contains(key1)){
@@ -286,7 +285,6 @@ class ApiObjectService{
 			}
 			
 		}
-		
 
 	}
 

@@ -31,6 +31,8 @@ package net.nosegrind.apiframework
 import grails.core.GrailsApplication
 
 import grails.plugin.springsecurity.SpringSecurityService
+import grails.util.Holders
+import groovy.json.JsonSlurper
 import net.nosegrind.apiframework.comm.ApiRequestService
 import net.nosegrind.apiframework.comm.ApiResponseService
 import grails.util.Metadata
@@ -62,20 +64,39 @@ class ApiFrameworkInterceptor extends Params{
 	}
 
 	boolean before(){
-		//println("##### FILTER (BEFORE) - ${params.testvar}")
+		println("##### FILTER (BEFORE) - ${params.testvar}")
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 
-		initParams()
+		// Init params
+		String format =request.format.toUpperCase()
+
+		if(['XML','JSON'].contains(format)) {
+			LinkedHashMap dataParams = [:]
+			switch (format) {
+				case 'XML':
+					String xml = request."${request.getAttribute('format')}".toString()
+					def slurper = new XmlSlurper()
+					slurper.parseText(xml).each() { k, v ->
+						dataParams[k] = v
+					}
+					request.setAttribute("${format}", dataParams)
+					break
+				case 'JSON':
+					String json = request."${format}".toString()
+					def slurper = new JsonSlurper()
+					slurper.parseText(json).each() { k, v ->
+						dataParams[k] = v
+					}
+					request.setAttribute("${format}", dataParams)
+					break
+			}
+		}
 
 		try{
-
 			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
 
-				LinkedHashMap cache = [:]
-				if(params.controller){
-					cache = apiCacheService.getApiCache(params.controller.toString())
-				}
+			LinkedHashMap cache = (params.controller)? apiCacheService.getApiCache(params.controller.toString()):[:]
 
 				if(cache) {
 					params.apiObject = (params.apiObjectVersion)?params.apiObjectVersion:cache['currentStable']['value']

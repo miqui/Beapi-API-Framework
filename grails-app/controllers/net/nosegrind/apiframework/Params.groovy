@@ -43,72 +43,9 @@ abstract class Params{
 
     List formats = ['text/html','text/json','application/json','text/xml','application/xml']
     List optionalParams = ['method','format','contentType','encoding','action','controller','v','apiCombine', 'apiObject','entryPoint','uri','testvar']
-    boolean batchEnabled
-    boolean chainEnabled
-    String apiAutomationType
-    String format = ""
-    String uri = ""
-    String method = ""
+    boolean batchEnabled = Holders.grailsApplication.config.apitoolkit.batching.enabled
+    boolean chainEnabled = Holders.grailsApplication.config.apitoolkit.chaining.enabled
 
-    void initParams(String apiAutomationType) {
-        //println("#### [ParamsService : initParams ] ####")
-
-
-        // modify request headers
-        this.apiAutomationType = apiAutomationType
-        this.batchEnabled = Holders.grailsApplication.config.apitoolkit.batching.enabled
-        this.chainEnabled = Holders.grailsApplication.config.apitoolkit.chaining.enabled
-
-        format =request.format.toUpperCase()
-        uri = request.forwardURI.toString()
-        method = request.method
-
-
-        if(!request.getAttribute(format)) {
-            LinkedHashMap dataParams = [:]
-            switch (format) {
-                case 'XML':
-                    String xml = request."${request.getAttribute('format')}".toString()
-                    def slurper = new XmlSlurper()
-                    slurper.parseText(xml).each() { k, v ->
-                        dataParams[k] = v
-                    }
-                    request.setAttribute("${format}", dataParams)
-                    break
-                case 'JSON':
-                    String json = request."${format}".toString()
-                    def slurper = new JsonSlurper()
-                    slurper.parseText(json).each() { k, v ->
-                        dataParams[k] = v
-                    }
-                    request.setAttribute("${format}", dataParams)
-                    break
-                default:
-                    println"format : "+format
-                    break
-            }
-        }
-
-
-        // SET BATCH/CHAIN PARAMS FOR FORWARDS
-        switch(this.apiAutomationType) {
-            case 'chain':
-                setChainParams(params)
-                if (request?."${format}"?.chain) {
-                    request."${format}".remove('chain')
-                }
-                break
-            case 'batch':
-                // init batchInc if doesnt exist else increment; used for popping batch vars with each forward
-                if (!request.getAttribute('batchInc')) {
-                    request.setAttribute('batchInc',0)
-                }else{
-                    request.setAttribute('batchInc',request.getAttribute('batchInc').toInteger().toInteger() + 1)
-                }
-                setBatchParams(params)
-                break
-        }
-    }
 
     /* set params for this 'loop'; these will NOT forward
     *
@@ -116,7 +53,7 @@ abstract class Params{
     void setBatchParams(GrailsParameterMap params){
         //println("#### [ParamsService : setBatchParams ] ####")
         if (batchEnabled) {
-            def batchVars = request.getAttribute(format)
+            def batchVars = request.getAttribute(request.format.toUpperCase())
             if(!request.getAttribute('batchLength')){ request.setAttribute('batchLength',batchVars['batch'].size()) }
             batchVars['batch'][request.getAttribute('batchInc').toInteger()].each() { k,v ->
                 params."${k}" = v

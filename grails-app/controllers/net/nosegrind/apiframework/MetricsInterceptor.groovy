@@ -30,6 +30,7 @@ package net.nosegrind.apiframework
 import grails.core.GrailsApplication
 import grails.plugin.springsecurity.SpringSecurityService
 import grails.util.Metadata
+import groovy.json.JsonSlurper
 import net.nosegrind.apiframework.comm.ApiRequestService
 import net.nosegrind.apiframework.comm.ApiResponseService
 
@@ -47,28 +48,70 @@ class MetricsInterceptor extends Params{
 	ApiCacheService apiCacheService
 	SpringSecurityService springSecurityService
 
-
 	String entryPoint = "m${Metadata.current.getProperty(Metadata.APPLICATION_VERSION, String.class)}"
 
 	MetricsInterceptor(){
 		match(uri:"/${entryPoint}/**")
 	}
 
-	boolean before(){
-		//println("##### FILTER (BEFORE)")
+	boolean before() {
+		//println("##### METRICS FILTER (BEFORE)")
 
-		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
+		Map methods = ['GET': 'show', 'PUT': 'update', 'POST': 'create', 'DELETE': 'delete']
 
-		initParams()
+		// Init params
+		String format = request.format.toUpperCase()
+
+		List keys = []
+		if (['XML','JSON'].contains(format)) {
+			LinkedHashMap dataParams = [:]
+			switch (format) {
+				case 'XML':
+					String xml = request."${request.getAttribute('format')}".toString()
+					def slurper = new XmlSlurper()
+					slurper.parseText(xml).each() { k, v ->
+						dataParams[k] = v
+					}
+					keys = dataParams.keySet()
+					request.setAttribute("${format}", dataParams)
+					break
+				case 'JSON':
+					String json = request."${format}".toString()
+					def slurper = new JsonSlurper()
+					slurper.parseText(json).each() { k, v ->
+						dataParams[k] = v
+					}
+					keys = dataParams.keySet()
+					request.setAttribute("${format}", dataParams)
+					break
+			}
+		}
+
+		if (!keys.isEmpty()) {
+			switch (keys[0]) {
+				case 'chain':
+					setChainParams(params)
+					if (request?."${format}"?.chain) {
+						request."${format}".remove('chain')
+					}
+					break
+				case 'batch':
+					// init batchInc if doesnt exist else increment; used for popping batch vars with each forward
+					if (!request.getAttribute('batchInc')) {
+						request.setAttribute('batchInc', 0)
+					} else {
+						request.setAttribute('batchInc', request.getAttribute('batchInc').toInteger().toInteger() + 1)
+					}
+					setBatchParams(params)
+					break
+			}
+		}
 
 		try{
 
 			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
 
-				LinkedHashMap cache = [:]
-				if(params.controller){
-					cache = apiCacheService.getApiCache(params.controller.toString())
-				}
+				LinkedHashMap cache = (params.controller)? apiCacheService.getApiCache(params.controller.toString()):[:]
 
 
 				if(cache){
@@ -111,7 +154,7 @@ class MetricsInterceptor extends Params{
 	}
 
 	boolean after(){
-		//println("##### FILTER (AFTER)")
+		//println("##### METRICS FILTER (AFTER)")
 		try{
 			LinkedHashMap newModel = [:]
 
