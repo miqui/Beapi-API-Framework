@@ -64,7 +64,7 @@ class ApiFrameworkInterceptor extends Params{
 	}
 
 	boolean before(){
-		println("##### FILTER (BEFORE) - ${params.testvar}")
+		//println("##### FILTER (BEFORE)")
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 

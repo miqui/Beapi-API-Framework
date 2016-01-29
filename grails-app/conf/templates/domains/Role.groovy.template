@@ -17,17 +17,7 @@ class Role implements Serializable {
 
 	static mapping = {
 		version false
-		datasource 'user'
 	}
-
-	
-	/*
-	static mapping = {
-		version false
-		table 'role'
-		id column:'id'
-	}
-	*/
 
 
 }

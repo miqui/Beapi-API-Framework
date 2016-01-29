@@ -1,0 +1,24 @@
+package net.nosegrind.apiframework
+
+import java.util.Date
+
+class ApiCache {
+	
+
+	String uri
+	Integer objectVersion
+	String role
+	String format = 'JSON'
+	String cache
+	Date dateCreated
+	Date lastModified = new Date()
+
+	
+	static constraints = {
+		uri(nullable:false)
+		objectVersion(nullable:false)
+		role(nullable:false)
+		format(nullable:false)
+		cache(nullable:false)
+	}
+}

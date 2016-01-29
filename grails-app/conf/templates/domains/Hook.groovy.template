@@ -14,9 +14,6 @@ class Hook {
 	Date dateCreated
 	Date lastModified = new Date()
 
-	static mapping = {
-		datasource 'user'
-	}
 	
 	static constraints = {
 		user(nullable:false)

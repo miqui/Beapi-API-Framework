@@ -49,7 +49,6 @@ class Person implements Serializable {
 	}
 
 	static mapping = {
-		datasource 'user'
 		password column: '`password`'
 	}
 

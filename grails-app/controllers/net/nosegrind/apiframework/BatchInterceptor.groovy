@@ -61,7 +61,7 @@ class BatchInterceptor extends Params{
 	}
 
 	boolean before(){
-		println("##### BATCHINTERCEPTOR (BEFORE)")
+		//println("##### BATCHINTERCEPTOR (BEFORE)")
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 
@@ -90,24 +90,22 @@ class BatchInterceptor extends Params{
 					break
 			}
 		}
-		
+
 
 		try{
 			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
 
 			LinkedHashMap cache = (params.controller)? apiCacheService.getApiCache(params.controller.toString()):[:]
 				if(cache) {
-					println("hacve cache")
 					params.apiObject = (params.apiObjectVersion)?params.apiObjectVersion:cache['currentStable']['value']
 
-					if (!request.getAttribute('batchInc')) {
+					if (request.getAttribute('batchInc')==null) {
 						request.setAttribute('batchInc',0)
 					}else{
-						request.setAttribute('batchInc',request.getAttribute('batchInc').toInteger().toInteger() + 1)
+						request.setAttribute('batchInc',request.getAttribute('batchInc').toInteger() + 1)
 					}
-					println("setting batch params...")
+
 					setBatchParams(params)
-					println("after setting batch params...")
 
 					LinkedHashMap receives = cache[params.apiObject.toString()][params.action.toString()]['receives'] as LinkedHashMap
 					boolean requestKeysMatch = checkURIDefinitions(cache[params.apiObject.toString()][params.action.toString()]['method'] as String,params,receives)
@@ -116,8 +114,6 @@ class BatchInterceptor extends Params{
 						render(status:HttpServletResponse.SC_BAD_REQUEST, text: 'Expected request variables do not match sent variables')
 						return false
 					}
-
-					println('keys matched...')
 
 					if(!params.action){
 						String methodAction = methods[request.method]
@@ -129,7 +125,6 @@ class BatchInterceptor extends Params{
 							// FORWARD FOR REST DEFAULTS WITH NO ACTION
 							String[] tempUri = request.getRequestURI().split("/")
 							if(tempUri[2].contains('dispatch') && "${params.controller}.dispatch" == tempUri[2] && !cache[params.apiObject]['domainPackage']){
-								println("tempUri : "+tempUri)
 								forward(controller:params.controller,action:params.action,params:params)
 								return false
 							}
@@ -144,15 +139,14 @@ class BatchInterceptor extends Params{
 			return false
 
 		}catch(Exception e) {
-			//log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
-			println("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:"+ e)
+			log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
 			return false
 		}
 	}
 
 	boolean after(){
-		println("##### BATCHFILTER (AFTER)")
-		//try{
+		//println("##### BATCHFILTER (AFTER)")
+		try{
 			LinkedHashMap newModel = [:]
 
 			if (!model) {
@@ -166,11 +160,9 @@ class BatchInterceptor extends Params{
 			LinkedHashMap content
 
 			if(batchEnabled && (request.getAttribute('batchLength')>(request.getAttribute('batchInc')+1))){
-				println("forwarding....")
 				WebUtils.exposeRequestAttributes(request, params);
 				// this will work fine when we upgrade to newer version that has fix in iut
 				params.uri = request.forwardURI.toString()
-				println params.uri
 				forward(params)
 				return false
 			}
@@ -183,10 +175,10 @@ class BatchInterceptor extends Params{
 			}
 
 			return false
-		//}catch(Exception e){
-		//	log.error("[ApiToolkitFilters :: apitoolkit.after] : Exception - full stack trace follows:", e);
-		//	return false
-		//}
+		}catch(Exception e){
+			log.error("[ApiToolkitFilters :: apitoolkit.after] : Exception - full stack trace follows:", e);
+			return false
+		}
 
 	}
 

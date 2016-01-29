@@ -59,13 +59,11 @@ class ApiFrameworkUrlMappings {
 
         // REGULAR API ENDPOINTS
         "/$api/$controller/$action?/$id?**"{
-            testvar = "api/controller/action/id(format)"
             entryPoint = api
             parseRequest = true
         }
 
         "/$api/$controller/$id" {
-            testvar = "api/controller/id"
             entryPoint = api
             parseRequest = true
         }
