@@ -2,7 +2,7 @@
 
 Fully reactive api framework providing automation and simplification of api's for scale. Some features include:
 
-- *automated batching:* all endpoints all batchable by default with AUTH ROLES assignable torestrict. Batching can also be TOGGLED to turn this feature ON/OFF per endpoint.
+- **automated batching:** all endpoints all batchable by default with AUTH ROLES assignable torestrict. Batching can also be TOGGLED to turn this feature ON/OFF per endpoint.
 
 - *api abstraction* of communication logic: communication logic is abstraction from business logic (or 'resource manager') to allow for easier automation, better communication, CPU bound processing and sharing of IO flow with processes/application in a distributed architecture
 
@@ -12,7 +12,8 @@ Fully reactive api framework providing automation and simplification of api's fo
 
 - api chaining: rather than using HATEOASto make a request, get a link, make a request, get a link, make a request, etc... api chaining allows for creation of an 'api monad' wherein the output from a related set of apis can be chained allowing the output from one api to be accepted as the input to the next and so on and be passed with ONE REQUEST AND ONE RESPONSE.
 
-*FAQ*
+**FAQ**
+
 Q: How hard is this to implement?
 A: Can you write controllers and models? Thats all thats needed to implement this plugin. Just the most basic understanding
 
