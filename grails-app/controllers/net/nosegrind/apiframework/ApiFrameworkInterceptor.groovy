@@ -64,7 +64,7 @@ class ApiFrameworkInterceptor extends Params{
 	}
 
 	boolean before(){
-		//println("##### FILTER (BEFORE)")
+		println("##### FILTER (BEFORE)")
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 
@@ -100,6 +100,11 @@ class ApiFrameworkInterceptor extends Params{
 
 				if(cache) {
 					params.apiObject = (params.apiObjectVersion)?params.apiObjectVersion:cache['currentStable']['value']
+
+println("apiobject : "+params.apiObject)
+println("controller/action : "+params.controller+"/"+params.action)
+println("cache :"+cache[params.apiObject])
+println("cache2 : "+cache[params.apiObject][params.action.toString()])
 
 					LinkedHashMap receives = cache[params.apiObject][params.action.toString()]['receives'] as LinkedHashMap
 					boolean requestKeysMatch = checkURIDefinitions(cache[params.apiObject][params.action.toString()]['method'] as String,params,receives)
