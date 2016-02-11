@@ -67,7 +67,6 @@ class ApiFrameworkUrlMappings {
             parseRequest = true
         }
 
-
         /*
         "/${api}-$apiObjectVersion/$controller/$action?/$id?(.$format)?**" {
             entryPoint = api

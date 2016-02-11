@@ -120,8 +120,8 @@ abstract class Params{
     }
 
     boolean checkURIDefinitions(String method,GrailsParameterMap params,LinkedHashMap requestDefinitions){
-        //println("#### [ParamsService : checkUriDefinitions ] ####")
-        List reservedNames = ['batchLength','batchInc',]
+        println("#### [ParamsService : checkUriDefinitions ] ####")
+        List reservedNames = ['batchLength','batchInc']
         // put in check to see if if app.properties allow for this check
         try{
             List requestList = getApiParams(requestDefinitions)

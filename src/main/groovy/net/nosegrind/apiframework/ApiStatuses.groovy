@@ -39,11 +39,6 @@ class ApiStatuses{
 		return request
 	}
 
-	private HttpServletResponse getResponse(){
-		HttpServletResponse response = ((ServletRequestAttributes) RCH.getRequestAttributes()).getAttribute(RESPONSE_NAME_AT_ATTRIBUTES, RequestAttributes.SCOPE_REQUEST)
-		return response
-	}
-
 	String getContentType(){
 		//HttpServletRequest request = getRequest()
 		def tempType = request.getHeader('Content-Type')?.split(';')

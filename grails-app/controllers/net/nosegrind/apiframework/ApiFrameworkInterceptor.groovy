@@ -66,6 +66,7 @@ class ApiFrameworkInterceptor extends Params{
 	boolean before(){
 		println("##### FILTER (BEFORE)")
 
+
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 
 		// Init params
@@ -101,10 +102,9 @@ class ApiFrameworkInterceptor extends Params{
 				if(cache) {
 					params.apiObject = (params.apiObjectVersion)?params.apiObjectVersion:cache['currentStable']['value']
 
-println("apiobject : "+params.apiObject)
-println("controller/action : "+params.controller+"/"+params.action)
-println("cache :"+cache[params.apiObject])
-println("cache2 : "+cache[params.apiObject][params.action.toString()])
+					if(params.action==null){
+						params.action = cache[params.apiObject]['defaultAction']
+					}
 
 					LinkedHashMap receives = cache[params.apiObject][params.action.toString()]['receives'] as LinkedHashMap
 					boolean requestKeysMatch = checkURIDefinitions(cache[params.apiObject][params.action.toString()]['method'] as String,params,receives)
@@ -144,16 +144,19 @@ println("cache2 : "+cache[params.apiObject][params.action.toString()])
 	}
 
 	boolean after(){
-		//println("##### FILTER (AFTER) - ${params.testvar}")
+		println("##### FILTER (AFTER)")
 		try{
 			LinkedHashMap newModel = [:]
 
 			if (!model) {
-				render(status:HttpServletResponse.SC_NOT_FOUND , text: 'No resource returned')
+				render(status:HttpServletResponse.SC_NOT_FOUND , text: 'No resource returned / domain is empty')
 				return false
 			} else {
 				newModel = apiResponseService.convertModel(model)
 			}
+
+			//render(status:HttpServletResponse.SC_BAD_REQUEST, text: 'Expected request variables do not match sent variables')
+			//return false
 
 			LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
 			LinkedHashMap content = apiResponseService.handleApiResponse(cache[params.apiObject][params.action],request,response,newModel,params) as LinkedHashMap

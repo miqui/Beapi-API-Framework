@@ -72,32 +72,26 @@ abstract class ApiLayer{
 		return request
 	}
 
-	private HttpServletResponse getResponse(){
-		HttpServletResponse response = ((ServletRequestAttributes) RCH.getRequestAttributes()).getAttribute(RESPONSE_NAME_AT_ATTRIBUTES, RequestAttributes.SCOPE_REQUEST)
-		return response
-	}
 
 	List getApiParams(LinkedHashMap definitions){
 		//println("#### [ApiLayer : getApiParams ] ####")
-		//try{
-		List apiList = []
-		def principal = springSecurityService.principal
-		List roleNames = principal.authorities*.authority
-		definitions.each() { it2 ->
-			if (roleNames.contains(it2.key) || it2.key == 'permitAll') {
-				//withPool {
-				it2.value.each() { it4 ->
-					apiList.add(it4.name)
+		try{
+			List apiList = []
+			def principal = springSecurityService.principal
+			List roleNames = principal.authorities*.authority
+			definitions.each() { it2 ->
+				if (roleNames.contains(it2.key) || it2.key == 'permitAll') {
+					//withPool {
+					it2.value.each() { it4 ->
+						apiList.add(it4.name)
+					}
+					//}
 				}
-				//}
 			}
+			return apiList
+		}catch(Exception e){
+			throw new Exception("[ApiLayer :: getApiParams] : Exception - full stack trace follows:",e)
 		}
-
-
-		return apiList
-		//}catch(Exception e){
-		//	throw new Exception("[ApiLayer :: getApiParams] : Exception - full stack trace follows:",e)
-		//}
 	}
 
 	LinkedHashMap parseURIDefinitions(LinkedHashMap model,List responseList){
@@ -105,27 +99,36 @@ abstract class ApiLayer{
 		try{
 			String msg = 'Error. Invalid variables being returned. Please see your administrator'
 
-			List paramsList = model.keySet() as List
-			paramsList.removeAll(optionalParams)
-			if(!responseList.containsAll(paramsList)){
-				paramsList.removeAll(responseList)
-				//withPool {
-				paramsList.each() { it2 ->
-					model.remove("${it2}".toString())
-				}
-				//}
-				if(!paramsList){
-					ApiStatuses._400_BAD_REQUEST(msg).send()
-					return [:]
+			if(model instanceof LinkedHashMap){
+
+			}else {
+				List paramsList = model.keySet() as List
+			}
+				paramsList.removeAll(optionalParams)
+
+				if(!responseList.containsAll(paramsList)){
+
+					paramsList.removeAll(responseList)
+					//withPool {
+
+					paramsList.each() { it2 ->
+						model.remove("${it2}".toString())
+					}
+					//}
+
+					if(!paramsList){
+						ApiStatuses._400_BAD_REQUEST(msg).send()
+						return [:]
+					}else{
+						return model
+					}
 				}else{
 					return model
 				}
-			}else{
-				return model
-			}
+			
 		}catch(Exception e){
-			//throw new Exception("[ApiLayer :: parseURIDefinitions] : Exception - full stack trace follows:",e)
-			println("[ApiLayer :: parseURIDefinitions] : Exception - full stack trace follows:"+e)
+			throw new Exception("[ApiLayer :: parseURIDefinitions] : Exception - full stack trace follows:",e)
+			//println("[ApiLayer :: parseURIDefinitions] : Exception - full stack trace follows:"+e)
 		}
 	}
 
@@ -254,8 +257,6 @@ abstract class ApiLayer{
 			throw new Exception("[ApiLayer :: checkDeprecationDate] : Exception - full stack trace follows:",e)
 		}
 	}
-
-
 
 	/*
 	private ArrayList processDocErrorCodes(HashSet error){
@@ -478,7 +479,6 @@ abstract class ApiLayer{
     }
 */
 
-
 	LinkedHashMap convertModel(Map map){
 		//println("#### [ApiResponseService : convertModel ] ####")
 
@@ -525,7 +525,6 @@ abstract class ApiLayer{
 		}
 	}
 
-
 	LinkedHashMap formatList(List list){
 		//println("#### [ApiResponseService : formatList ] ####")
 		LinkedHashMap newMap = [:]
@@ -552,7 +551,6 @@ abstract class ApiLayer{
 				newMap[key] = ((val in java.util.ArrayList || val in java.util.List) || val in java.util.Map)?val:val.toString()
 			}
 		}
-
 
 		return newMap
 	}
