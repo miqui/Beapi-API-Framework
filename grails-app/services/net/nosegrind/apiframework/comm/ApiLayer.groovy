@@ -99,36 +99,38 @@ abstract class ApiLayer{
 		try{
 			String msg = 'Error. Invalid variables being returned. Please see your administrator'
 
+			List paramsList
 			if(model instanceof LinkedHashMap){
-
+				if(model.size()==0) {
+					return [:]
+				}else{
+					paramsList = model.first.keySet() as List
+				}
 			}else {
-				List paramsList = model.keySet() as List
+				paramsList = model.keySet() as List
 			}
-				paramsList.removeAll(optionalParams)
 
-				if(!responseList.containsAll(paramsList)){
+			paramsList.removeAll(optionalParams)
 
-					paramsList.removeAll(responseList)
-					//withPool {
+			if(!responseList.containsAll(paramsList)){
 
-					paramsList.each() { it2 ->
-						model.remove("${it2}".toString())
-					}
-					//}
+				paramsList.removeAll(responseList)
+				paramsList.each() { it2 ->
+					model.remove("${it2}".toString())
+				}
 
-					if(!paramsList){
-						ApiStatuses._400_BAD_REQUEST(msg).send()
-						return [:]
-					}else{
-						return model
-					}
+				if(!paramsList){
+					return [:]
 				}else{
 					return model
 				}
-			
+			}else{
+				return model
+			}
+
 		}catch(Exception e){
-			throw new Exception("[ApiLayer :: parseURIDefinitions] : Exception - full stack trace follows:",e)
-			//println("[ApiLayer :: parseURIDefinitions] : Exception - full stack trace follows:"+e)
+			//throw new Exception("[ApiLayer :: parseURIDefinitions] : Exception - full stack trace follows:",e)
+			println("[ApiLayer :: parseURIDefinitions] : Exception - full stack trace follows:"+e)
 		}
 	}
 
@@ -153,7 +155,6 @@ abstract class ApiLayer{
 			case 'PUT':
 			case 'POST':
 			case 'DELETE':
-				if(!result.isEmpty()){
 					String content
 					switch(request.format.toUpperCase()){
 						case 'XML':
@@ -162,7 +163,6 @@ abstract class ApiLayer{
 						case 'JSON':
 						default:
 							content = result as JSON
-					}
 					data = ['content':content,'contentType':request.getAttribute('contentType'),'encoding':encoding]
 				}
 				break;

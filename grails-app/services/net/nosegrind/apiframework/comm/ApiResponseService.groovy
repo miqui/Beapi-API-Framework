@@ -27,6 +27,8 @@
 
 package net.nosegrind.apiframework.comm
 
+import grails.util.Holders
+
 //import grails.application.springsecurity.SpringSecurityService
 
 import grails.web.http.HttpHeaders
@@ -63,12 +65,11 @@ class ApiResponseService extends ApiLayer{
 			response.setHeader('Authorization', cache['roles'].toString().join(', '))
 			List responseList = getApiParams((LinkedHashMap)cache['returns'])
 			LinkedHashMap result = parseURIDefinitions(model,responseList)
-			if(!result){
-				response.status = 400
-			}else{
-				LinkedHashMap content = parseResponseMethod(request, params, result)
-				return content
-			}
+
+			// will parse empty map the same as map with content
+			LinkedHashMap content = parseResponseMethod(request, params, result)
+			return content
+
 		}catch(Exception e){
 			throw new Exception("[ApiResponseService :: handleApiResponse] : Exception - full stack trace follows:",e)
 		}
