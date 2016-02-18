@@ -66,7 +66,6 @@ class ApiFrameworkInterceptor extends Params{
 	boolean before(){
 		println("##### FILTER (BEFORE)")
 
-
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 
 		// Init params
@@ -145,6 +144,7 @@ class ApiFrameworkInterceptor extends Params{
 
 	boolean after(){
 		println("##### FILTER (AFTER)")
+
 		try{
 			LinkedHashMap newModel = [:]
 
