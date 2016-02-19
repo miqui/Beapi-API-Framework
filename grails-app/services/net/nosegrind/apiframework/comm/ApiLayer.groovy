@@ -100,14 +100,17 @@ abstract class ApiLayer{
 			String msg = 'Error. Invalid variables being returned. Please see your administrator'
 
 			List paramsList
-			if(model instanceof LinkedHashMap){
-				if(model.size()==0) {
+			Integer msize = model.size()
+			switch(msize) {
+				case 0:
 					return [:]
-				}else{
-					paramsList = model.first.keySet() as List
-				}
-			}else {
-				paramsList = model.keySet() as List
+					break;
+				case 1:
+					paramsList = (model.keySet()!=['id'])?model.entrySet().iterator().next() as List : model.keySet() as List
+					break;
+				default:
+					paramsList = model.keySet() as List
+					break;
 			}
 
 			paramsList.removeAll(optionalParams)
