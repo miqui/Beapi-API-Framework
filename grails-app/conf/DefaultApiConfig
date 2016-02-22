@@ -1,0 +1,16 @@
+apitoolkit.attempts= 5
+apitoolkit.roles= ['ROLE_USER','ROLE_ROOT','ROLE_ADMIN','ROLE_ARCH']
+apitoolkit.apichain.limit= 3
+apitoolkit.rest.postcrement= false
+apitoolkit.chaining.enabled= true
+apitoolkit.batching.enabled= true
+apitoolkit.encoding= 'UTF-8'
+apitoolkit.user.roles= ['ROLE_USER']
+apitoolkit.admin.roles= ['ROLE_ROOT','ROLE_ADMIN','ROLE_ARCH']
+apitoolkit.serverType= 'master'
+apitoolkit.webhook.services= ['iostate']
+apitoolkit.iostate.preloadDir= ''
+apitoolkit.iostate.archInstanceUrls= ['proxy': '127.0.0.1','mq': '127.0.0.1']
+apitoolkit.corsInterceptor.includeEnvironments= ['development','test']
+apitoolkit.corsInterceptor.excludeEnvironments= ['production']
+apitoolkit.corsInterceptor.allowedOrigins= ['localhost:3000']

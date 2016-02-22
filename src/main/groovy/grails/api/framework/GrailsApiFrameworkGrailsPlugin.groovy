@@ -103,10 +103,11 @@ class GrailsApiFrameworkGrailsPlugin extends Plugin{
             writeFile("templates/domains/Role.groovy.template", "${domainDir}Role.groovy")
         }
 
+        ApiUtils.updateConfig()
+
         final String isBatchServer = grailsApplication.config.apitoolkit.batching.enabled
         final String isChainServer = grailsApplication.config.apitoolkit.chaining.enabled
         //final String isLocalAuth = (String)grailsApplication.config.apitoolkit.localauth.enabled
-
 
         System.setProperty('isBatchServer', isBatchServer)
         System.setProperty('isChainServer', isChainServer)
