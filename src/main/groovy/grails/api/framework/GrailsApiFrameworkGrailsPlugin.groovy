@@ -110,7 +110,6 @@ class GrailsApiFrameworkGrailsPlugin extends Plugin{
             println " ... installing Domain dir/files ..."
         }
 
-
         if(!ApiUtils.getApiConfig()){
             println " ... updating config ..."
             ApiUtils.updateConfig()

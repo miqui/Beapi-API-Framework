@@ -49,27 +49,7 @@ class ApiUtils {
         return application
     }
 
-    // Used for testing
-    static Object getConfigProperty(String name) {
-        def value = getApiConfig()
-        name.split('\\.').each { String part -> value = value."$part" }
-        value
-    }
-
-    // used for testing
-    static void setConfigProperty(String name, value) {
-        def config = getApiConfig()
-
-        List parts = name.split('\\.')
-        name = parts.remove(parts.size() - 1)
-
-        parts.each { String part -> config = config."$part" }
-
-        config."$name" = value
-    }
-
     private void updateConfig() {
-
         file('grails-app/conf/application.groovy').withWriterAppend { BufferedWriter writer ->
             writer.newLine()
             writer.newLine()
