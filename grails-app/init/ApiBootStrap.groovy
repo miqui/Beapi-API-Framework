@@ -10,7 +10,7 @@ class ApiBootStrap {
 
 	def init = { servletContext ->
 		apiObjectService.initialize()
-		def test = apiCacheService.getCacheNames()
+
 	}
 	
 	def destroy = {}
