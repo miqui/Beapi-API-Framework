@@ -87,6 +87,7 @@ class GrailsApiFrameworkGrailsPlugin extends Plugin{
         def iostateDir = "${basedir}/src/iostate/"
         def iofile = new File(iostateDir)
         if(!iofile.exists()) {
+            writeFile("templates/iostate/Apidoc.json.template", "${iostateDir}Apidoc.json")
             writeFile("templates/iostate/Hook.json.template", "${iostateDir}Hook.json")
             writeFile("templates/iostate/IOState.json.template", "${iostateDir}IOState.json")
             println " ... installing IOstate dir/files ..."
@@ -96,6 +97,7 @@ class GrailsApiFrameworkGrailsPlugin extends Plugin{
         def cfile = new File(contDir)
         if(!cfile.exists()) {
             ant.mkdir(dir: contDir)
+            writeFile("templates/controllers/ApidocController.groovy.template", "${contDir}ApidocController.groovy")
             writeFile("templates/controllers/HookController.groovy.template", "${contDir}HookController.groovy")
             writeFile("templates/controllers/IostateController.groovy.template", "${contDir}IostateController.groovy")
             println " ... installing Controller dir/files ..."
