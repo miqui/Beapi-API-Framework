@@ -112,9 +112,31 @@ class GrailsApiFrameworkGrailsPlugin extends Plugin{
             println " ... installing Domain dir/files ..."
         }
 
-        if(!ApiUtils.getApiConfig()){
+
+
+        if(!grailsApplication.config.apitoolkit){
             println " ... updating config ..."
-            ApiUtils.updateConfig()
+            file('grails-app/conf/application.groovy').withWriterAppend { BufferedWriter writer ->
+                writer.newLine()
+                writer.newLine()
+                writer.writeLine '// Added by the Reactive API Framework plugin:'
+
+                writer.writeLine "apitoolkit.attempts= 5"
+                writer.writeLine "apitoolkit.roles= ['ROLE_USER','ROLE_ROOT','ROLE_ADMIN','ROLE_ARCH']"
+                writer.writeLine "apitoolkit.chaining.enabled= true"
+                writer.writeLine "apitoolkit.batching.enabled= true"
+                writer.writeLine "apitoolkit.encoding= 'UTF-8'"
+                writer.writeLine "apitoolkit.user.roles= ['ROLE_USER']"
+                writer.writeLine "apitoolkit.admin.roles= ['ROLE_ROOT','ROLE_ADMIN','ROLE_ARCH']"
+                writer.writeLine "apitoolkit.serverType= 'master'"
+                writer.writeLine "apitoolkit.webhook.services= ['iostate']"
+                writer.writeLine "apitoolkit.iostate.preloadDir= '/user/home/.iostate'"
+                writer.writeLine "apitoolkit.corsInterceptor.includeEnvironments= ['development','test']"
+                writer.writeLine "apitoolkit.corsInterceptor.excludeEnvironments= ['production']"
+                writer.writeLine "apitoolkit.corsInterceptor.allowedOrigins= ['localhost:3000']"
+
+                writer.newLine()
+            }
         }
 
         final String isBatchServer = grailsApplication.config.apitoolkit.batching.enabled

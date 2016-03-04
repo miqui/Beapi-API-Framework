@@ -1,6 +1,7 @@
 package grails3.cors.interceptor
 
 import grails.compiler.GrailsCompileStatic
+import grails.core.GrailsApplication
 import grails.util.Environment
 
 /**
@@ -9,15 +10,18 @@ import grails.util.Environment
  *
  * @see https://github.com/davidtinker/grails-cors
  */
-@GrailsCompileStatic
+//@CompileStatic
 class CorsInterceptor {
 
+	GrailsApplication grailsApplication
+	
 	CorsInterceptor() {
 		matchAll() // match all controllers
 		//.excludes(controller:"login")   // uncomment to add exclusion
 	}
 
 	boolean before() {
+		println("##### CORSFILTER (BEFORE)")
 		Map corsInterceptorConfig = (Map) grailsApplication.config.apitoolkit.corsInterceptor
 		String[] includeEnvironments = corsInterceptorConfig['includeEnvironments']?: null
 		String[] excludeEnvironments = corsInterceptorConfig['excludeEnvironments']?: null
@@ -59,10 +63,8 @@ class CorsInterceptor {
 		true // proceed to controller
 	}
 
-	boolean after() { true }
+	//boolean after() {}
 
-	void afterView() {
-		// no-op
-	}
+	//void afterView() {// no-op}
 
 }

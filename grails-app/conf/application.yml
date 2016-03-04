@@ -74,7 +74,7 @@ config:
 
 ---
 apitoolkit:
-    encoding: 'UTF-8'
+    apiName: api
     attempts: 5
     roles: {ROLE_USER,ROLE_ROOT,ROLE_ADMIN,ROLE_ARCH}
     apichain:
@@ -85,11 +85,21 @@ apitoolkit:
         enabled: true
     batching:
         enabled: true
+    encoding: UTF-8
     user:
         roles: {ROLE_USER}
     admin:
         roles: {ROLE_ROOT,ROLE_ADMIN,ROLE_ARCH}
     serverType: master
+    webhook:
+        services: {iostate}
     iostate:
         preloadDir: /home/owenrubel/.iostate
+        archInstanceUrls:
+            "proxy": "127.0.0.1"
+            "mq": "127.0.0.1"
+    corsInterceptor:
+        includeEnvironments: {'development','test'}
+        excludeEnvironments: {'production'}
+        allowedOrigins: {"localhost:3000"}
 
