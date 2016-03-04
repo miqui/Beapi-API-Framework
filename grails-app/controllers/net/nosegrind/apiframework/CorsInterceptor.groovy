@@ -21,24 +21,20 @@ class CorsInterceptor {
 	}
 
 	boolean before() {
-		println("##### CORSFILTER (BEFORE)")
+		//println("##### CORSFILTER (BEFORE)")
 		Map corsInterceptorConfig = (Map) grailsApplication.config.apitoolkit.corsInterceptor
 		String[] includeEnvironments = corsInterceptorConfig['includeEnvironments']?: null
 		String[] excludeEnvironments = corsInterceptorConfig['excludeEnvironments']?: null
 		String[] allowedOrigins = corsInterceptorConfig['allowedOrigins']?: null
 
 		if( excludeEnvironments && excludeEnvironments.contains(Environment.current.name) )  { // current env is excluded
-			// skip
 			return true
 		}
 		else if( includeEnvironments && !includeEnvironments.contains(Environment.current.name) )  {  // current env is not included
-			// skip
 			return true
 		}
 
-
 		String origin = request.getHeader("Origin");
-
 
 		boolean options = ("OPTIONS" == request.method)
 		if (options) {
@@ -60,7 +56,7 @@ class CorsInterceptor {
 			header("Access-Control-Allow-Credentials", "true")
 		}
 
-		true // proceed to controller
+		true
 	}
 
 	//boolean after() {}
