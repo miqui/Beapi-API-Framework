@@ -27,7 +27,9 @@
 
 package net.nosegrind.apiframework
 
+import javax.annotation.Resource
 import grails.core.GrailsApplication
+import net.nosegrind.apiframework.ApiDescriptor
 import grails.plugin.springsecurity.SpringSecurityService
 import grails.util.Metadata
 import groovy.json.JsonSlurper
@@ -39,15 +41,17 @@ import grails.artefact.controller.support.RequestForwarder
 import org.grails.web.util.WebUtils
 
 import javax.servlet.http.HttpServletResponse
-
+import groovy.transform.CompileStatic
 //import net.nosegrind.apiframework.Timer
 
-//@CompileStatic
+@CompileStatic
 class BatchInterceptor extends Params{
 
 	int order = HIGHEST_PRECEDENCE + 999
 
+	@Resource
 	GrailsApplication grailsApplication
+
 	BatchRequestService batchRequestService
 	BatchResponseService batchResponseService
 	ApiCacheService apiCacheService
@@ -72,21 +76,20 @@ class BatchInterceptor extends Params{
 			LinkedHashMap dataParams = [:]
 			switch (format) {
 				case 'XML':
-
-					String xml = request."${request.getAttribute('format')}".toString()
+					String xml = request.XML.toString()
 					def slurper = new XmlSlurper()
 					slurper.parseText(xml).each() { k, v ->
 						dataParams[k] = v
 					}
-					request.setAttribute("${format}", dataParams)
+					request.setAttribute("XML", dataParams)
 					break
 				case 'JSON':
-					String json = request."${format}".toString()
+					String json = request.JSON.toString()
 					def slurper = new JsonSlurper()
 					slurper.parseText(json).each() { k, v ->
 						dataParams[k] = v
 					}
-					request.setAttribute("${format}", dataParams)
+					request.setAttribute("JSON", dataParams)
 					break
 			}
 		}
@@ -96,48 +99,49 @@ class BatchInterceptor extends Params{
 			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
 
 			LinkedHashMap cache = (params.controller)? apiCacheService.getApiCache(params.controller.toString()):[:]
-			if(!params.action){
-				params.action = cache['defaultAction']
-			}
-				if(cache) {
-					params.apiObject = (params.apiObjectVersion)?params.apiObjectVersion:cache['currentStable']['value']
+			params.action = (params.action==null)?cache['defaultAction']:params.action
 
-					if (request.getAttribute('batchInc')==null) {
-						request.setAttribute('batchInc',0)
+			if(cache) {
+				params.apiObject = (params.apiObjectVersion)?params.apiObjectVersion:cache['currentStable']['value']
+
+				if (request?.getAttribute('batchInc')==null) {
+					request.setAttribute('batchInc',0)
+				}else{
+					Integer newBI = (Integer) request?.getAttribute('batchInc')
+					request.setAttribute('batchInc',newBI+1)
+				}
+
+				setBatchParams(params)
+
+				LinkedHashMap receives = cache[params.apiObject.toString()][params.action.toString()]['receives'] as LinkedHashMap
+				boolean requestKeysMatch = checkURIDefinitions(cache[params.apiObject.toString()][params.action.toString()]['method'] as String,params,receives)
+
+				if(!requestKeysMatch){
+					render(status:HttpServletResponse.SC_BAD_REQUEST, text: 'Expected request variables do not match sent variables')
+					return false
+				}
+
+				if(!params.action){
+					String methodAction = methods[request.method]
+					if(!cache[params.apiObject][methodAction]){
+						params.action = cache[params.apiObject]['defaultAction']
 					}else{
-						request.setAttribute('batchInc',request.getAttribute('batchInc').toInteger() + 1)
-					}
+						params.action = methods[request.method]
 
-					setBatchParams(params)
-
-					LinkedHashMap receives = cache[params.apiObject.toString()][params.action.toString()]['receives'] as LinkedHashMap
-					boolean requestKeysMatch = checkURIDefinitions(cache[params.apiObject.toString()][params.action.toString()]['method'] as String,params,receives)
-
-					if(!requestKeysMatch){
-						render(status:HttpServletResponse.SC_BAD_REQUEST, text: 'Expected request variables do not match sent variables')
-						return false
-					}
-
-					if(!params.action){
-						String methodAction = methods[request.method]
-						if(!cache[params.apiObject][methodAction]){
-							params.action = cache[params.apiObject]['defaultAction']
-						}else{
-							params.action = methods[request.method]
-
-							// FORWARD FOR REST DEFAULTS WITH NO ACTION
-							String[] tempUri = request.getRequestURI().split("/")
-							if(tempUri[2].contains('dispatch') && "${params.controller}.dispatch" == tempUri[2] && !cache[params.apiObject]['domainPackage']){
-								forward(controller:params.controller,action:params.action,params:params)
-								return false
-							}
+						// FORWARD FOR REST DEFAULTS WITH NO ACTION
+						String[] tempUri = request.getRequestURI().split("/")
+						if(tempUri[2].contains('dispatch') && "${params.controller}.dispatch" == tempUri[2] && !cache[params.apiObject]['domainPackage']){
+							forward(controller:params.controller,action:params.action,params:params)
+							return false
 						}
 					}
-
-					// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
-					boolean result = batchRequestService.handleApiRequest(cache[params.apiObject.toString()][params.action.toString()], request, response, params)
-					return result
 				}
+
+				// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
+				boolean result = batchRequestService.handleApiRequest(cache[params.apiObject.toString()][params.action.toString()], request, response, params)
+				return result
+			}
+
 			//}
 			return false
 
@@ -161,8 +165,9 @@ class BatchInterceptor extends Params{
 
 			LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
 			LinkedHashMap content
-
-			if(batchEnabled && (request.getAttribute('batchLength')>(request.getAttribute('batchInc')+1))){
+			int batchLength = (int) request.getAttribute('batchLength')
+			int batchInc = (int) request.getAttribute('batchInc')
+			if(batchEnabled && (batchLength > batchInc+1)){
 				WebUtils.exposeRequestAttributes(request, params);
 				// this will work fine when we upgrade to newer version that has fix in iut
 				params.uri = request.forwardURI.toString()

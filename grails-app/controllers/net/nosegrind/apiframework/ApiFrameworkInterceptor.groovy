@@ -29,8 +29,6 @@ package net.nosegrind.apiframework
 
 import javax.annotation.Resource
 import grails.core.GrailsApplication
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
 import net.nosegrind.apiframework.ApiDescriptor
 
 import grails.plugin.springsecurity.SpringSecurityService
@@ -39,7 +37,7 @@ import groovy.json.JsonSlurper
 import net.nosegrind.apiframework.comm.ApiRequestService
 import net.nosegrind.apiframework.comm.ApiResponseService
 import grails.util.Metadata
-import net.nosegrind.apiframework.ApiDescriptor
+
 import org.grails.web.util.WebUtils
 
 import javax.servlet.http.HttpServletResponse
@@ -70,7 +68,6 @@ class ApiFrameworkInterceptor extends Params{
 
 	boolean before(){
 		//println("##### FILTER (BEFORE)")
-
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 
@@ -120,8 +117,8 @@ class ApiFrameworkInterceptor extends Params{
 
 					if(params.action==null || !params.action){
 						String methodAction = methods[request.method]
-						if(!cache[params.apiObject][methodAction]){
-							params.action = cache[params.apiObject]['defaultAction']
+						if(!cache[(String)params.apiObject][methodAction]){
+							params.action = cache[(String)params.apiObject]['defaultAction']
 						}else{
 							params.action = methods[request.method]
 
@@ -135,9 +132,7 @@ class ApiFrameworkInterceptor extends Params{
 					}
 
 					// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
-
-
-					ApiDescriptor cachedEndpoint = cache[params.apiObject][(String)params.action] as ApiDescriptor
+					ApiDescriptor cachedEndpoint = cache[(String)params.apiObject][(String)params.action] as ApiDescriptor
 					boolean result = apiRequestService.handleApiRequest(cachedEndpoint, request, response, params)
 					return result
 				}
@@ -163,9 +158,6 @@ class ApiFrameworkInterceptor extends Params{
 				newModel = apiResponseService.convertModel(model)
 			}
 
-			//render(status:HttpServletResponse.SC_BAD_REQUEST, text: 'Expected request variables do not match sent variables')
-			//return false
-
 			LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
 			ApiDescriptor cachedEndpoint = cache[params.apiObject][(String)params.action] as ApiDescriptor
 			LinkedHashMap content = apiResponseService.handleApiResponse(cachedEndpoint,request,response,newModel,params) as LinkedHashMap
@@ -180,7 +172,6 @@ class ApiFrameworkInterceptor extends Params{
 			log.error("[ApiToolkitFilters :: apitoolkit.after] : Exception - full stack trace follows:", e);
 			return false
 		}
-
 	}
 
 }
