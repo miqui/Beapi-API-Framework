@@ -27,8 +27,11 @@
 
 package net.nosegrind.apiframework
 
-
+import javax.annotation.Resource
 import grails.core.GrailsApplication
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
+import net.nosegrind.apiframework.ApiDescriptor
 
 import grails.plugin.springsecurity.SpringSecurityService
 import grails.util.Holders
@@ -44,12 +47,14 @@ import javax.servlet.http.HttpServletResponse
 import groovy.transform.CompileStatic
 //import net.nosegrind.apiframework.Timer
 
-//@CompileStatic
+@CompileStatic
 class ApiFrameworkInterceptor extends Params{
 
 	int order = HIGHEST_PRECEDENCE + 999
 
+	@Resource
 	GrailsApplication grailsApplication
+
 	ApiRequestService apiRequestService
 	ApiResponseService apiResponseService
 	ApiCacheService apiCacheService
@@ -66,29 +71,30 @@ class ApiFrameworkInterceptor extends Params{
 	boolean before(){
 		//println("##### FILTER (BEFORE)")
 
+
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 
 		// Init params
 		String format =request.format.toUpperCase()
 
-		if(['XML','JSON'].contains(format)) {
+		if (['XML', 'JSON'].contains(format)) {
 			LinkedHashMap dataParams = [:]
 			switch (format) {
 				case 'XML':
-					String xml = request."${request.getAttribute('format')}".toString()
+					String xml = request.XML.toString()
 					def slurper = new XmlSlurper()
 					slurper.parseText(xml).each() { k, v ->
 						dataParams[k] = v
 					}
-					request.setAttribute("${format}", dataParams)
+					request.setAttribute('XML', dataParams)
 					break
 				case 'JSON':
-					String json = request."${format}".toString()
+					String json = request.JSON.toString()
 					def slurper = new JsonSlurper()
 					slurper.parseText(json).each() { k, v ->
 						dataParams[k] = v
 					}
-					request.setAttribute("${format}", dataParams)
+					request.setAttribute('JSON', dataParams)
 					break
 			}
 		}
@@ -98,12 +104,11 @@ class ApiFrameworkInterceptor extends Params{
 
 			LinkedHashMap cache = (params.controller)? apiCacheService.getApiCache(params.controller.toString()):[:]
 
+
 				if(cache) {
 					params.apiObject = (params.apiObjectVersion)?params.apiObjectVersion:cache['currentStable']['value']
+					params.action = (params.action==null)?cache[params.apiObject]['defaultAction']:params.action
 
-					if(params.action==null){
-						params.action = cache[params.apiObject]['defaultAction']
-					}
 
 					LinkedHashMap receives = cache[params.apiObject][params.action.toString()]['receives'] as LinkedHashMap
 					boolean requestKeysMatch = checkURIDefinitions(cache[params.apiObject][params.action.toString()]['method'] as String,params,receives)
@@ -113,7 +118,7 @@ class ApiFrameworkInterceptor extends Params{
 						return false
 					}
 
-					if(!params.action){
+					if(params.action==null || !params.action){
 						String methodAction = methods[request.method]
 						if(!cache[params.apiObject][methodAction]){
 							params.action = cache[params.apiObject]['defaultAction']
@@ -130,7 +135,10 @@ class ApiFrameworkInterceptor extends Params{
 					}
 
 					// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
-					boolean result = apiRequestService.handleApiRequest(cache[params.apiObject][params.action], request, response, params)
+
+
+					ApiDescriptor cachedEndpoint = cache[params.apiObject][(String)params.action] as ApiDescriptor
+					boolean result = apiRequestService.handleApiRequest(cachedEndpoint, request, response, params)
 					return result
 				}
 			//}
@@ -159,7 +167,8 @@ class ApiFrameworkInterceptor extends Params{
 			//return false
 
 			LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
-			LinkedHashMap content = apiResponseService.handleApiResponse(cache[params.apiObject][params.action],request,response,newModel,params) as LinkedHashMap
+			ApiDescriptor cachedEndpoint = cache[params.apiObject][(String)params.action] as ApiDescriptor
+			LinkedHashMap content = apiResponseService.handleApiResponse(cachedEndpoint,request,response,newModel,params) as LinkedHashMap
 
 			if(content){
 				render(text:content.apiToolkitContent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)

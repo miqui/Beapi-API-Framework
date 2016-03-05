@@ -59,7 +59,7 @@ class ApiResponseService extends ApiLayer{
 	ApiCacheService apiCacheService
 
 
-	def handleApiResponse(Object cache, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
+	def handleApiResponse(ApiDescriptor cache, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
 		//println("#### [ApiResponseService : handleApiResponse ] ####")
 		try{
 			response.setHeader('Authorization', cache['roles'].toString().join(', '))

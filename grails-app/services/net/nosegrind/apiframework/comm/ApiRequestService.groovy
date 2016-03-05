@@ -45,7 +45,7 @@ class ApiRequestService extends ApiLayer{
 	static transactional = false
 
 
-	boolean handleApiRequest(Object cache, HttpServletRequest request, HttpServletResponse response, GrailsParameterMap params){
+	boolean handleApiRequest(ApiDescriptor cache, HttpServletRequest request, HttpServletResponse response, GrailsParameterMap params){
 		//println("#### [ApiRequestService : handleApiRequest ] ####")
 		try{
 			// CHECK ACCESS TO METHOD

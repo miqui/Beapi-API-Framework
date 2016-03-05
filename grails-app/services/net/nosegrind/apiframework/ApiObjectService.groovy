@@ -41,6 +41,7 @@ import net.nosegrind.apiframework.ApiStatuses
 //import grails.application.springsecurity.SpringSecurityService
 import org.grails.groovy.grails.commons.*
 
+// TODO: rename to IOSTATESERVICE
 class ApiObjectService{
 
 	GrailsApplication grailsApplication

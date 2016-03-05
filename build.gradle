@@ -25,8 +25,21 @@ apply plugin: "maven-publish"
 apply plugin: "spring-boot"
 apply plugin: "org.grails.grails-plugin"
 // Used for publishing to central repository, remove if not needed
-apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/master/profiles/plugin/templates/grailsCentralPublishing.gradle'
-apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/master/profiles/plugin/templates/bintrayPublishing.gradle'
+//apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/master/profiles/plugin/templates/grailsCentralPublishing.gradle'
+//apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/master/profiles/plugin/templates/bintrayPublishing.gradle'
+apply plugin: "org.grails.grails-plugin"
+apply plugin: "org.grails.grails-plugin-publish"
+
+grailsPublish {
+    userOrg = 'nosegrind' // Optional
+    githubSlug = 'orubel/api-framework'
+    license {
+        name = 'MIT License'
+    }
+    title = "Reactive API Framework"
+    desc = "Reactive API Framework for Distributed Architectures provides api abstraction, cached IO state, automated batching and more. It is meant to autmoate alot of the issues behind setting up and maintaining API's in distributed architectures as well as handling/simplifying automation."
+    developers = [orubel:"Owen Rubel"]
+}
 
 ext {
     grailsVersion = '3.1.1'
@@ -63,22 +76,16 @@ dependencies {
     //runtime 'com.stormpath.spring.security:stormpath-spring-security-core:0.2.0'
 
     compile 'org.springframework.boot:spring-boot-starter-logging'
-    //provided "org.springframework.boot:spring-boot-starter-actuator"
     compile 'org.springframework.boot:spring-boot-autoconfigure'
     provided 'org.springframework.boot:spring-boot-starter-tomcat'
 
     compile 'org.grails.plugins:spring-security-core:3.0.3'
-    //compile 'org.grails.plugins:spring-security-core:3.0.0.M1'
-    // 3.1.0RC1
-    //compile 'org.springframework.security:spring-security-core:3.2.9.RELEASE'
-    //compile 'org.springframework.security:spring-security-web:3.2.9.RELEASE'
+
 
     compile 'org.grails:grails-web'
     compile 'org.grails:grails-dependencies'
-    //compile 'javax.servlet:javax.servlet-api:3.1.0'
 
     //testCompile "org.grails:grails-plugin-testing"
-
     //console "org.grails:grails-console"
 }
 

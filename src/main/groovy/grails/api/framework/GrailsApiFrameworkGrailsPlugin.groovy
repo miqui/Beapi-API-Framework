@@ -38,15 +38,15 @@ import java.util.jar.JarEntry
 
 class GrailsApiFrameworkGrailsPlugin extends Plugin{
 	def version = "0.1"
-    def grailsVersion = "3.0.1 > *"
+    def grailsVersion = "3.1.1 > *"
     def title = "Grails Api Framework" // Headline display name of the plugin
 	def author = "Owen Rubel"
 	def authorEmail = "orubel@gmail.com"
-	def description = 'API Framework for Distributed Architectures providing api abstraction and cached IO state'
+	def description = 'Reactive API Framework for Distributed Architectures providing api abstraction, cached IO state, automated batching and more'
 	def documentation = "https://github.com/orubel/grails-api-toolkit-docs"
 	def license = "Apache"
 	def issueManagement = [system: 'GitHub', url: 'https://github.com/orubel/grails-api-toolkit-docs/issues']
-	def scm = [url: 'https://github.com/orubel/grails-api-toolkit']
+	def scm = [url: 'https://github.com/orubel/api-framework']
 	
 	def dependsOn = [cache: "* > 3.0"]
 	def loadAfter = ['cache']
