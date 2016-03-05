@@ -1,8 +1,10 @@
 package grails3.cors.interceptor
 
-import grails.compiler.GrailsCompileStatic
+
+import javax.annotation.Resource
 import grails.core.GrailsApplication
 import grails.util.Environment
+import groovy.transform.CompileStatic
 
 /**
  * Add Cross-Origin Resource Sharing (CORS) headers for Grails applications. These headers make it possible for
@@ -10,9 +12,11 @@ import grails.util.Environment
  *
  * @see https://github.com/davidtinker/grails-cors
  */
+
 //@CompileStatic
 class CorsInterceptor {
 
+	@Resource
 	GrailsApplication grailsApplication
 	
 	CorsInterceptor() {
@@ -27,10 +31,9 @@ class CorsInterceptor {
 		String[] excludeEnvironments = corsInterceptorConfig['excludeEnvironments']?: null
 		String[] allowedOrigins = corsInterceptorConfig['allowedOrigins']?: null
 
-		if( excludeEnvironments && excludeEnvironments.contains(Environment.current.name) )  { // current env is excluded
+		if(excludeEnvironments && excludeEnvironments.contains(Environment.current.name))  { // current env is excluded
 			return true
-		}
-		else if( includeEnvironments && !includeEnvironments.contains(Environment.current.name) )  {  // current env is not included
+		} else if(includeEnvironments && !includeEnvironments.contains(Environment.current.name))  {  // current env is not included
 			return true
 		}
 
@@ -56,7 +59,7 @@ class CorsInterceptor {
 			header("Access-Control-Allow-Credentials", "true")
 		}
 
-		true
+		return true
 	}
 
 	//boolean after() {}
