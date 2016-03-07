@@ -10,9 +10,9 @@ Fully reactive api framework providing automation and simplification of api's fo
 
 - **api chaining:** rather than using HATEOASto make a request, get a link, make a request, get a link, make a request, etc... api chaining allows for creation of an 'api monad' wherein the output from a related set of apis can be chained allowing the output from one api to be accepted as the input to the next and so on and be passed with ONE REQUEST AND ONE RESPONSE.
 
-- **(Licensed Version) Localized API Cache:** returned resources are cached,stored and updated with requesting ROLE/AUTH. Domains extend a base class that auto update this cache upon create/update/delete. This speeds up your api REQUEST/RESPONSE x10
+- **(2.0) Localized API Cache:** returned resources are cached,stored and updated with requesting ROLE/AUTH. Domains extend a base class that auto update this cache upon create/update/delete. This speeds up your api REQUEST/RESPONSE x10
 
-- **(Licensed Version) API Metrics Reporting:** Call your API's normally but have them deliver a metrics report of time it takes for every class/method to deliver so you can optimize queries, methods services
+- **(2.0) API Metrics Reporting:** Call your API's normally but have them deliver a metrics report of time it takes for every class/method to deliver so you can optimize queries, methods services
 
 **FAQ**
 
