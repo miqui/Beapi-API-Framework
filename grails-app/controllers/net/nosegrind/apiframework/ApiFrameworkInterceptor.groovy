@@ -67,7 +67,7 @@ class ApiFrameworkInterceptor extends Params{
 	}
 
 	boolean before(){
-		//println("##### FILTER (BEFORE)")
+		println("##### FILTER (BEFORE)")
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 
@@ -79,19 +79,23 @@ class ApiFrameworkInterceptor extends Params{
 			switch (format) {
 				case 'XML':
 					String xml = request.XML.toString()
-					def slurper = new XmlSlurper()
-					slurper.parseText(xml).each() { k, v ->
-						dataParams[k] = v
+					if(xml!='[:]') {
+						def slurper = new XmlSlurper()
+						slurper.parseText(xml).each() { k, v ->
+							dataParams[k] = v
+						}
+						request.setAttribute('XML', dataParams)
 					}
-					request.setAttribute('XML', dataParams)
 					break
 				case 'JSON':
 					String json = request.JSON.toString()
-					def slurper = new JsonSlurper()
-					slurper.parseText(json).each() { k, v ->
-						dataParams[k] = v
+					if(json!='[:]') {
+						def slurper = new JsonSlurper()
+						slurper.parseText(json).each() { k, v ->
+							dataParams[k] = v
+						}
+						request.setAttribute('JSON', dataParams)
 					}
-					request.setAttribute('JSON', dataParams)
 					break
 			}
 		}
@@ -146,8 +150,8 @@ class ApiFrameworkInterceptor extends Params{
 	}
 
 	boolean after(){
-		//println("##### FILTER (AFTER)")
-
+		println("##### FILTER (AFTER)")
+println model
 		try{
 			LinkedHashMap newModel = [:]
 

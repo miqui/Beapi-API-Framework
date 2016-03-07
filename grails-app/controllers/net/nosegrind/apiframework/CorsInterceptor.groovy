@@ -25,8 +25,9 @@ class CorsInterceptor {
 	}
 
 	boolean before() {
-		//println("##### CORSFILTER (BEFORE)")
-		Map corsInterceptorConfig = (Map) grailsApplication.config.apitoolkit.corsInterceptor
+		println("##### CORSFILTER (BEFORE)")
+		LinkedHashMap corsInterceptorConfig = (LinkedHashMap) grailsApplication.config.apitoolkit.corsConfig
+
 		String[] includeEnvironments = corsInterceptorConfig['includeEnvironments']?: null
 		String[] excludeEnvironments = corsInterceptorConfig['excludeEnvironments']?: null
 		String[] allowedOrigins = corsInterceptorConfig['allowedOrigins']?: null

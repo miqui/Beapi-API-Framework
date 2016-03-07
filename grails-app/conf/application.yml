@@ -78,28 +78,29 @@ apitoolkit:
     attempts: 5
     roles: ['ROLE_USER','ROLE_ROOT','ROLE_ADMIN','ROLE_ARCH']
     apichain:
-        limit:3
+        limit: 3
     rest:
         postcrement: false
     chaining:
         enabled: true
     batching:
         enabled: true
-    encoding: UTF-8
+    encoding: 'UTF-8'
     user:
         roles: ['ROLE_USER']
     admin:
         roles: ['ROLE_ROOT','ROLE_ADMIN','ROLE_ARCH']
-    serverType: master
+    serverType: 'master'
     webhook:
-        services: {iostate}
+        services: ['iostate']
+    corsConfig:
+        includeEnvironments: ['development','test']
+        excludeEnvironments: ['production']
+        allowedOrigins: ['localhost:3000']
     iostate:
-        preloadDir: /home/owenrubel/.iostate
+        preloadDir: "/home/owenrubel/.iostate"
         archInstanceUrls:
-            proxy: '127.0.0.1'
-            mq: '127.0.0.1'
-    corsInterceptor:
-        includeEnvironments: {'development','test'}
-        excludeEnvironments: {'production'}
-        allowedOrigins: {'localhost:3000'}
+            proxy: "127.0.0.1"
+            mq: "127.0.0.1"
+
 
