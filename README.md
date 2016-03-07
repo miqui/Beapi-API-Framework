@@ -17,7 +17,7 @@ Fully reactive api framework providing automation and simplification of api's fo
 **FAQ**
 
 **Q: How hard is this to implement?**
-**A:** Can you write controllers and models? Thats all thats needed to implement this plugin. Just the most basic understanding
+**A:** Can you write controllers and models? Thats all thats needed to implement this plugin. Just the most basic understanding of MVC implementation.
 
 **Q: How do I implement the listener for IO state webhook on my proxy/Message queue?**
-**A:** It merely requires an endpoint to send the data to. I may actually create a simple script in the future with ehCache to do this for people as a side project.
+**A:** It merely requires an endpoint to send the data to. As a side project, I may actually create a simple daemon in the future with ehCache to do this for people.
