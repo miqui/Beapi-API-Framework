@@ -42,6 +42,8 @@ import javax.servlet.http.HttpServletResponse
 @CompileStatic
 class ApiRequestService extends ApiLayer{
 
+	def grailsApplication
+
 	static transactional = false
 
 

@@ -27,6 +27,8 @@
 
 package net.nosegrind.apiframework
 
+import javax.servlet.http.HttpServletRequest
+
 import static groovyx.gpars.GParsPool.withPool
 import grails.converters.JSON
 import grails.converters.XML
@@ -119,7 +121,14 @@ abstract class Params{
         }
     }
 
-    boolean checkURIDefinitions(String method,GrailsParameterMap params,LinkedHashMap requestDefinitions){
+    boolean checkRequestMethod(String method, boolean restAlt){
+        if(!restAlt) {
+            return (method == request.method.toUpperCase()) ? true : false
+        }
+        return true
+    }
+
+    boolean checkURIDefinitions(GrailsParameterMap params,LinkedHashMap requestDefinitions){
         //println("#### [ParamsService : checkUriDefinitions ] ####")
         List reservedNames = ['batchLength','batchInc']
         // put in check to see if if app.properties allow for this check
@@ -127,21 +136,45 @@ abstract class Params{
             List requestList = getApiParams(requestDefinitions)
 
             Map methodParams = getMethodParams(params)
-            if(method==request.method.toUpperCase()) {
-                List paramsList = methodParams.keySet() as List
-                // remove constants from check
-                reservedNames.each(){
-                    paramsList.remove(it)
-                }
 
-                if (paramsList.size() == requestList.intersect(paramsList).size()) {
-                    return true
-                }
+            List paramsList = methodParams.keySet() as List
+
+            // remove reservedNames from List
+            reservedNames.each(){ paramsList.remove(it) }
+
+            if (paramsList.size() == requestList.intersect(paramsList).size()) {
+                return true
             }
+
             return false
         }catch(Exception e) {
            throw new Exception("[ApiLayerService :: checkURIDefinitions] : Exception - full stack trace follows:",e)
         }
+    }
+
+    LinkedHashMap parseRequestMethod(HttpServletRequest request, GrailsParameterMap params){
+        //println("#### [ApiLayer : parseRequestMethods ] ####")
+        LinkedHashMap data = [:]
+        String defaultEncoding = grailsApplication.config.apitoolkit.encoding
+        String encoding = request.getHeader('accept-encoding')?request.getHeader('accept-encoding'):defaultEncoding
+        switch(request.method) {
+            case 'PURGE':
+                // cleans cache; disabled for now
+                break;
+            case 'TRACE':
+                // placeholder
+                break;
+            case 'HEAD':
+                // placeholder
+                break;
+            case 'OPTIONS':
+                println("OPTIONS CALLED")
+                LinkedHashMap doc = getApiDoc(params)
+                data = ['content':doc,'contentType':request.getAttribute('contentType'),'encoding':encoding]
+                break;
+        }
+
+        return ['apiToolkitContent':data.content,'apiToolkitType':request.getAttribute('contentType'),'apiToolkitEncoding':encoding]
     }
 
     List getRedirectParams(GrailsParameterMap params){
@@ -185,6 +218,80 @@ abstract class Params{
     /*
  * TODO: Need to compare multiple authorities
  */
+    LinkedHashMap getApiDoc(GrailsParameterMap params){
+        //println("#### [ApiLayer : getApiDoc ] ####")
+        LinkedHashMap newDoc = [:]
+        List paramDescProps = ['paramType','idReferences','name','description']
+        try{
+            def controller = grailsApplication.getArtefactByLogicalPropertyName('Controller', params.controller)
+            if(controller){
+                def cache = (params.controller)?apiCacheService.getApiCache(params.controller):null
+                if(cache){
+                    if(cache[params.apiObject][params.action]){
+
+                        def doc = cache[params.apiObject][params.action].doc
+                        def path = doc?.path
+                        def method = doc?.method
+                        def description = doc?.description
+
+                        def authority = springSecurityService.principal.authorities*.authority[0]
+                        newDoc[params.action] = ['path':path,'method':method,'description':description]
+                        if(doc.receives){
+                            newDoc[params.action].receives = [:]
+                            doc.receives.each{ it ->
+                                if(authority==it.key || it.key=='permitAll'){
+                                    it.value.each(){ it2 ->
+                                        it2.getProperties().each(){ it3 ->
+                                            if(paramDescProps.contains(it3.key)){
+                                                newDoc[params.action].receives[it3.key] = it3.value
+                                            }
+                                        }
+                                    }
+                                    //newDoc[params.action].receives[it.key] = it.value
+                                }
+                            }
+                        }
+
+                        if(doc.returns){
+                            newDoc[params.action].returns = [:]
+                            List jsonReturns = []
+                            doc.returns.each(){ v ->
+                                if(authority==v.key || v.key=='permitAll'){
+                                    jsonReturns.add(["${v.key}":v.value])
+                                    v.value.each(){ v2 ->
+                                        v2.getProperties().each(){ v3 ->
+                                            if(paramDescProps.contains(v3.key)){
+                                                newDoc[params.action].returns[v3.key] = v3.value
+                                            }
+                                        }
+                                    }
+                                    //newDoc[params.action].returns[v.key] = v.value
+                                }
+                            }
+
+                            //newDoc[params.action].json = processJson(newDoc[params.action].returns)
+
+                            newDoc[params.action].json = processJson(jsonReturns[0] as LinkedHashMap)
+                        }
+
+                        if(doc.errorcodes){
+                            doc.errorcodes.each{ it ->
+                                newDoc[params.action].errorcodes.add(it)
+                            }
+                        }
+                        return newDoc
+                    }
+                }
+            }
+            return [:]
+        }catch(Exception e){
+            throw new Exception("[ApiLayer :: getApiDoc] : Exception - full stack trace follows:",e)
+        }
+    }
+
+    /*
+* TODO: Need to compare multiple authorities
+*/
     private String processJson(LinkedHashMap returns){
         //println("#### [ParamsService : processJson ] ####")
         try{
@@ -230,7 +337,7 @@ abstract class Params{
             }
             return jsonReturn
         }catch(Exception e){
-            throw new Exception("[ApiLayerService :: processJson] : Exception - full stack trace follows:",e)
+            throw new Exception("[ParamsService :: processJson] : Exception - full stack trace follows:",e)
         }
     }
 

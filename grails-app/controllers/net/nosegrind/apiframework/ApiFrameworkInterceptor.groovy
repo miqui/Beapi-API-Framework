@@ -27,6 +27,8 @@
 
 package net.nosegrind.apiframework
 
+import grails.web.servlet.mvc.GrailsParameterMap
+
 import javax.annotation.Resource
 import grails.core.GrailsApplication
 import net.nosegrind.apiframework.ApiDescriptor
@@ -40,6 +42,7 @@ import grails.util.Metadata
 
 import org.grails.web.util.WebUtils
 
+import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
 import groovy.transform.CompileStatic
@@ -48,7 +51,7 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class ApiFrameworkInterceptor extends Params{
 
-	int order = HIGHEST_PRECEDENCE + 999
+	//int order = HIGHEST_PRECEDENCE + 998
 
 	@Resource
 	GrailsApplication grailsApplication
@@ -70,6 +73,7 @@ class ApiFrameworkInterceptor extends Params{
 		println("##### FILTER (BEFORE)")
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
+		boolean restAlt = (['OPTIONS','TRACE','HEAD'].contains(request.method))?true:false
 
 		// Init params
 		String format =request.format.toUpperCase()
@@ -105,17 +109,31 @@ class ApiFrameworkInterceptor extends Params{
 
 			LinkedHashMap cache = (params.controller)? apiCacheService.getApiCache(params.controller.toString()):[:]
 
-
 				if(cache) {
-					params.apiObject = (params.apiObjectVersion)?params.apiObjectVersion:cache['currentStable']['value']
-					params.action = (params.action==null)?cache[params.apiObject]['defaultAction']:params.action
+					params.apiObject = (params.apiObjectVersion) ? params.apiObjectVersion : cache['currentStable']['value']
+					params.action = (params.action == null) ? cache[params.apiObject]['defaultAction'] : params.action
 
+					String expectedMethod = cache[params.apiObject][params.action.toString()]['method'] as String
+					if(!checkRequestMethod(expectedMethod,restAlt)) {
+						render(status: HttpServletResponse.SC_BAD_REQUEST, text: "Expected request method '${expectedMethod}' does not match sent method '${request.method}'")
+						return false
+					}
 
-					LinkedHashMap receives = cache[params.apiObject][params.action.toString()]['receives'] as LinkedHashMap
-					boolean requestKeysMatch = checkURIDefinitions(cache[params.apiObject][params.action.toString()]['method'] as String,params,receives)
+					// Check for REST alternatives
+					if (!restAlt) {
+						// Check that sent request params match expected endpoint params for principal ROLE
+						LinkedHashMap receives = cache[params.apiObject][params.action.toString()]['receives'] as LinkedHashMap
+						boolean requestKeysMatch = checkURIDefinitions(params, receives)
 
-					if(!requestKeysMatch){
-						render(status:HttpServletResponse.SC_BAD_REQUEST, text: 'Expected request variables do not match sent variables')
+						if (!requestKeysMatch) {
+							render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Expected request variables do not match sent variables')
+							return false
+						}
+					}else{
+						LinkedHashMap result = parseRequestMethod(request, params)
+						if(result){
+							render(text:result.apiToolkitContent, contentType:"${result.apiToolkitType}", encoding:result.apiToolkitEncoding)
+						}
 						return false
 					}
 

@@ -27,6 +27,9 @@
 
 package grails.api.framework
 
+import javax.servlet.ServletRegistration
+
+import org.grails.web.servlet.mvc.GrailsDispatcherServlet
 import grails.plugins.*
 import grails.util.GrailsNameUtils
 import grails.util.Metadata
@@ -50,7 +53,8 @@ class GrailsApiFrameworkGrailsPlugin extends Plugin{
 	
 	def dependsOn = [cache: "* > 3.0"]
 	def loadAfter = ['cache']
-	
+    //def loadBefore = ['spring-boot-starter-tomcat']
+
     def pluginExcludes = [
         "grails-app/views/error.gsp"
     ]
@@ -60,21 +64,54 @@ class GrailsApiFrameworkGrailsPlugin extends Plugin{
     def developers = [ [ name: "Owen Rubel", email: "orubel@gmail.com" ]]
 
 
-    Closure doWithSpring() { {->
+    Closure doWithSpring() {
+        { ->
             // TODO Implement runtime spring config (optional)
-        } 
+        }
     }
 
-	def doWithDynamicMethods = {
-	}
+    def doWithDynamicMethods = { applicationContext ->
+        // Configure servlets
+        def config = getBean("grailsApplication").config
+        def servletContext =  applicationContext.servletContext
+        def serverInfo = servletContext.getServerInfo()
+
+
+
+        config?.servlets?.each { name, parameters ->
+            ServletRegistration servletRegistration = servletContext.addServlet(name, parameters.className)
+            servletRegistration.addMapping(parameters.mapping)
+            servletRegistration.setAsyncSupported(Boolean.TRUE)
+            servletRegistration.setLoadOnStartup(1)
+
+            servletRegistration.setInitParameter("org.atmosphere.cpr.asyncSupport", "org.atmosphere.container.JettyServlet30AsyncSupportWithWebSocket")
+
+            def initParams = parameters.initParams
+            if (initParams != "none") {
+                initParams?.each { param, value ->
+                    servletRegistration.setInitParameter(param, value)
+                }
+            }
+        }
+    }
 	
     void doWithApplicationContext() {
+
+        // Delegate OPTIONS requests to controllers
+        applicationContext.dispatcherServlet.setDispatchOptionsRequest(true)
+
 		String basedir = BuildSettings.BASE_DIR
 		def ant = new AntBuilder()
 		ant.mkdir(dir: "${basedir}/src/iostate")
 		ant.mkdir(dir: "${System.properties.'user.home'}/.iostate")
+
+        //def ctx = applicationContext.getServletContext()
+        //ctx.setInitParameter("dispatchOptionsRequest", "true");
+
+
 		doInitApiFrameworkInstall(applicationContext)
     }
+
 
 	void doInitApiFrameworkInstall(applicationContext) {
 		//String basedir = applicationContext.getResource("../../..").getFile().path
@@ -149,7 +186,8 @@ class GrailsApiFrameworkGrailsPlugin extends Plugin{
 
         println  "... API Framework installed. ###"
 	}
-	
+
+
     void onChange(Map<String, Object> event) {
         // TODO Implement code that is executed when any artefact that this plugin is
         // watching is modified and reloaded. The event contains: event.source,

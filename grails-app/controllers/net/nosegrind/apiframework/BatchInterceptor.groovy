@@ -68,6 +68,7 @@ class BatchInterceptor extends Params{
 		//println("##### BATCHINTERCEPTOR (BEFORE)")
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
+		boolean restAlt = (['OPTIONS','TRACE','HEAD'].contains(request.method))?true:false
 
 		// Init params
 		String format =request.format.toUpperCase()
@@ -99,10 +100,16 @@ class BatchInterceptor extends Params{
 			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
 
 			LinkedHashMap cache = (params.controller)? apiCacheService.getApiCache(params.controller.toString()):[:]
-			params.action = (params.action==null)?cache['defaultAction']:params.action
 
 			if(cache) {
 				params.apiObject = (params.apiObjectVersion)?params.apiObjectVersion:cache['currentStable']['value']
+				params.action = (params.action==null)?cache['defaultAction']:params.action
+
+				String expectedMethod = cache[params.apiObject][params.action.toString()]['method'] as String
+				if(!checkRequestMethod(expectedMethod,restAlt)) {
+					render(status: HttpServletResponse.SC_BAD_REQUEST, text: "Expected request method '${expectedMethod}' does not match sent method '${request.method}'")
+					return false
+				}
 
 				if (request?.getAttribute('batchInc')==null) {
 					request.setAttribute('batchInc',0)
@@ -114,7 +121,7 @@ class BatchInterceptor extends Params{
 				setBatchParams(params)
 
 				LinkedHashMap receives = cache[params.apiObject.toString()][params.action.toString()]['receives'] as LinkedHashMap
-				boolean requestKeysMatch = checkURIDefinitions(cache[params.apiObject.toString()][params.action.toString()]['method'] as String,params,receives)
+				boolean requestKeysMatch = checkURIDefinitions(params,receives)
 
 				if(!requestKeysMatch){
 					render(status:HttpServletResponse.SC_BAD_REQUEST, text: 'Expected request variables do not match sent variables')
