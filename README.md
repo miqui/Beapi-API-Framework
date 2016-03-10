@@ -1,5 +1,5 @@
 
-![alt tag](https://github.com/orubel/Boomstick-API-Framework/BOOMSTICK.png)
+![alt tag](https://cloud.githubusercontent.com/assets/274764/13683183/302b399c-e6ba-11e5-9637-38b5b95c6ad6.png)
 # Boomstick(tm) Api Framework
 
 Fully reactive api framework providing automation and simplification of api's for scale. Some features include:
