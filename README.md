@@ -1,4 +1,4 @@
-# api-framework
+# Boomstick(tm) Api Framework
 
 Fully reactive api framework providing automation and simplification of api's for scale. Some features include:
 
