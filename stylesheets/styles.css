@@ -182,7 +182,8 @@ header li {
 header ul ol{
   width:auto;
   padding-left:25px;
-  height:13px;
+  height:auto;
+  margin-bottom: 5px;
 }
 
 header li:first-child a {
