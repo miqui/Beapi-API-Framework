@@ -175,12 +175,14 @@ header ul {
 
 header li {
   width:auto;
-  height:25px;
+  height:auto;
+  padding:0;
 }
 
 header ul ol{
   padding:0;
   width:auto;
+  padding-left:20px;
 }
 
 header li:first-child a {
