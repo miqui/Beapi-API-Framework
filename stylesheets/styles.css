@@ -175,6 +175,7 @@ header ul {
 
 header li {
   width:auto;
+  float:left;
   height:40px;
 }
 
