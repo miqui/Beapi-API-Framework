@@ -178,7 +178,7 @@ header li {
   height:25px;
 }
 
-li li {
+li .sub {
   padding-left:15px;
 }
 
