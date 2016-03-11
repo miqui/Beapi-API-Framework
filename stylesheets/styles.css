@@ -180,9 +180,9 @@ header li {
 }
 
 header ul ol{
-  padding:0;
   width:auto;
   padding-left:25px;
+  height:13px;
 }
 
 header li:first-child a {
