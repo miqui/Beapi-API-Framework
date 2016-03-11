@@ -178,6 +178,10 @@ header li {
   height:25px;
 }
 
+header ul li + li{
+  padding-left:15px;
+}
+
 header li:first-child a {
   border-radius:5px 0 0 5px;
 }
