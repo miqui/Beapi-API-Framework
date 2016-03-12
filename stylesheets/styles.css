@@ -179,11 +179,12 @@ header li {
   padding:0;
 }
 
-header ul ol{
+header ul ul{
   width:auto;
   padding-left:25px;
   height:auto;
   margin-bottom: 5px;
+  border:0px;
 }
 
 header li:first-child a {
