@@ -55,33 +55,33 @@
   apply plugin: "spring-boot"
   apply plugin: "org.grails.grails-web"
 </code></pre>
+
         <p>You will also need the following dependencies:</p>
+<pre><code>
+  dependencies {
+      compile("org.grails.plugins:api-framework:0.1-SNAPSHOT")
+      compile "org.springframework.boot:spring-boot-starter-logging"
+      compile "org.springframework.boot:spring-boot-autoconfigure"
+      compile "org.grails:grails-dependencies"
 
-        <pre><code>
-          dependencies {
-          compile("org.grails.plugins:api-framework:0.1-SNAPSHOT")
-          compile "org.springframework.boot:spring-boot-starter-logging"
-          compile "org.springframework.boot:spring-boot-autoconfigure"
-          compile "org.grails:grails-dependencies"
+      // INSTALL DATABASE DRIVER OF YOUR CHOICE; HERE ARE EXAMPLE
+      //runtime 'mysql:mysql-connector-java:5.1.29'
 
-          // INSTALL DATABASE DRIVER OF YOUR CHOICE; HERE ARE EXAMPLE
-          //runtime 'mysql:mysql-connector-java:5.1.29'
+      //compile 'org.grails.plugins:mongodb:5.0.2'
+      //compile "org.mongodb:mongodb-driver:3.0.2"
+      //runtime 'org.springframework.data:spring-data-mongodb:1.8.1.RELEASE'
 
-          //compile 'org.grails.plugins:mongodb:5.0.2'
-          //compile "org.mongodb:mongodb-driver:3.0.2"
-          //runtime 'org.springframework.data:spring-data-mongodb:1.8.1.RELEASE'
+      provided 'org.springframework.boot:spring-boot-starter-tomcat'
+      compile 'org.grails.plugins:spring-security-core:3.0.3'
 
-          provided 'org.springframework.boot:spring-boot-starter-tomcat'
-          compile 'org.grails.plugins:spring-security-core:3.0.3'
-
-          compile "org.grails.plugins:hibernate"
-          compile "org.hibernate:hibernate-ehcache"
+      compile "org.grails.plugins:hibernate"
+      compile "org.hibernate:hibernate-ehcache"
 
 
-          testCompile "org.grails.plugins:geb"
-          testCompile "org.grails:grails-plugin-testing"
-          }
-        </code></pre>
+      testCompile "org.grails.plugins:geb"
+      testCompile "org.grails:grails-plugin-testing"
+  }
+</code></pre>
 
 <h3>
 <a id="ease_development" class="anchor" href="#sample" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Sample Project</h3>
