@@ -23,10 +23,10 @@
           <li><a href="http://orubel.github.io/Boomstick-API-Framework/installation.html"><strong>Installation</strong></a></li>
           <li><a href="http://orubel.github.io/Boomstick-API-Framework/iostate.html"><strong>IO State</strong></a></li>
             <ul>
-            <li><a>Values</a></li>
-            <li><a>Rules</a></li>
-            <li><a>Predefined Variables</a></li>
-	        <li><a>FAQ</a></li>
+              <li><a>What is IO State</a></li>
+              <li><a>Values VS Rules</a></li>
+              <li><a>Predefined Variables</a></li>
+	          <li><a>FAQ</a></li>
             </ul>
           </li>
           <li><a href="http://orubel.github.io/Boomstick-API-Framework/apidocs.html"><strong>Apidocs</strong></a></li>
@@ -38,11 +38,135 @@
         </ul>
       </header>
       <section>
-        <h3><a id="what_is" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>What is BoomStick&#8482; API Framework?</h3>
+        <h3><a id="what_is" class="anchor" href="#iostate" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>What Is IO State?</h3>
 
-<p>The <b>BoomStick&#8482; API Framework</b> is a Plugin for <a href="https://grails.org/">Grails</a> on the <a href="http://projects.spring.io/spring-boot/">Spring Boot Microservice</a>.</p>
-<p>It installs a fully Reactive API Framework allowing improved automation, code reduction, simplified/fast development, and improved performance/scalability for distributed architectures.</p>
-<p>It was built by <a href="https://www.linkedin.com/in/orubel">a leader in the API industry</a> who has spent years solving issues with API installations in distributed architectures and who has advised/consulted/worked with enterprise leaders such as Apple, Netflix, VMWare, Cisco, Mashery, Amazon and others.</p>
+          <p><b>[Patent Pending 2014 Owen Rubel]</b></p>
+
+          <p>The IO State File is a cacheable configuration file holding data directly associated with a specific API request/response grouping. This enables all URI's (and their associated data) to be easily cached and this data to be shared with services sharing in the IO Flow (ie Proxy, MQ, etc).</p>
+          <p>URI's call a common set of data as they are based on classes/method. As such, these URIs can be GROUPED and said to share a common dataset and set of config options. The IO State File is a set of rules for all URI's sharing a common data object.</p>
+          <p>A typical IO State File looks like this:</p>
+<pre><code>
+  {
+  "NAME":"hook",
+  "VALUES": {
+  "id": {
+  "type": "PKEY",
+  "description":"ID for Hook"
+  },
+  "version": {
+  "type": "Long",
+  "description":"Version for Updating Hook"
+  },
+  "user": {
+  "type": "FKEY",
+  "description":"User relationship"
+  },
+  "name": {
+  "type": "String",
+  "description":"Name of Hook"
+  },
+  "url": {
+  "type": "String",
+  "description":"Subscribers Receiving URL for Hook"
+  },
+  "format": {
+  "type": "String",
+  "description":"JSON/XML"
+  },
+  "service": {
+  "type": "String",
+  "description":"Api Service being Subscribed to"
+  }
+  },
+  "CURRENTSTABLE": "1",
+  "VERSION": {
+  "1": {
+  "DOMAINPACKAGE":"",
+  "DEFAULTACTION":"list",
+  "URI": {
+  "list": {
+  "METHOD":"GET",
+  "DESCRIPTION":"List Hook",
+  "ROLES":["permitAll"],
+  "BATCH":["ROLE_ADMIN","ROLE_ARCH"],
+  "REQUEST": {
+  "permitAll":[]
+  },
+  "RESPONSE": {
+  "permitAll":["id","version","user","name","url","format","service"]
+  }
+  },
+  "show": {
+  "METHOD":"GET",
+  "DESCRIPTION":"Show Hooks",
+  "ROLES":["permitAll"],
+  "BATCH":["ROLE_ADMIN","ROLE_ARCH"],
+  "REQUEST": {
+  "permitAll":["id"]
+  },
+  "RESPONSE": {
+  "permitAll":["id","version","user","name","url","format","service"]
+  }
+  },
+  "create":{
+  "METHOD":"PUT",
+  "DESCRIPTION":"Create Hook",
+  "ROLES":["permitAll"],
+  "BATCH":["ROLE_ADMIN","ROLE_ARCH"],
+  "REQUEST": {
+  "permitAll":["name","url","format","service"]
+  },
+  "RESPONSE": {
+  "permitAll":["id","version"]
+  }
+  },
+  "update": {
+  "METHOD":"POST",
+  "DESCRIPTION":"Update Hook",
+  "ROLES":["permitAll"],
+  "BATCH":["ROLE_ADMIN","ROLE_ARCH"],
+  "REQUEST": {
+  "permitAll":["id","version","name","url","format","service"]
+  },
+  "RESPONSE": {
+  "permitAll":["id","version"]
+  }
+  },
+  "delete":{
+  "METHOD":"DELETE",
+  "DESCRIPTION":"Delete Hook",
+  "ROLES":["permitAll"],
+  "BATCH":["ROLE_ADMIN","ROLE_ARCH"],
+  "REQUEST": {
+  "permitAll":["id"]
+  },
+  "RESPONSE": {
+  "permitAll":["id"]
+  }
+  },
+  "reset":{
+  "METHOD":"GET",
+  "DESCRIPTION":"Reset Hook attempts",
+  "ROLES":["permitAll"],
+  "BATCH":["ROLE_ADMIN"],
+  "REQUEST": {
+  "permitAll":["id"]
+  },
+  "RESPONSE": {
+  "permitAll":["id"]
+  }
+  }
+  }
+  }
+  }
+  }
+</code></pre>
+
+        <h3><a id="what_is" class="anchor" href="#values" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>'VALUES' VS Rules</h3>
+
+          <p>The <b>BoomStick&#8482; API Framework</b> is a Plugin for <a href="https://grails.org/">Grails</a> on the <a href="http://projects.spring.io/spring-boot/">Spring Boot Microservice</a>.</p>
+          <p>It installs a fully Reactive API Framework allowing improved automation, code reduction, simplified/fast development, and improved performance/scalability for distributed architectures.</p>
+          <p>It was built by <a href="https://www.linkedin.com/in/orubel">a leader in the API industry</a> who has spent years solving issues with API installations in distributed architectures and who has advised/consulted/worked with enterprise leaders such as Apple, Netflix, VMWare, Cisco, Mashery, Amazon and others.</p>
 
 <h3>
 <a id="benefits" class="anchor" href="#designer-templates" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>What Are It's Benefits?</h3>
