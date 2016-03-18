@@ -24,8 +24,8 @@
           <li><a href="http://orubel.github.io/Boomstick-API-Framework/iostate.html"><strong>IO State</strong></a></li>
             <ul>
               <li><a>What is IO State</a></li>
-              <li><a>Values VS Rules</a></li>
-              <li><a>Predefined Variables</a></li>
+              <li><a>Defining Values</a></li>
+              <li><a>Defining URI Rules</a></li>
 	          <li><a>FAQ</a></li>
             </ul>
           </li>
@@ -162,41 +162,75 @@
   }
 </code></pre>
 
-        <h3><a id="what_is" class="anchor" href="#values" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>'VALUES' VS Rules</h3>
+        <h3><a id="what_is" class="anchor" href="#values" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Defining VALUES</h3>
 
-          <p>The <b>BoomStick&#8482; API Framework</b> is a Plugin for <a href="https://grails.org/">Grails</a> on the <a href="http://projects.spring.io/spring-boot/">Spring Boot Microservice</a>.</p>
-          <p>It installs a fully Reactive API Framework allowing improved automation, code reduction, simplified/fast development, and improved performance/scalability for distributed architectures.</p>
-          <p>It was built by <a href="https://www.linkedin.com/in/orubel">a leader in the API industry</a> who has spent years solving issues with API installations in distributed architectures and who has advised/consulted/worked with enterprise leaders such as Apple, Netflix, VMWare, Cisco, Mashery, Amazon and others.</p>
+        <p>The IO State File is all about defining IO state:</p>
+        <pre><code>
+          the I/O definitions and rules for a common set of values that are used by URI's associated with GET/POST/PUT/DELETE methods. In the API Object, The 'values' can have two different 'key/value' pair types : definitions and rules.
+        </code></pre>
+
+        <p><b>'VALUES'</b> basically defines the variable names and their corresponding data types. These are then in turn used by the 'Rules' ( VERSION>URI ) that set limitations on the request/response. Below are the definitions and rules used in above API Object:</p>
+
+        <ul>
+          <li><b>type : PKEY,FKEY,INDEX,STRING,DATE,LONG,BOOLEAN,FLOAT,BIGDECIMAL,EMAIL,URL,ARRAY,COMPOSITE</b> - <b>(required)</b> Defines scope of variable; only used for apidocs/options or for reference.</li>
+          <li><b>description : variable description</b> - <b>(required)</b> description of variable, how it is used. mainly for apidocs</li>
+          <li><b>references : see below </b> - (optional) This allows someone to point a PKEY/FKEY/Index to its referencing IO State Object NAME. Usage is as follows:</li>
+          <ul>
+            <li><i>references: self (type:Long)</i> - primary key, reference to self;</li>
+            <li><i>references: name of API Object referenced w/ (type:Long)</i> - foreign key; referenced to IO State Object</li>
+            <li><i>references : self or name of API Object referenced w/ (type:String)</i> - index;reference to IO State Object</li>
+          </ul>
+          <li><b>mockData : 'string descriptor'</b> - (optional) Mock data for options and apidoc.</li>
+        </ul>
+
 
 <h3>
-<a id="benefits" class="anchor" href="#designer-templates" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>What Are It's Benefits?</h3>
+<a id="rules" class="anchor" href="#designer-templates" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Defining URI Rules</h3>
 
-<p>The <b>BoomStick&#8482; API Framework</b> is based upon the principles of <a href="http://www.infoq.com/author/Owen-Rubel">API abstraction and shared IO state</a>. These create an entirely <b>NEW API Pattern</b> allowing us the ability to do the following:</p>
+<p>Underneath <b>URI</b>, you list out all the <b>'endpoints'</b> for this Controller. If you put endpoints for a separate controller in here, they will not map.</p>
+<p>Once you have mapped all your endpoints, you will need to assign then the following rules:</p>
 <ul>
-<li><b>60-80% code reduction for API development</b></li>
-<li><b>Vastly simplified API development</b></li>
-<li><b>Faster & More scalable</b></li>
-<li>On-the-fly reloading of endpoint data (no shutting down server to make changes)</li>
-<li>Ability to sychronize endpoint data across all services</li>
-<li>Automated checks</li>
-<li>Automated batching</li>
-<li>Automated Webhooks / Architectural Webhooks</li>
-<li>API Chaining</li>
-<li>Reduction in dropped threads</li>
-<li>100% stateless</li>
+<li><b>METHOD:</b> GET/PUT/POST/DELETE</li>
+<li><b>DESCRIPTION:</b> <String> ; A String Describing API; This is used for API Doc generation".</li>
+<li><b>ROLES:</b> A List of Roles that have access to this endpoint this endpoint. Uses Spring-Security.</li>
+<li><b>BATCH:</b> A list of Roles that have access to send batch jobs on this endpoint. Uses Spring-Security.</li>
+<li><b>REQUEST:</b> A map of roles with VALUES expected to be sent at request.</li>
+<li><b>RESPONSE:</b> A map of roles with VALUES expected to be returned at response.</li>
 </ul>
 
 <h3>
-<a id="ease_development" class="anchor" href="#creating-pages-manually" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Easy API Development</h3>
+<a id="FAQ" class="anchor" href="#creating-pages-manually" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>FAQ</h3>
 
-<p>All communication logic and data are abstracted away from the controllers and services leaving the controllers to only deal with retrieving and returning a resource. This makes API development INCREDIBLY simple. You simply have to:</p>
-<ul>
-<li>Install the plugin</li>
-<li>Build a JSON IO State file for each controller</li>
-</ul>
+        <p>
+        <b>Why can't we just move services like Security to the proxy or Gateway?</b></br>
+        Doing AUTH check (or other checks) at the proxy/gateway does not solve for forwards/redirects where the roles need to be checked again. This shows the issue with the architectural cross cutting concern. This data needs to be duplicated to avoid the dropped thread and roundtrip. But then, we can't synchronize it. In our system, we synchronize then duplicate and make sure that all duplicate are coming from one centralized source.
+        </p>
 
-<p>There are <b>NO ANNOTATIONS</b> to be set, <b>NO SERVICES</b> to rely upon, <b>NO CHECKS</b> to be made. The IO State file acts as a properties file for endpoint rules for ALL services in your architectures and is handled at the communication layer NOT at the business logic. This makes it faster and more scalable and reduces code needed to create API's.</p>
+        <p>
+        <b>Is 'type' checking done on incoming response or outgoing request?</b></br>
+        Type Validation is an operation performed by the MODEL/Domain. Since no assignment is done at the API Layer, this isn't suggested as this slows down your api. What 'type' does is set a declaration on the variable so we can use it for OPTIONS and apidocs. It also is used for api chaining so objects can reference each other at the front controller by assigning a 'key'. Potentially we MAY autobuild this in the future based on Domain Objects
+        </p>
 
+        <p>
+        <b>It stated that the IO State does data checking? Isn't data checking the same thing as validation?</b></br>
+        If one checks to see if a set of variables are being sent for the privilege the api expects, that is data checking. If one VALIDATEs that data for what it is stated to be set as, that is validation. This is the difference between what the API Layer does and what the MODEL layer does
+        </p>
+
+        <p>
+        <b>Does the IO State Object need to be called with every call?</b></br>
+        No. The IO State Object is loaded at runtime, processed and then the final object (not JS) is loaded into a cache (ideally). This gives us a language specific object that we can use for each individual method api call with the definitions,rules and roles.
+        </p>
+
+        <p>
+        <b>Can this work with external api's?</b></br>
+        Yes. To do this you would normally create a separate controller/action that calls the external api. This would give you an internal URI reference point. The api object checks the data before going to the external service and will check the data coming back.
+        </p>
+
+        <p>
+        <b>Why is the object in JSON when you are coding in Groovy/Java?</b></br>
+        JSON allows us to abstract the object so we can reload on the fly and recache if we need to. JSON also allows for definition of a base object in a form that can be used by any architectural point as well regardless of what language it is written in.
+        </p>
+        
 </section>
       <footer>
         <p class="view"><a href="https://github.com/orubel/Boomstick-API-Framework">View the Project on GitHub <small>orubel/Boomstick-API-Framework</small></a></p>
