@@ -172,13 +172,13 @@
         <p><b>'VALUES'</b> basically defines the variable names and their corresponding data types. These are then in turn used by the 'Rules' ( VERSION>URI ) that set limitations on the request/response. Below are the definitions and rules used in above API Object:</p>
 
         <ul>
-          <li><b>type : PKEY,FKEY,INDEX,STRING,DATE,LONG,BOOLEAN,FLOAT,BIGDECIMAL,EMAIL,URL,ARRAY,COMPOSITE</b> - <b>(required)</b> Defines scope of variable; only used for apidocs/options or for reference.</li>
+          <li><b>type : PKEY, FKEY, INDEX, STRING, DATE, LONG, BOOLEAN, FLOAT, BIGDECIMAL, EMAIL, URL, ARRAY, COMPOSITE</b> - <b>(required)</b> Defines scope of variable; only used for apidocs/options or for reference.</li>
           <li><b>description : variable description</b> - <b>(required)</b> description of variable, how it is used. mainly for apidocs</li>
           <li><b>references : see below </b> - (optional) This allows someone to point a PKEY/FKEY/Index to its referencing IO State Object NAME. Usage is as follows:</li>
           <ul>
-            <li><i>references: self (type:Long)</i> - primary key, reference to self;</li>
-            <li><i>references: name of API Object referenced w/ (type:Long)</i> - foreign key; referenced to IO State Object</li>
-            <li><i>references : self or name of API Object referenced w/ (type:String)</i> - index;reference to IO State Object</li>
+            <li><div style="text-decoration: underline;">references: self (type:Long)</div> - primary key, reference to self;</li>
+            <li><div style="text-decoration: underline;">references: name of API Object referenced w/ (type:Long)</div> - foreign key; referenced to IO State Object</li>
+            <li><div style="text-decoration: underline;">references : self or name of API Object referenced w/ (type:String)</div> - index;reference to IO State Object</li>
           </ul>
           <li><b>mockData : 'string descriptor'</b> - (optional) Mock data for options and apidoc.</li>
         </ul>
@@ -230,7 +230,7 @@
         <b>Why is the object in JSON when you are coding in Groovy/Java?</b></br>
         JSON allows us to abstract the object so we can reload on the fly and recache if we need to. JSON also allows for definition of a base object in a form that can be used by any architectural point as well regardless of what language it is written in.
         </p>
-        
+
 </section>
       <footer>
         <p class="view"><a href="https://github.com/orubel/Boomstick-API-Framework">View the Project on GitHub <small>orubel/Boomstick-API-Framework</small></a></p>
