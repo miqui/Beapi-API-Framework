@@ -31,40 +31,23 @@
         </ul>
       </header>
       <section>
-        <h3><a id="what_is" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>What is BoomStick&#8482; API Framework?</h3>
+        <h3><a id="what_is" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Troubleshooting</h3>
 
-<p>The <b>BoomStick&#8482; API Framework</b> is a Plugin for <a href="https://grails.org/">Grails</a> on the <a href="http://projects.spring.io/spring-boot/">Spring Boot Microservice</a>.</p>
-<p>It installs a fully Reactive API Framework allowing improved automation, code reduction, simplified/fast development, and improved performance/scalability for distributed architectures.</p>
-<p>It was built by <a href="https://www.linkedin.com/in/orubel">a leader in the API industry</a> who has spent years solving issues with API installations in distributed architectures and who has advised/consulted/worked with enterprise leaders such as Apple, Netflix, VMWare, Cisco, Mashery, Amazon and others.</p>
+        <p><b>I'm getting 404 when trying to access API from Javascript frontend</b></p>
+        <p>Make sure you are authenticated and sending authentication via AJAX properly (http://grails-plugins.github.io/grails-spring-security-core/docs/manual/guide/authentication.html#ajax. Also make sure that if you are sending a 'cross-domain' request to encode your session cookie for such.</p>
 
-<h3>
-<a id="benefits" class="anchor" href="#designer-templates" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>What Are It's Benefits?</h3>
 
-<p>The <b>BoomStick&#8482; API Framework</b> is based upon the principles of <a href="http://www.infoq.com/author/Owen-Rubel">API abstraction and shared IO state</a>. These create an entirely <b>NEW API Pattern</b> allowing us the ability to do the following:</p>
-<ul>
-<li><b>60-80% code reduction for API development</b></li>
-<li><b>Vastly simplified API development</b></li>
-<li><b>Faster & More scalable</b></li>
-<li>On-the-fly reloading of endpoint data (no shutting down server to make changes)</li>
-<li>Ability to sychronize endpoint data across all services</li>
-<li>Automated checks</li>
-<li>Automated batching</li>
-<li>Automated Webhooks / Architectural Webhooks</li>
-<li>API Chaining</li>
-<li>Reduction in dropped threads</li>
-<li>100% stateless</li>
-</ul>
+        <p><b>Calls to http://localhost/api_v0.1/controller/action/1 fail or give a blank page</b></p>
+        <p>This is because you have a context set for your application. You need to call the api with the appContext (usually the app name) or set the app to a blank context within your Config.groovy environment...</p>
+        <pre><code>
+          grails.app.context = "/"
+        </code></pre>
 
-<h3>
-<a id="ease_development" class="anchor" href="#creating-pages-manually" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Easy API Development</h3>
+        <p><b>Error : An association from the table 'blah' refers to an unmapped class</b></p>
+        <p>It is most likely that you are using multiple datasources. Make sure your mappings in the newly created domains go to the correct datasource.</p>
 
-<p>All communication logic and data are abstracted away from the controllers and services leaving the controllers to only deal with retrieving and returning a resource. This makes API development INCREDIBLY simple. You simply have to:</p>
-<ul>
-<li>Install the plugin</li>
-<li>Build a JSON IO State file for each controller</li>
-</ul>
-
-<p>There are <b>NO ANNOTATIONS</b> to be set, <b>NO SERVICES</b> to rely upon, <b>NO CHECKS</b> to be made. The IO State file acts as a properties file for endpoint rules for ALL services in your architectures and is handled at the communication layer NOT at the business logic. This makes it faster and more scalable and reduces code needed to create API's.</p>
+        <p><b>ApiToolkit-Init asks for 'Person' and 'Role' but authentication is separated from application</b></p>
+        <p>The only classes that need this are the 'Hook' domain and the 'HookController'. If you have separated your authentication, you will have to manually handle these references in the application and change the id in the domain to Long instead of Person.</p>
 
 </section>
       <footer>
