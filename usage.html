@@ -44,8 +44,17 @@
 <pre><code>return ['fred':data]
 </code></pre>
 
-        <h3><a id="what_is" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Remotely Authorizing</h3>
-
+        <h3><a id="what_is" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Authorizing</h3>
+        <p>Since we don't use URLMapping to secure our endpoints, we store all that data in the IO State and then load and cache at runtime so we can share that data with other services. As a result, this makes it easier for us to automate alot of the security so you no longer have to:</p>
+<ul>
+  <li>Check access to your endpoints</li>
+  <li>Check if user is logged in</li>
+  <li>check users roles</li>
+  <li>Check request data</li>
+  <li>Check response data</li>
+  <li>etc</li>
+</ul>
+<p>All automation and checks are automated based on your IO state files and you no longer have to do this in your controllers or services.</p>
 
         <h3><a id="what_is" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Sending Data to API</h3>
 
