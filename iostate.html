@@ -171,15 +171,15 @@
         <p><b>'VALUES'</b> basically defines the variable names and their corresponding data types. These are then in turn used by the 'Rules' ( VERSION>URI ) that set limitations on the request/response. Below are the definitions and rules used in above API Object:</p>
 
         <ul>
-          <li><b><div style="text-decoration: underline;">type</div> : PKEY, FKEY, INDEX, STRING, DATE, LONG, BOOLEAN, FLOAT, BIGDECIMAL, EMAIL, URL, ARRAY, COMPOSITE</b> - <b>(required)</b> Defines scope of variable; only used for apidocs/options or for reference.</li>
-          <li><b><div style="text-decoration: underline;">description</div> : variable description</b> - <b>(required)</b> description of variable, how it is used. mainly for apidocs</li>
-          <li><b><div style="text-decoration: underline;">references</div> : see below  - (optional)</b> This allows someone to point a PKEY/FKEY/Index to its referencing IO State Object NAME. Usage is as follows:</li>
+          <li><b><span style="text-decoration: underline;">type</span> : PKEY, FKEY, INDEX, STRING, DATE, LONG, BOOLEAN, FLOAT, BIGDECIMAL, EMAIL, URL, ARRAY, COMPOSITE</b> - <b>(required)</b> Defines scope of variable; only used for apidocs/options or for reference.</li>
+          <li><b><span style="text-decoration: underline;">description</span> : variable description</b> - <b>(required)</b> description of variable, how it is used. mainly for apidocs</li>
+          <li><b><span style="text-decoration: underline;">references</span> : see below  - (optional)</b> This allows someone to point a PKEY/FKEY/Index to its referencing IO State Object NAME. Usage is as follows:</li>
           <ul>
-            <li><div style="text-decoration: underline;">references: self (type:Long)</div> - primary key, reference to self;</li>
-            <li><div style="text-decoration: underline;">references: name of API Object referenced w/ (type:Long)</div> - foreign key; referenced to IO State Object</li>
-            <li><div style="text-decoration: underline;">references : self or name of API Object referenced w/ (type:String)</div> - index;reference to IO State Object</li>
+            <li><span style="text-decoration: underline;">references: self (type:Long)</span> - primary key, reference to self;</li>
+            <li><span style="text-decoration: underline;">references: name of API Object referenced w/ (type:Long)</span> - foreign key; referenced to IO State Object</li>
+            <li><span style="text-decoration: underline;">references : self or name of API Object referenced w/ (type:String)</span> - index;reference to IO State Object</li>
           </ul>
-          <li><b><div style="text-decoration: underline;">mockData</div> : 'string descriptor' - (optional)</b> Mock data for options and apidoc.</li>
+          <li><b><span style="text-decoration: underline;">mockData</span> : 'string descriptor' - (optional)</b> Mock data for options and apidoc.</li>
         </ul>
 
 
