@@ -26,7 +26,8 @@
             <ul>
               <li><a href="usage.html#controller">Controller Implementation</a></li>
               <li><a href="usage.html#role_auth">Role Authorizing</a></li>
-              <li><a href="usage.html#data">Sending Data to API</a></li>
+              <li><a href="usage.html#data_shell">Sending Data to API via Shell</a></li>
+              <li><a href="usage.html#data_js">Sending Data to API via Javascript</a></li>
             </ul>
           </li>
           <li><a href="http://orubel.github.io/Boomstick-API-Framework/batch.html"><strong>Batch Processing</strong></a></li>
@@ -49,8 +50,23 @@
 
 <p>All automation and checks are automated based on your IO state files and you no longer have to do this in your controllers or services. Please read about <a href="iostate.html#rules>">'Defining URI Rule'</a> under <b><a href="iostate.html">IO State</a></b></p>
 
-        <h3><a id="data" class="anchor" href="#data" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Sending Data to API</h3>
+        <h3><a id="data_shell" class="anchor" href="#data" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Sending Data to API via Shell</h3>
 
+        <h2>Authorizing from Shell</h2>
+        <p>Simply replace <b><your_username</b> and <b>your_password</b> in the following curl command to login to your API from the shell:</p>
+        <pre><code>curl --verbose --request POST --data "username=<your_username>&password=<yourpassword>&_spring_security_remember_me=checked" http://localhost:8080/login/authenticate --cookie-jar cookies.txt</code></pre>
+</br>
+        <h2>Calling API from Shell</h2>
+        <p>Once you have authorized, you can now call the API endpoints you have access to:</p>
+
+        <p><b>GET Example</b></p>
+        <pre><code>curl --verbose --request GET --header "Content-Type: application/json" "http://localhost:8080/v0.1/post/show/1" --cookie cookies.txt</code></pre>
+
+        <p><b>POST Example</b></p>
+        <pre><code>curl --verbose --request POST --header "Content-Type: application/json" -d "{'title': 'test post','teaser': 'This is just a test post to see if this works. Testing the api post system.','content':'Lorem ipsum dolor sit amet, consectetur adipiscing elit. In vel consequat nisl, quis commodo neque. Integer ultrices vitae nulla lacinia rutrum. Duis ut porta arcu, sed gravida tortor. Donec pulvinar elit turpis, ultricies tristique mi auctor ac. Ut elementum ullamcorper risus ac sollicitudin. Morbi semper ultrices enim vel euismod. Proin eleifend orci ac elit mollis tempor. Nulla egestas odio eu volutpat eleifend. Nunc nec massa eget nisl sodales posuere. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Nunc accumsan pretium sapien a tincidunt. Sed at fringilla mi.','sectionId':2}" http://localhost:8080/v0.1/post/create --cookie cookies.txt</code></pre>
+
+        <p><b>PUT Example</b></p>
+        <pre><code>curl --verbose --request PUT --header "Content-Type: application/json" -d "{'title':'testamundo'}" "http://localhost:8080/v0.1/post/update/1" --cookie cookies.txt</code></pre>
 
       </section>
       <footer>
