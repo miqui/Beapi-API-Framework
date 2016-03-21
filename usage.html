@@ -24,9 +24,9 @@
           <li><a href="http://orubel.github.io/Boomstick-API-Framework/iostate.html"><strong>IO State</strong></a></li>
           <li><a href="http://orubel.github.io/Boomstick-API-Framework/usage.html"><strong>API Usage</strong></a>
             <ul>
-              <li><a>Controller Implementation</a></li>
-              <li><a>Role Authorizing</a></li>
-              <li><a>Sending Data to API</a></li>
+              <li><a href="usage.html#controller">Controller Implementation</a></li>
+              <li><a href="usage.html#role_auth">Role Authorizing</a></li>
+              <li><a href="usage.html#data">Sending Data to API</a></li>
             </ul>
           </li>
           <li><a href="http://orubel.github.io/Boomstick-API-Framework/batch.html"><strong>Batch Processing</strong></a></li>
@@ -37,26 +37,19 @@
         </ul>
       </header>
       <section>
-        <h3><a id="what_is" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Controller Implementation</h3>
+        <h3><a id="controller" class="anchor" href="#controller" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Controller Implementation</h3>
         <p>Without <b>Boomstick&#8482;</b>, you may find yourself having to update your controllers, domains, security, urlmappings, etc just to install API's. <b>This is NOT THE CASE with BOOMSTICK&#8482;</b>. Boomstick&#8482; makes API development simple, easy, fast and scalable. All you have to do is plug and play and Boomstick&#8482; takes care of the 'REST'.</p>
 
         <p>The only requirement is that in  your controller when returning a 'resource', you <b>have to</b> return your data under the name of controller. So if your Controller is named 'FredController' and you are returning data from a 'show' method, you would return it like so:</p>
 <pre><code>return ['fred':data]
 </code></pre>
 
-        <h3><a id="what_is" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Role Authorizing</h3>
+        <h3><a id="role_auth" class="anchor" href="#role_auth" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Role Authorizing</h3>
         <p>Since we don't use URLMapping to secure our endpoints, we store all that data in the IO State and then load and cache at runtime so we can share that data with other services. As a result, this makes it easier for us to automate alot of the security so you no longer have to:</p>
-<ul>
-  <li>Check access to your endpoints</li>
-  <li>Check if user is logged in</li>
-  <li>check users roles</li>
-  <li>Check request data</li>
-  <li>Check response data</li>
-  <li>etc</li>
-</ul>
-<p>All automation and checks are automated based on your IO state files and you no longer have to do this in your controllers or services.</p>
 
-        <h3><a id="what_is" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Sending Data to API</h3>
+<p>All automation and checks are automated based on your IO state files and you no longer have to do this in your controllers or services. Please read about <a href="iostate.html#rules>">'Defining URI Rule'</a> under <b><a href="iostate.html">IO State</a></b></p>
+
+        <h3><a id="data" class="anchor" href="#data" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Sending Data to API</h3>
 
 
       </section>
