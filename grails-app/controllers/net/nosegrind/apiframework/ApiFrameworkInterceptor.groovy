@@ -70,7 +70,7 @@ class ApiFrameworkInterceptor extends Params{
 	}
 
 	boolean before(){
-		println("##### FILTER (BEFORE)")
+		//println("##### FILTER (BEFORE)")
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 		boolean restAlt = (['OPTIONS','TRACE','HEAD'].contains(request.method))?true:false
@@ -168,8 +168,8 @@ class ApiFrameworkInterceptor extends Params{
 	}
 
 	boolean after(){
-		println("##### FILTER (AFTER)")
-println model
+		//println("##### FILTER (AFTER)")
+
 		try{
 			LinkedHashMap newModel = [:]
 

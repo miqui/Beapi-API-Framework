@@ -97,10 +97,5 @@ apitoolkit:
         includeEnvironments: ['development','test']
         excludeEnvironments: ['production']
         allowedOrigins: ['localhost:3000']
-    iostate:
-        preloadDir: "/home/owenrubel/.iostate"
-        archInstanceUrls:
-            proxy: "127.0.0.1"
-            mq: "127.0.0.1"
 
 

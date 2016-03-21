@@ -88,8 +88,8 @@ class ApiObjectService{
 				}
 				parseFiles(ioPath)
 			}
-			
-			String apiObjectSrc = grailsApplication.config.apitoolkit.iostate.preloadDir
+
+			String apiObjectSrc = grailsApplication.config.iostate.preloadDir
 			parseFiles(apiObjectSrc.toString())
 
 		} catch (Exception e) {

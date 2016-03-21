@@ -167,7 +167,8 @@ class GrailsApiFrameworkGrailsPlugin extends Plugin{
                 writer.writeLine "apitoolkit.admin.roles= ['ROLE_ROOT','ROLE_ADMIN','ROLE_ARCH']"
                 writer.writeLine "apitoolkit.serverType= 'master'"
                 writer.writeLine "apitoolkit.webhook.services= ['iostate']"
-                writer.writeLine "apitoolkit.iostate.preloadDir= '/user/home/.iostate'"
+                // set this per environment
+                //writer.writeLine "apitoolkit.iostate.preloadDir= '/user/home/.iostate'"
                 writer.writeLine "apitoolkit.corsInterceptor.includeEnvironments= ['development','test']"
                 writer.writeLine "apitoolkit.corsInterceptor.excludeEnvironments= ['production']"
                 writer.writeLine "apitoolkit.corsInterceptor.allowedOrigins= ['localhost:3000']"

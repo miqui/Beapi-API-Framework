@@ -24,7 +24,7 @@ class CorsInterceptor {
 	}
 
 	boolean before() {
-		println("##### CORS FILTER (BEFORE)")
+		//println("##### CORS FILTER (BEFORE)")
 		Map corsInterceptorConfig = (Map) grailsApplication.config.corsInterceptor
 		String[] includeEnvironments = corsInterceptorConfig['includeEnvironments']?: null
 		String[] excludeEnvironments = corsInterceptorConfig['excludeEnvironments']?: null
@@ -66,7 +66,7 @@ class CorsInterceptor {
 	}
 
 	boolean after() {
-		println("##### CORS FILTER (BEFORE)")
+		//println("##### CORS FILTER (BEFORE)")
 		return true
 	}
 

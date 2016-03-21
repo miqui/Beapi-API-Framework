@@ -151,8 +151,7 @@ abstract class ApiLayer{
 			case 'HEAD':
 				break;
 			case 'OPTIONS':
-				println("OPTIONS CALLED")
-				LinkedHashMap doc = getApiDoc(params)
+				String doc = getApiDoc(params)
 				data = ['content':doc,'contentType':request.getAttribute('contentType'),'encoding':encoding]
 				break;
 			case 'GET':
@@ -175,6 +174,96 @@ abstract class ApiLayer{
 		return ['apiToolkitContent':data.content,'apiToolkitType':request.getAttribute('contentType'),'apiToolkitEncoding':encoding]
 	}
 
+	/*
+ * TODO: Need to compare multiple authorities
+ */
+	String getApiDoc(GrailsParameterMap params){
+		//println("#### [ApiLayer : getApiDoc ] ####")
+
+		// check for ['doc'][role] in cache
+		// if none, continue
+
+		LinkedHashMap newDoc = [:]
+		List paramDescProps = ['paramType','idReferences','name','description']
+		try{
+			def controller = grailsApplication.getArtefactByLogicalPropertyName('Controller', params.controller)
+			if(controller){
+				def cache = (params.controller)?apiCacheService.getApiCache(params.controller):null
+				if(cache){
+					if(cache[params.apiObject][params.action]){
+
+						def doc = cache[params.apiObject][params.action].doc
+						def path = doc?.path
+						def method = doc?.method
+						def description = doc?.description
+
+
+						//def authority = springSecurityService.principal.authorities*.authority[0]
+						newDoc[params.action] = ['path':path,'method':method,'description':description]
+						if(doc.receives){
+							newDoc[params.action].receives = []
+
+							doc.receives.each{ it ->
+								if(apiRoles([it.key]) || it.key=='permitAll'){
+									it.value.each(){ it2 ->
+										LinkedHashMap values = [:]
+										it2.each(){ it3 ->
+											if(paramDescProps.contains(it3.key)){
+												values[it3.key] = it3.value
+											}
+										}
+										if(values) {
+											newDoc[params.action].receives.add(values)
+										}
+									}
+
+								}
+							}
+						}
+
+						if(doc.returns){
+							newDoc[params.action].returns = []
+							List jsonReturns = []
+							doc.returns.each(){ v ->
+								if(apiRoles([v.key]) || v.key=='permitAll'){
+									jsonReturns.add(["${v.key}":v.value])
+									v.value.each(){ v2 ->
+										LinkedHashMap values3 = [:]
+										v2.each(){ v3 ->
+											if(paramDescProps.contains(v3.key)){
+												values3[v3.key] = v3.value
+											}
+										}
+										if(values3) {
+											newDoc[params.action].returns.add(values3)
+										}
+									}
+									//newDoc[params.action].returns[v.key] = v.value
+								}
+							}
+
+							//newDoc[params.action].json = processJson(newDoc[params.action].returns)
+
+							newDoc[params.action].json = processJson(jsonReturns[0] as LinkedHashMap)
+						}
+
+						if(doc.errorcodes){
+							doc.errorcodes.each{ it ->
+								newDoc[params.action].errorcodes.add(it)
+							}
+						}
+
+						// store ['doc'][role] in cache
+
+						return newDoc as JSON
+					}
+				}
+			}
+			return [:]
+		}catch(Exception e){
+			throw new Exception("[ApiLayer :: getApiDoc] : Exception - full stack trace follows:",e)
+		}
+	}
 
 	/*
 	GrailsParameterMap getParams(HttpServletRequest request,GrailsParameterMap params){
@@ -464,9 +553,7 @@ abstract class ApiLayer{
 		return err
 	}
 
-	/*
-	 * TODO: Need to compare multiple authorities
-	 */
+
 	def apiRoles(List list) {
 		if(springSecurityService.principal.authorities*.authority.any { list.contains(it) }){
 			return true

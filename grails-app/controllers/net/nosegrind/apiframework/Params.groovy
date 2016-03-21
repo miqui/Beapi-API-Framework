@@ -27,6 +27,8 @@
 
 package net.nosegrind.apiframework
 
+import grails.converters.JSON
+import grails.converters.XML
 import javax.servlet.http.HttpServletRequest
 
 import static groovyx.gpars.GParsPool.withPool
@@ -168,8 +170,7 @@ abstract class Params{
                 // placeholder
                 break;
             case 'OPTIONS':
-                println("OPTIONS CALLED")
-                LinkedHashMap doc = getApiDoc(params)
+                String doc = getApiDoc(params)
                 data = ['content':doc,'contentType':request.getAttribute('contentType'),'encoding':encoding]
                 break;
         }
@@ -214,12 +215,22 @@ abstract class Params{
     */
 
 
+    def apiRoles(List list) {
+        if(springSecurityService.principal.authorities*.authority.any { list.contains(it) }){
+            return true
+        }
+        return ['validation.customRuntimeMessage', 'ApiCommandObject does not validate. Check that your data validates or that requesting user has access to api method and all fields in api command object.']
+    }
 
     /*
  * TODO: Need to compare multiple authorities
  */
-    LinkedHashMap getApiDoc(GrailsParameterMap params){
+    String getApiDoc(GrailsParameterMap params){
         //println("#### [ApiLayer : getApiDoc ] ####")
+
+        // check for ['doc'][role] in cache
+        // if none, continue
+
         LinkedHashMap newDoc = [:]
         List paramDescProps = ['paramType','idReferences','name','description']
         try{
@@ -234,35 +245,45 @@ abstract class Params{
                         def method = doc?.method
                         def description = doc?.description
 
-                        def authority = springSecurityService.principal.authorities*.authority[0]
+
+                        //def authority = springSecurityService.principal.authorities*.authority[0]
                         newDoc[params.action] = ['path':path,'method':method,'description':description]
                         if(doc.receives){
-                            newDoc[params.action].receives = [:]
+                            newDoc[params.action].receives = []
+
                             doc.receives.each{ it ->
-                                if(authority==it.key || it.key=='permitAll'){
+                                if(apiRoles([it.key]) || it.key=='permitAll'){
                                     it.value.each(){ it2 ->
-                                        it2.getProperties().each(){ it3 ->
+                                        LinkedHashMap values = [:]
+                                        it2.each(){ it3 ->
                                             if(paramDescProps.contains(it3.key)){
-                                                newDoc[params.action].receives[it3.key] = it3.value
+                                                values[it3.key] = it3.value
                                             }
                                         }
+                                        if(values) {
+                                            newDoc[params.action].receives.add(values)
+                                        }
                                     }
-                                    //newDoc[params.action].receives[it.key] = it.value
+
                                 }
                             }
                         }
 
                         if(doc.returns){
-                            newDoc[params.action].returns = [:]
+                            newDoc[params.action].returns = []
                             List jsonReturns = []
                             doc.returns.each(){ v ->
-                                if(authority==v.key || v.key=='permitAll'){
+                                if(apiRoles([v.key]) || v.key=='permitAll'){
                                     jsonReturns.add(["${v.key}":v.value])
                                     v.value.each(){ v2 ->
-                                        v2.getProperties().each(){ v3 ->
+                                        LinkedHashMap values3 = [:]
+                                        v2.each(){ v3 ->
                                             if(paramDescProps.contains(v3.key)){
-                                                newDoc[params.action].returns[v3.key] = v3.value
+                                                values3[v3.key] = v3.value
                                             }
+                                        }
+                                        if(values3) {
+                                            newDoc[params.action].returns.add(values3)
                                         }
                                     }
                                     //newDoc[params.action].returns[v.key] = v.value
@@ -279,7 +300,10 @@ abstract class Params{
                                 newDoc[params.action].errorcodes.add(it)
                             }
                         }
-                        return newDoc
+
+                        // store ['doc'][role] in cache
+
+                        return newDoc as JSON
                     }
                 }
             }

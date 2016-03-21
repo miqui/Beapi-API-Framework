@@ -29,6 +29,7 @@ package net.nosegrind.apiframework
 
 import grails.converters.JSON
 import grails.converters.XML
+import grails.util.Metadata
 
 import java.lang.reflect.Method
 import java.util.HashSet;
@@ -140,26 +141,32 @@ class ApiCacheService{
 	*/
 	
 	Map generateApiDoc(String controllername, String actionname, String apiversion){
+		//println("### ApiCacheService > generateApiDoc")
 		try{
 			Map doc = [:]
 			def cache = getApiCache(controllername)
-			String apiPrefix = "v"+grailsApplication.metadata['app.version'] as String
-			
+
+			String apiPrefix = "v${Metadata.current.getApplicationVersion()}"
+
 			if(cache){
 				String path = "/${apiPrefix}-${apiversion}/${controllername}/${actionname}"
 				doc = ['path':path,'method':cache[apiversion][actionname]['method'],'description':cache[apiversion][actionname]['description']]
 				if(cache[apiversion][actionname]['receives']){
-	
+					
 					doc['receives'] = [:]
 					for(receiveVal in cache[apiversion][actionname]['receives']){
-						doc['receives']["$receiveVal.key"] = receiveVal.value
+						if(receiveVal?.key) {
+							doc['receives']["$receiveVal.key"] = receiveVal.value
+						}
 					}
 				}
 				
 				if(cache[apiversion][actionname]['returns']){
 					doc['returns'] = [:]
 					for(returnVal in cache[apiversion][actionname]['returns']){
-						doc['returns']["$returnVal.key"] = returnVal.value
+						if(returnVal?.key) {
+							doc['returns']["$returnVal.key"] = returnVal.value
+						}
 					}
 					doc['json'] = [:]
 					doc['json'] = processJson(doc["returns"])
