@@ -32,27 +32,17 @@ import grails.converters.XML
 import grails.util.Holders
 import org.grails.validation.routines.UrlValidator
 import org.grails.web.util.GrailsApplicationAttributes
-import org.springframework.web.context.request.RequestAttributes
 import org.grails.core.DefaultGrailsDomainClass
 import javax.servlet.http.HttpServletResponse
-
-//import java.lang.reflect.Method
-import grails.core.GrailsApplication
-
-import javax.servlet.forward.*
 import javax.servlet.http.HttpServletRequest
-
+import javax.servlet.forward.*
 import java.text.SimpleDateFormat
-
 import org.grails.groovy.grails.commons.*
-
 import grails.web.servlet.mvc.GrailsParameterMap
-import org.grails.web.util.WebUtils
 import org.springframework.web.context.request.RequestContextHolder as RCH
 import org.springframework.web.context.request.ServletRequestAttributes
 import net.nosegrind.apiframework.*
-import static groovyx.gpars.GParsPool.withPool
-import java.util.concurrent.ForkJoinPool
+
 
 abstract class ApiLayer{
 
@@ -61,10 +51,7 @@ abstract class ApiLayer{
 	def springSecurityService
 	ApiCacheService apiCacheService
 
-
 	List optionalParams = ['action','controller','v','apiCombine', 'apiObject']
-
-	//ApiStatuses error = ApiStatuses.instance
 
 
 	private HttpServletRequest getRequest(){
@@ -74,18 +61,15 @@ abstract class ApiLayer{
 
 
 	List getApiParams(LinkedHashMap definitions){
-		//println("#### [ApiLayer : getApiParams ] ####")
 		try{
 			List apiList = []
 			def principal = springSecurityService.principal
 			List roleNames = principal.authorities*.authority
 			definitions.each() { it2 ->
 				if (roleNames.contains(it2.key) || it2.key == 'permitAll') {
-					//withPool {
 					it2.value.each() { it4 ->
 						apiList.add(it4.name)
 					}
-					//}
 				}
 			}
 			return apiList
@@ -95,7 +79,6 @@ abstract class ApiLayer{
 	}
 
 	LinkedHashMap parseURIDefinitions(LinkedHashMap model,List responseList){
-		//println("#### [ApiLayer : parseURIDefinitions ] ####")
 		try{
 			String msg = 'Error. Invalid variables being returned. Please see your administrator'
 
@@ -138,7 +121,6 @@ abstract class ApiLayer{
 	}
 
 	LinkedHashMap parseResponseMethod(HttpServletRequest request, GrailsParameterMap params, LinkedHashMap result){
-		//println("#### [ApiLayer : parseResponseMethods ] ####")
 		LinkedHashMap data = [:]
 		String defaultEncoding = Holders.grailsApplication.config.apitoolkit.encoding
 		String encoding = request.getHeader('accept-encoding')?request.getHeader('accept-encoding'):defaultEncoding
@@ -178,8 +160,6 @@ abstract class ApiLayer{
  * TODO: Need to compare multiple authorities
  */
 	String getApiDoc(GrailsParameterMap params){
-		//println("#### [ApiLayer : getApiDoc ] ####")
-
 		// check for ['doc'][role] in cache
 		// if none, continue
 
@@ -265,22 +245,7 @@ abstract class ApiLayer{
 		}
 	}
 
-	/*
-	GrailsParameterMap getParams(HttpServletRequest request,GrailsParameterMap params){
-		try{
-			String type = params.format
-			request."${type}"?.each() { key,value ->
-				params.put(key,value)
-			}
-			return params
-		}catch(Exception e){
-			throw new Exception("[ApiLayer :: getParams] : Exception - full stack trace follows:",e)
-		}
-	}
-	*/
-
 	boolean checkAuth(HttpServletRequest request, List roles){
-		//println("#### [ApiLayer : checkAuth ] ####")
 		try {
 			boolean hasAuth = false
 			if (springSecurityService.loggedIn) {
@@ -296,8 +261,7 @@ abstract class ApiLayer{
 			}
 			return hasAuth
 		}catch(Exception e) {
-			//throw new Exception("[ApiLayer :: checkAuth] : Exception - full stack trace follows:",e)
-			println("[ApiLayer :: checkAuth] : Exception - full stack trace follows:"+e)
+			throw new Exception("[ApiLayer :: checkAuth] : Exception - full stack trace follows:",e)
 		}
 	}
 
@@ -320,23 +284,6 @@ abstract class ApiLayer{
 		}
 	}
 
-	/*
-	void setApiCache(String controllername,LinkedHashMap apidoc){
-		apiCacheService.setApiCache(controllername,apidoc)
-		apidoc.each(){ k1,v1 ->
-			if(k1!='currentStable'){
-				v1.each() { k2,v2 ->
-					if(!['deprecated','defaultAction','domainPackage'].contains(k2)){
-						def doc = generateApiDoc(controllername, k2, k1)
-						apiCacheService.setApiDocCache(controllername,k2,k1,doc)
-					}
-				}
-			}
-		}
-		def cache = apiCacheService.getApiCache(controllername)
-	}
-	*/
-
 
 	boolean checkDeprecationDate(String deprecationDate){
 		try{
@@ -351,22 +298,6 @@ abstract class ApiLayer{
 			throw new Exception("[ApiLayer :: checkDeprecationDate] : Exception - full stack trace follows:",e)
 		}
 	}
-
-	/*
-	private ArrayList processDocErrorCodes(HashSet error){
-		try{
-			def errors = error as List
-			def err = []
-			errors.each{ v ->
-				def code = ['code':v.code,'description':"${v.description}"]
-				err.add(code)
-			}
-			return err
-		}catch(Exception e){
-			throw new Exception("[ApiLayerService :: processDocErrorCodes] : Exception - full stack trace follows:",e)
-		}
-	}
-	*/
 
 	// api call now needs to detect request method and see if it matches anno request method
 	boolean isApiCall(){
@@ -405,7 +336,6 @@ abstract class ApiLayer{
 	 * 3 = illegal combination
 	 */
 	protected int checkChainedMethodPosition(LinkedHashMap cache,HttpServletRequest request, GrailsParameterMap params, List uri, Map path){
-		//println("#### [ApiLayer : checkChainedMethodPosition ] ####")
 		try{
 			boolean preMatch = false
 			boolean postMatch = false
@@ -490,7 +420,7 @@ abstract class ApiLayer{
 				}
 			}
 
-			//println("${pathMatch} / ${preMatch} / ${postMatch}")
+			//log.info("${pathMatch} / ${preMatch} / ${postMatch}")
 			if(pathMatch || (preMatch && postMatch)){
 				if(params?.apiChain?.type=='blankchain'){
 					return 0
@@ -513,14 +443,12 @@ abstract class ApiLayer{
 				return 3
 			}
 
-
 		}catch(Exception e){
 			throw new Exception("[ApiLayerService :: checkChainedMethodPosition] : Exception - full stack trace follows:",e)
 		}
 	}
 
 	boolean isRequestMatch(String protocol,String method){
-		//println("#### [ApiLayer : isRequestMatch ] ####")
 		if(['TRACERT','OPTIONS','HEAD'].contains(method)){
 			return true
 		}else{
@@ -561,19 +489,7 @@ abstract class ApiLayer{
 		return ['validation.customRuntimeMessage', 'ApiCommandObject does not validate. Check that your data validates or that requesting user has access to api method and all fields in api command object.']
 	}
 
-	/*
-    public ResponseEntity<LinkedHashMap> respond(LinkedHashMap model){
-        HttpHeaders responseHeaders = new HttpHeaders();
-        responseHeaders.setLocation(location);
-        responseHeaders.set("MyResponseHeader", "MyValue");
-        return new ResponseEntity<String>("Hello World", responseHeaders, HttpStatus.CREATED);
-        return ResponseEntity(model,HttpStatus.BAD_REQUEST);
-    }
-*/
-
 	LinkedHashMap convertModel(Map map){
-		//println("#### [ApiResponseService : convertModel ] ####")
-
 		try{
 			LinkedHashMap newMap = [:]
 			String k = map.entrySet().toList().first().key
@@ -596,13 +512,8 @@ abstract class ApiLayer{
 	}
 
 	LinkedHashMap formatDomainObject(Object data){
-		//println("#### [ApiResponseService : formatDomainObject ] ####")
 		try{
 			LinkedHashMap newMap = [:]
-
-			//if(data.id.class.toString().contains('org.bson.types.ObjectId')){
-			//	newMap.put('id',data?.id.get().toString())
-			//}else{}
 
 			newMap.put('id',data?.id)
 			newMap.put('version',data?.version)
@@ -618,7 +529,6 @@ abstract class ApiLayer{
 	}
 
 	LinkedHashMap formatList(List list){
-		//println("#### [ApiResponseService : formatList ] ####")
 		LinkedHashMap newMap = [:]
 		list.eachWithIndex(){ val, key ->
 			if(val){
@@ -633,7 +543,6 @@ abstract class ApiLayer{
 	}
 
 	LinkedHashMap formatMap(Map map) {
-		//println("#### [ApiResponseService : formatMap ] ####")
 		LinkedHashMap newMap = [:]
 
 		map.each(){ key, val ->

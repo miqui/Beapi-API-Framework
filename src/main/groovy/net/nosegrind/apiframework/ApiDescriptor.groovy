@@ -5,16 +5,11 @@
 package net.nosegrind.apiframework
 
 
-
-import net.nosegrind.apiframework.ErrorCodeDescriptor
-import net.nosegrind.apiframework.ParamsDescriptor
 import grails.validation.Validateable
 import grails.compiler.GrailsCompileStatic
 
 // name is name of the object used
 
-//@grails.validation.Validateable
-//@Validateable
 //@GrailsCompileStatic
 class ApiDescriptor implements Validateable {
 
@@ -30,7 +25,6 @@ class ApiDescriptor implements Validateable {
 	Map doc
     LinkedHashMap<String,ParamsDescriptor> receives
     LinkedHashMap<String,ParamsDescriptor> returns
-    ErrorCodeDescriptor[] errorcodes
 
 
 	static constraints = { 
@@ -51,7 +45,6 @@ class ApiDescriptor implements Validateable {
 		doc(nullable:true)
 		receives(nullable:true)
 		returns(nullable:true)
-		errorcodes(nullable:true)
 	}
 
 }

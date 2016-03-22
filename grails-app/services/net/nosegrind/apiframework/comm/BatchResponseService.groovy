@@ -29,13 +29,6 @@ package net.nosegrind.apiframework.comm
 
 import grails.core.GrailsApplication
 
-/* ****************************************************************************
- * Copyright 2014 Owen Rubel
- *****************************************************************************/
-
-
-
-//import grails.application.springsecurity.SpringSecurityService
 import grails.web.servlet.mvc.GrailsParameterMap
 import groovy.transform.CompileStatic
 import net.nosegrind.apiframework.ApiCacheService
@@ -45,7 +38,6 @@ import javax.servlet.forward.*
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
-//import org.grails.web.sitemesh.GrailsContentBufferingResponse
 @CompileStatic
 class BatchResponseService extends ApiLayer{
 
@@ -53,7 +45,6 @@ class BatchResponseService extends ApiLayer{
 	ApiCacheService apiCacheService
 
 	def handleApiResponse(Object cache, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
-		//println("#### [ApiResponseService : handleApiResponse ] ####")
 
 		try{
 			response.setHeader('Authorization', cache['roles'].toString().join(', '))

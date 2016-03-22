@@ -34,19 +34,16 @@ import grails.core.GrailsApplication
 import net.nosegrind.apiframework.ApiDescriptor
 
 import grails.plugin.springsecurity.SpringSecurityService
-import grails.util.Holders
+
 import groovy.json.JsonSlurper
 import net.nosegrind.apiframework.comm.ApiRequestService
 import net.nosegrind.apiframework.comm.ApiResponseService
 import grails.util.Metadata
 
-import org.grails.web.util.WebUtils
-
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-
 import groovy.transform.CompileStatic
-//import net.nosegrind.apiframework.Timer
+
 
 @CompileStatic
 class ApiFrameworkInterceptor extends Params{
@@ -70,7 +67,7 @@ class ApiFrameworkInterceptor extends Params{
 	}
 
 	boolean before(){
-		//println("##### FILTER (BEFORE)")
+		//log.info('##### FILTER (BEFORE)')
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 		boolean restAlt = (['OPTIONS','TRACE','HEAD'].contains(request.method))?true:false
@@ -168,7 +165,7 @@ class ApiFrameworkInterceptor extends Params{
 	}
 
 	boolean after(){
-		//println("##### FILTER (AFTER)")
+		//log.info('##### FILTER (AFTER)')
 
 		try{
 			LinkedHashMap newModel = [:]

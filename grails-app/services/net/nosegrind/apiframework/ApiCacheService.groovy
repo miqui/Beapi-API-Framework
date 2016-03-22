@@ -30,26 +30,15 @@ package net.nosegrind.apiframework
 import grails.converters.JSON
 import grails.converters.XML
 import grails.util.Metadata
-
-import java.lang.reflect.Method
-import java.util.HashSet;
-import java.util.Map;
-import javax.lang.model.element.Element
-
 import grails.plugin.cache.CacheEvict
 import grails.plugin.cache.Cacheable
 import grails.plugin.cache.CachePut
 import grails.plugin.cache.GrailsValueWrapper
 import grails.plugin.cache.GrailsCacheManager
-
 import org.grails.groovy.grails.commons.*
-import org.grails.validation.routines.UrlValidator
-import org.springframework.web.context.request.RequestContextHolder as RCH
 import grails.core.GrailsApplication
-
 import net.nosegrind.apiframework.ApiDescriptor
 
-import net.nosegrind.apiframework.*
 
 import static groovyx.gpars.GParsPool.withPool
 
@@ -58,12 +47,8 @@ class ApiCacheService{
 	static transactional = false
 	
 	GrailsApplication grailsApplication
-	//SpringSecurityService springSecurityService
-	
-	def apiLayerService
-	//ApiToolkitService apiToolkitService
 	GrailsCacheManager grailsCacheManager
-	//CacheManager cacheManager
+
 
 	
 	/*
@@ -87,12 +72,6 @@ class ApiCacheService{
 	@CacheEvict(value="ApiCache",key="#controllername")
 	void flushApiCache(String controllername){} 
 
-	/*
-	@CacheEvict(value="ApiCache",key="#controllername")
-	Map resetApiCache(String controllername,String method,ApiDescriptor apidoc){
-		setApiCache(controllername,method,apidoc)
-	}
-	*/
 	
 	@CachePut(value="ApiCache",key="#controllername")
 	LinkedHashMap setApiCache(String controllername,LinkedHashMap apidesc){
@@ -101,7 +80,6 @@ class ApiCacheService{
 	
 	@CachePut(value="ApiCache",key="#controllername")
 	LinkedHashMap setApiCache(String controllername,String methodname, ApiDescriptor apidoc, String apiversion){
-		//println("#### ApiCacheService > setApiCache")
 		try{
 			def cache = getApiCache(controllername)
 			if(!cache[apiversion][methodname]){
@@ -122,26 +100,8 @@ class ApiCacheService{
 			throw new Exception("[ApiCacheService :: setApiCache] : Exception - full stack trace follows:",e)
 		}
 	}
-
-	/*
-	@CachePut(value="ApiCache",key="#controllername")
-	LinkedHashMap setApiDocCache(String controllername,String methodname, String apiversion, Map apidoc){
-		try{
-			def cache = getApiCache(controllername)
-			if(cache[apiversion][methodname]){
-				cache[apiversion][methodname]['doc'] = generateApiDoc(controllername, methodname, apiversion)
-			}else{
-				throw new Exception("[ApiCacheService :: setApiCache] : No Cache exists for controller/action pair of ${controllername}/${methodname}")
-			}
-			return cache
-		}catch(Exception e){
-			throw new Exception("[ApiCacheService :: setApiDocCache] : Exception - full stack trace follows:",e)
-		}
-	}
-	*/
 	
 	Map generateApiDoc(String controllername, String actionname, String apiversion){
-		//println("### ApiCacheService > generateApiDoc")
 		try{
 			Map doc = [:]
 			def cache = getApiCache(controllername)
@@ -171,10 +131,6 @@ class ApiCacheService{
 					doc['json'] = [:]
 					doc['json'] = processJson(doc["returns"])
 				}
-				
-				//if(cont["${actionname}"]["${apiversion}"]["errorcodes"]){
-				//	doc["errorcodes"] = processDocErrorCodes(cont[("${actionname}".toString())][("${apiversion}".toString())]["errorcodes"] as HashSet)
-				//}
 	
 			}
 			return doc
@@ -184,7 +140,6 @@ class ApiCacheService{
 	}
 	
 	LinkedHashMap getApiCache(String controllername){
-		//println("#### [ApiCacheService : getApiCache ] ####")
 		try{
 			def temp = grailsCacheManager?.getCache('ApiCache')
 			def cache = temp?.get(controllername)
@@ -210,7 +165,6 @@ class ApiCacheService{
  * TODO: Need to compare multiple authorities
  */
 	private String processJson(LinkedHashMap returns){
-		//println("#### [ApiCacheService : processJson ] ####")
 		try{
 			LinkedHashMap json = [:]
 			returns.each{ p ->

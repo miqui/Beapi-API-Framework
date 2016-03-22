@@ -29,16 +29,9 @@ package net.nosegrind.apiframework.comm
 
 import grails.web.servlet.mvc.GrailsParameterMap
 import groovy.transform.CompileStatic
-
-/* ****************************************************************************
- * Copyright 2014 Owen Rubel
- *****************************************************************************/
 import org.grails.groovy.grails.commons.*
-
 import javax.servlet.forward.*
 import javax.servlet.http.HttpServletRequest
-
-//import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper
 import javax.servlet.http.HttpServletResponse
 
 @CompileStatic
@@ -46,10 +39,8 @@ class BatchRequestService extends ApiLayer{
 
 	static transactional = false
 
-
 	boolean handleApiRequest(Object cache, HttpServletRequest request, HttpServletResponse response, GrailsParameterMap params){
-		//println("#### [ApiRequestService : handleApiRequest ] ####")
-		//try{
+		try{
 			// CHECK ACCESS TO METHOD
 			List roles = cache['roles'] as List
 			if(!checkAuth(request,roles)){
@@ -78,8 +69,8 @@ class BatchRequestService extends ApiLayer{
 				return false
 			}
 			return true
-		//}catch(Exception e){
-		//	throw new Exception("[ApiRequestService :: handleApiRequest] : Exception - full stack trace follows:",e)
-		//}
+		}catch(Exception e){
+			throw new Exception("[ApiRequestService :: handleApiRequest] : Exception - full stack trace follows:",e)
+		}
 	}
 }

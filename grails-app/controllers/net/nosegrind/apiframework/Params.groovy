@@ -37,7 +37,6 @@ import grails.converters.XML
 import grails.web.servlet.mvc.GrailsParameterMap
 import groovy.json.JsonSlurper
 
-import net.nosegrind.apiframework.Timer
 import javax.servlet.forward.*
 import org.grails.groovy.grails.commons.*
 
@@ -55,7 +54,6 @@ abstract class Params{
     *
      */
     void setBatchParams(GrailsParameterMap params){
-        //println("#### [ParamsService : setBatchParams ] ####")
         if (batchEnabled) {
             def batchVars = request.getAttribute(request.format.toUpperCase())
             if(!request.getAttribute('batchLength')){ request.setAttribute('batchLength',batchVars['batch'].size()) }
@@ -71,23 +69,8 @@ abstract class Params{
         }
     }
 
-    /*
-    void setApiParams(HttpServletRequest request){
-        try{
-            GrailsParameterMap params = RequestContextHolder.currentRequestAttributes().params
-            if(request."$format"){
-                request."$format".each{ k,v ->
-                    params.put(k,v)
-                }
-            }
-        }catch(Exception e){
-            throw new Exception("[ParamsService :: setApiParams] : Exception - full stack trace follows:"+ e);
-        }
-    }
-    */
 
     LinkedHashMap getApiObjectParams(LinkedHashMap definitions){
-        //println("#### [ParamsService : getApiObjectParams ] ####")
         try{
             LinkedHashMap apiList = [:]
             definitions.each{ key,val ->
@@ -103,10 +86,10 @@ abstract class Params{
         }catch(Exception e){
             throw new Exception("[ParamsService :: getApiObjectParams] : Exception - full stack trace follows:",e)
         }
+        return [:]
     }
 
     List getApiParams(LinkedHashMap definitions){
-        //println("#### [ParamsService : getApiParams ] ####")
         try{
             List apiList = []
             definitions.each(){ key, val ->
@@ -131,7 +114,6 @@ abstract class Params{
     }
 
     boolean checkURIDefinitions(GrailsParameterMap params,LinkedHashMap requestDefinitions){
-        //println("#### [ParamsService : checkUriDefinitions ] ####")
         List reservedNames = ['batchLength','batchInc']
         // put in check to see if if app.properties allow for this check
         try{
@@ -152,10 +134,10 @@ abstract class Params{
         }catch(Exception e) {
            throw new Exception("[ApiLayerService :: checkURIDefinitions] : Exception - full stack trace follows:",e)
         }
+        return false
     }
 
     LinkedHashMap parseRequestMethod(HttpServletRequest request, GrailsParameterMap params){
-        //println("#### [ApiLayer : parseRequestMethods ] ####")
         LinkedHashMap data = [:]
         String defaultEncoding = grailsApplication.config.apitoolkit.encoding
         String encoding = request.getHeader('accept-encoding')?request.getHeader('accept-encoding'):defaultEncoding
@@ -179,14 +161,11 @@ abstract class Params{
     }
 
     List getRedirectParams(GrailsParameterMap params){
-        //println("#### [ParamsService : getRedirectParams ] ####")
         def uri = grailsApplication.mainContext.servletContext.getControllerActionUri(request)
-        //def uri = HOLDER.getServletContext().getControllerActionUri(request)
         return uri[1..(uri.size()-1)].split('/')
     }
 
     Map getMethodParams(GrailsParameterMap params){
-        //println("#### [ParamsService : getMethodParams ] ####")
         try{
             Map paramsRequest = [:]
             paramsRequest = params.findAll { it2 -> !optionalParams.contains(it2.key) }
@@ -194,42 +173,21 @@ abstract class Params{
         }catch(Exception e){
             throw new Exception("[ParamsService :: getMethodParams] : Exception - full stack trace follows:",e)
         }
+        return [:]
     }
 
-    /*
-    Map parseContentType(HttpServletRequest request, GrailsParameterMap params, Map map, LinkedHashMap returns){
-        String content
-        String encoding = (params.encoding)?params.encoding:"UTF-8"
-        LinkedHashMap result = parseURIDefinitions(request,map,returns)
-        switch(format){
-            case 'XML':
-                content = result as XML
-                break
-            case 'JSON':
-            default:
-                content = result as JSON
-        }
 
-        return ['content':content,'type':format,'encoding':encoding]
-    }
-    */
-
-
-    def apiRoles(List list) {
+    Boolean apiRoles(List list) {
         if(springSecurityService.principal.authorities*.authority.any { list.contains(it) }){
             return true
         }
-        return ['validation.customRuntimeMessage', 'ApiCommandObject does not validate. Check that your data validates or that requesting user has access to api method and all fields in api command object.']
+        return false
     }
 
-    /*
- * TODO: Need to compare multiple authorities
- */
-    String getApiDoc(GrailsParameterMap params){
-        //println("#### [ApiLayer : getApiDoc ] ####")
 
-        // check for ['doc'][role] in cache
-        // if none, continue
+    String getApiDoc(GrailsParameterMap params){
+        // TODO: Need to compare multiple authorities
+        // TODO: check for ['doc'][role] in cache; if none, continue
 
         LinkedHashMap newDoc = [:]
         List paramDescProps = ['paramType','idReferences','name','description']
@@ -313,11 +271,9 @@ abstract class Params{
         }
     }
 
-    /*
-* TODO: Need to compare multiple authorities
-*/
+
     private String processJson(LinkedHashMap returns){
-        //println("#### [ParamsService : processJson ] ####")
+        // TODO: Need to compare multiple authorities
         try{
             LinkedHashMap json = [:]
             returns.each{ p ->
