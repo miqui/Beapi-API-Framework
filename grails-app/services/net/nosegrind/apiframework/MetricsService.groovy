@@ -69,7 +69,7 @@ class MetricsService {
 		endTime()
 		Long time = currentTimer
 		clearTimer()
-		println(time+"ms")
+		//println(time+"ms")
 	}
 
 	void startTime() {
@@ -88,7 +88,7 @@ class MetricsService {
 		Long start = getTime()
 		Long end = System.currentTimeMillis()-start
 		setTime(end)
-		println(end+"ms")
+		//println(end+"ms")
 	}
 
 	public static void trace(StackTraceElement[] e) {

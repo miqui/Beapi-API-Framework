@@ -30,7 +30,6 @@ class ApiDescriptor implements Validateable {
 	Map doc
     LinkedHashMap<String,ParamsDescriptor> receives
     LinkedHashMap<String,ParamsDescriptor> returns
-    ErrorCodeDescriptor[] errorcodes
 
 
 	static constraints = { 
@@ -51,7 +50,6 @@ class ApiDescriptor implements Validateable {
 		doc(nullable:true)
 		receives(nullable:true)
 		returns(nullable:true)
-		errorcodes(nullable:true)
 	}
 
 }

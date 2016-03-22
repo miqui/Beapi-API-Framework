@@ -30,34 +30,20 @@ package net.nosegrind.apiframework
 import org.grails.web.json.JSONObject
 import grails.core.GrailsApplication
 
-//import grails.util.Holders
 import grails.converters.JSON
 import grails.util.Environment
 import net.nosegrind.apiframework.ApiDescriptor
-import net.nosegrind.apiframework.ApiStatuses
-
-//import grails.application.cache.GrailsCacheManager
-//import org.springframework.cache.CacheManager
-//import grails.application.springsecurity.SpringSecurityService
 import org.grails.groovy.grails.commons.*
 
 // TODO: rename to IOSTATESERVICE
 class ApiObjectService{
 
 	GrailsApplication grailsApplication
-	//SpringSecurityService springSecurityService
-	//ApiToolkitService apiToolkitService
-	//GrailsCacheManager grailsCacheManager
-	//CacheManager cacheManager
 	ApiCacheService apiCacheService
-	def grailsResourceLocator
-	
-	
+
 	static transactional = false
 	
 	public initialize(){
-		//println("#### ApiObjectService > initialize")
-		//Object version = 0.1
 
 		try {
 			if(grailsApplication.config.apitoolkit.serverType=='master'){
@@ -68,20 +54,13 @@ class ApiObjectService{
 					if(Environment.current == Environment.DEVELOPMENT || Environment.current == Environment.TEST){
 						ioPath += 'WEB-INF/classes/iostate'
 					}else{
-						// test in Environment.PRODUCTION
 						ioPath += 'WEB-INF/classes/iostate'
 					}
 				}else{
-					//ioPath = (String) BuildSettings.BASE_DIR?.path
-					//ioPath = System.getProperty(BuildSettings.PROJECT_RESOURCES_DIR)
-					//GrailsPluginManager pluginMngr = grailsApplication.getMainContext().getBean('pluginManager')
-					//ioPath = pluginMngr.getGrailsPlugin("grailsApiFramework").getPluginPath()
 					if(Environment.current == Environment.DEVELOPMENT || Environment.current == Environment.TEST){
 						//ioPath = grailsApplication.mainContext.getResources("conf/iostate").path
 						ioPath = 'src/iostate'
 					}else{
-						// test in Environment.PRODUCTION
-						//ioPath = grailsApplication.mainContext.getResources("conf/iostate").path
 						ioPath = 'src/iostate'
 					}
 					
@@ -103,7 +82,6 @@ class ApiObjectService{
 	}
 	
 	private parseFiles(String path){
-		//println("#### ApiObjectService > parseFiles : "+path)
 		new File(path).eachFile() { file ->
 			def tmp = file.name.toString().split('\\.')
 
@@ -220,7 +198,6 @@ class ApiObjectService{
 	}
 	
 	Boolean parseJson(String apiName,JSONObject json){
-		//println("#### ApiObjectService > parseJson")
 		LinkedHashMap methods = [:]
 		json.VERSION.each() { vers ->
 			def versKey = vers.key

@@ -32,18 +32,14 @@ import grails.util.Metadata
 class ApiFrameworkUrlMappings {
 
     static mappings = {
-        //String apiVersion = getGrailsApplication().metadata['info.app.version']
+
         String apiVersion = Metadata.current.getApplicationVersion()
         String api = "v${apiVersion}"
         String batchEntryPoint = "b${apiVersion}"
         String chainEntryPoint = "c${apiVersion}"
         String metricsEntryPoint = "m${apiVersion}"
 
-/*
-		"/apidoc/show" {
-            parseRequest: true
-        }
-*/
+
 
         "/login/$action" {
             controller = 'login'
@@ -70,8 +66,9 @@ class ApiFrameworkUrlMappings {
             entryPoint = api
             parseRequest = true
         }
-        /*
-        "/${api}-$apiObjectVersion/$controller/$action?/$id?(.$format)?**" {
+
+
+        "/${api}-$apiObjectVersion/$controller/$action/$id?**" {
             entryPoint = api
             apiObject = apiObjectVersion
             parseRequest = true
@@ -80,7 +77,11 @@ class ApiFrameworkUrlMappings {
             }
         }
 
-        "/${api}-$apiObjectVersion/$controller/$id" {
+        "/${api}-$apiObjectVersion/$controller/$action" {
+            if(action?.toInteger()==action && action!=null){
+                id=action
+                action = null
+            }
             entryPoint = api
             apiObject = apiObjectVersion
             parseRequest = true
@@ -88,20 +89,22 @@ class ApiFrameworkUrlMappings {
                 apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
             }
         }
-*/
+
 
         // BATCH API ENDPOINTS
-        "/$batchEntryPoint/$controller/$action?/$id?(.$format)?"{
+        "/$batchEntryPoint/$controller/$action"{
+            if(action?.toInteger()==action && action!=null){
+                id=action
+                action = null
+            }
             entryPoint = batchEntryPoint
             parseRequest = true
         }
 
-        /*
-        "/$batchEntryPoint/$controller/$action/$id**" {
+        "/$batchEntryPoint/$controller/$action/$id?**"{
             entryPoint = batchEntryPoint
             parseRequest = true
         }
-        */
 
         "/${batchEntryPoint}-$apiObjectVersion/$controller/$action/$id**" {
             entryPoint = batchEntryPoint
@@ -112,14 +115,6 @@ class ApiFrameworkUrlMappings {
             }
         }
 
-        "/$batchEntryPoint/$controller/$action" {
-            if(action?.toInteger()==action && action!=null){
-                id=action
-                action = null
-            }
-            entryPoint = batchEntryPoint
-            parseRequest = true
-        }
 
         "/${batchEntryPoint}-$apiObjectVersion/$controller/$action" {
             if(action?.toInteger()==action && action!=null){
@@ -134,95 +129,6 @@ class ApiFrameworkUrlMappings {
             }
         }
 
-
-
-        // TRACERT API ENDPOINTS
-        "/$metricsEntryPoint/$controller/$action?/$id?(.$format)?"{
-            entryPoint = metricsEntryPoint
-            parseRequest = true
-        }
-
-        /*
-        "/$metricsEntryPoint/$controller/$action/$id**" {
-            entryPoint = metricsEntryPoint
-            parseRequest = true
-        }
-        */
-
-        "/${metricsEntryPoint}-$apiObjectVersion/$controller/$action/$id**" {
-            entryPoint = metricsEntryPoint
-            apiObjectVersion = apiObjectVersion
-            parseRequest = true
-            constraints {
-                apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
-            }
-        }
-
-        "/$metricsEntryPoint/$controller/$action" {
-            if(action?.toInteger()==action && action!=null){
-                id=action
-                action = null
-            }
-            entryPoint = metricsEntryPoint
-            parseRequest = true
-        }
-
-        "/${metricsEntryPoint}-$apiObjectVersion/$controller/$action" {
-            if(action?.toInteger()==action && action!=null){
-                id=action
-                action = null
-            }
-            entryPoint = metricsEntryPoint
-            apiObjectVersion = apiObjectVersion
-            parseRequest = true
-            constraints {
-                apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
-            }
-        }
-
-
-
-        // CHAIN API ENDPOINTS
-        "/$chainEntryPoint/$controller/$action?/$id?(.$format)?"{
-            entryPoint = chainEntryPoint
-            parseRequest = true
-        }
-
-        "/$chainEntryPoint/$controller/$action/$id**" {
-            entryPoint = chainEntryPoint
-            parseRequest = true
-        }
-
-        "/${chainEntryPoint}-$apiObjectVersion/$controller/$action/$id**" {
-            entryPoint = chainEntryPoint
-            apiObjectVersion = apiObjectVersion
-            parseRequest = true
-            constraints {
-                apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
-            }
-        }
-
-        "/$chainEntryPoint/$controller/$action" {
-            if(action?.toInteger()==action && action!=null){
-                id=action
-                action = null
-            }
-            entryPoint = chainEntryPoint
-            parseRequest = true
-        }
-
-        "/${chainEntryPoint}-$apiObjectVersion/$controller/$action" {
-            if(action?.toInteger()==action && action!=null){
-                id=action
-                action = null
-            }
-            entryPoint = chainEntryPoint
-            apiObjectVersion = apiObjectVersion
-            parseRequest = true
-            constraints {
-                apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
-            }
-        }
 
         "200"{
             id = '200'

@@ -29,7 +29,6 @@ package net.nosegrind.apiframework
 
 import javax.annotation.Resource
 import grails.core.GrailsApplication
-import net.nosegrind.apiframework.ApiDescriptor
 import grails.plugin.springsecurity.SpringSecurityService
 import grails.util.Metadata
 import groovy.json.JsonSlurper
@@ -37,12 +36,11 @@ import net.nosegrind.apiframework.comm.BatchRequestService
 import net.nosegrind.apiframework.comm.BatchResponseService
 import org.grails.web.util.WebUtils
 
-import grails.artefact.controller.support.RequestForwarder
 import org.grails.web.util.WebUtils
 
 import javax.servlet.http.HttpServletResponse
 import groovy.transform.CompileStatic
-//import net.nosegrind.apiframework.Timer
+
 
 @CompileStatic
 class BatchInterceptor extends Params{
@@ -65,7 +63,7 @@ class BatchInterceptor extends Params{
 	}
 
 	boolean before(){
-		//println("##### BATCHINTERCEPTOR (BEFORE)")
+		//log.info('##### BATCHINTERCEPTOR (BEFORE)')
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 		boolean restAlt = (['OPTIONS','TRACE','HEAD'].contains(request.method))?true:false
@@ -159,7 +157,7 @@ class BatchInterceptor extends Params{
 	}
 
 	boolean after(){
-		//println("##### BATCHFILTER (AFTER)")
+		//log.info('##### BATCHFILTER (AFTER)')
 		try{
 			LinkedHashMap newModel = [:]
 
