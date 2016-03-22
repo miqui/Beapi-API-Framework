@@ -44,7 +44,6 @@ class ApiObjectService{
 	static transactional = false
 	
 	public initialize(){
-
 		try {
 			if(grailsApplication.config.apitoolkit.serverType=='master'){
 				String ioPath
@@ -210,13 +209,9 @@ class ApiObjectService{
 				methods['cacheversion'] = (!cache?.cacheversion)? 1 : cache['cacheversion']+1
 				
 				JSONObject apiVersion = json.VERSION[vers.key]
-				
-				//List temp = it.key.split('/')
-				//String actionname = temp[1]
+
 				String actionname = it.key
-				
-				//ApiStatuses error = new ApiStatuses()
-				
+
 				ApiDescriptor apiDescriptor
 				Map apiParams
 				
@@ -255,8 +250,6 @@ class ApiObjectService{
 				cache[vers.key].each(){ key1,val1 ->
 					if(!['deprecated','defaultAction','domainPackage'].contains(key1)){
 						apiCacheService.setApiCache(apiName,key1, val1, vers.key)
-						//val.doc = apiCacheService.generateApiDoc(apiName, key, vers.key)
-						//apiCacheService.resetApiCache(apiName,key,val)
 					}
 				}
 

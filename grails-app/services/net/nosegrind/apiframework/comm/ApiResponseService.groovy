@@ -29,27 +29,15 @@ package net.nosegrind.apiframework.comm
 
 import grails.util.Holders
 
-//import grails.application.springsecurity.SpringSecurityService
-
-import grails.web.http.HttpHeaders
-import net.nosegrind.apiframework.comm.ApiLayer
 
 import javax.servlet.forward.*
-import org.springframework.http.ResponseEntity
-
 import grails.web.servlet.mvc.GrailsParameterMap
-
 import org.grails.groovy.grails.commons.*
-import org.grails.validation.routines.UrlValidator
-import org.grails.web.util.GrailsApplicationAttributes
-//import org.grails.web.sitemesh.GrailsContentBufferingResponse
-
 import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.HttpServletRequest
 import net.nosegrind.apiframework.ApiDescriptor
 import grails.core.GrailsApplication
 import net.nosegrind.apiframework.*
-import net.nosegrind.apiframework.Timer
 import groovy.transform.CompileStatic
 
 @CompileStatic

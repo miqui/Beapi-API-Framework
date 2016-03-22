@@ -29,14 +29,10 @@ package net.nosegrind.apiframework.comm
 
 import net.nosegrind.apiframework.ApiDescriptor
 import javax.servlet.forward.*
-import net.nosegrind.apiframework.comm.ApiLayer
 import org.grails.groovy.grails.commons.*
 import grails.web.servlet.mvc.GrailsParameterMap
-//import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper
 import javax.servlet.http.HttpServletRequest
-import net.nosegrind.apiframework.*
 import groovy.transform.CompileStatic
-
 import javax.servlet.http.HttpServletResponse
 
 @CompileStatic
@@ -48,7 +44,6 @@ class ApiRequestService extends ApiLayer{
 
 
 	boolean handleApiRequest(ApiDescriptor cache, HttpServletRequest request, HttpServletResponse response, GrailsParameterMap params){
-		//println("#### [ApiRequestService : handleApiRequest ] ####")
 		try{
 			// CHECK ACCESS TO METHOD
 			List roles = cache['roles'] as List
@@ -80,8 +75,7 @@ class ApiRequestService extends ApiLayer{
 			}
 			return true
 		}catch(Exception e){
-			//throw new Exception("[ApiRequestService :: handleApiRequest] : Exception - full stack trace follows:",e)
-			println("[ApiRequestService :: handleApiRequest] : Exception - full stack trace follows:"+e)
+			throw new Exception("[ApiRequestService :: handleApiRequest] : Exception - full stack trace follows:",e)
 		}
 	}
 }

@@ -5,16 +5,11 @@
 package net.nosegrind.apiframework
 
 
-
-import net.nosegrind.apiframework.ErrorCodeDescriptor
-import net.nosegrind.apiframework.ParamsDescriptor
 import grails.validation.Validateable
 import grails.compiler.GrailsCompileStatic
 
 // name is name of the object used
 
-//@grails.validation.Validateable
-//@Validateable
 //@GrailsCompileStatic
 class ApiDescriptor implements Validateable {
 

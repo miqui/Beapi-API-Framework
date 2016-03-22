@@ -3,14 +3,9 @@
  *****************************************************************************/
 package net.nosegrind.apiframework;
 
-
 import grails.validation.Validateable
 //import grails.compiler.GrailsCompileStatic
-//import groovy.transform.TypeCheckingMode
 
-
-
-//@Validateable
 //@GrailsCompileStatic
 class ParamsDescriptor implements Validateable {
 

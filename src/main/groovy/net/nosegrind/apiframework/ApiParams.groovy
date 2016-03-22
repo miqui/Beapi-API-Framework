@@ -3,8 +3,7 @@
  *****************************************************************************/
 package net.nosegrind.apiframework
 
-import net.nosegrind.apiframework.ParamsDescriptor
-//import org.apache.commons.beanutils.BeanMap
+
 import java.beans.BeanInfo
 import java.beans.PropertyDescriptor
 import java.beans.Introspector
@@ -12,11 +11,6 @@ import java.lang.reflect.InvocationTargetException
 
 //@GrailsCompileStatic
 class ApiParams{
-
-	//def applicationContext
-	//def grailsApplication
-	//def apiDocService
-	//def springSecurityService
 
 	ParamsDescriptor param
 	
