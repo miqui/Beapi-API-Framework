@@ -1,6 +1,7 @@
 
 ![alt tag](https://cloud.githubusercontent.com/assets/274764/13708177/095061a0-e762-11e5-8c96-34bdda673fff.png)
-# Boomstick(tm) Api Framework
+# Boomstick(tm) Api Framework 
+### Documentation located at http://orubel.github.io/Boomstick-API-Framework/
 
 Fully reactive api framework providing automation and simplification of api's for scale. Some features include:
 
@@ -19,7 +20,7 @@ Fully reactive api framework providing automation and simplification of api's fo
 **FAQ**
 
 **Q: How hard is this to implement?**
-**A:** Can you write controllers and models? Thats all thats needed to implement this plugin. Just the most basic understanding of MVC implementation.
+**A:** Boomstick is 'Plug-N-Play'. Merely install the plugin and it takes care of the 'REST'. The only thing you have to do is build an IO state file for each controller. This enables us to separate all IO data from functionality so it can be shared with other services in the architecture.
 
 **Q: How do I implement the listener for IO state webhook on my proxy/Message queue?**
-**A:** It merely requires an endpoint to send the data to. As a side project, I may actually create a simple daemon in the future with ehCache to do this for people.
+**A:** It merely requires an endpoint to send the data to. As a side project, I may actually supply a simple daemon in the future with ehCache to do this for people.
