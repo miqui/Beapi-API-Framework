@@ -1,5 +1,5 @@
 
-![alt tag](https://cloud.githubusercontent.com/assets/274764/13708177/095061a0-e762-11e5-8c96-34bdda673fff.png)
+![alt tag](https://cloud.githubusercontent.com/assets/274764/13968629/179cad2c-f03b-11e5-89e2-3f39a0b1df36.png)
 # Boomstick(tm) Api Framework 
 ### Documentation located at http://orubel.github.io/Boomstick-API-Framework/
 
