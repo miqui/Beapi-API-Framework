@@ -4,6 +4,7 @@ buildscript {
         //grailsVersion = project.grailsVersion
     }
     repositories {
+        mavenCentral()
         mavenLocal()
         maven { url "https://repo.grails.org/grails/core" }
     }
@@ -17,7 +18,7 @@ plugins {
     id "com.jfrog.bintray" version "1.2"
 }
 
-version "0.2.1"
+version "0.2.1.1"
 group "org.grails.plugins"
 
 

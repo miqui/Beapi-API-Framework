@@ -40,7 +40,7 @@ import java.util.jar.JarException
 import java.util.jar.JarEntry
 
 class BoomstickApiFrameworkGrailsPlugin extends Plugin{
-	def version = "0.2.1"
+	def version = "0.2.1.1"
     def grailsVersion = "3.1.1 > *"
     def title = "Boomstick Api Framework" // Headline display name of the plugin
 	def author = "Owen Rubel"
