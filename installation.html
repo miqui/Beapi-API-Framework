@@ -56,10 +56,13 @@
   apply plugin: "org.grails.grails-web"
 </code></pre>
 
+<p>And while the plugin is in <b>BETA</b>, you will have to add the Maven Repository:</p>
+<pre><code>maven { url 'https://dl.bintray.com/nosegrind/plugins' }</code></pre>
+
         <p>You will also need the following dependencies:</p>
 <pre><code>
   dependencies {
-      compile 'org.grails.plugins:api-framework:0.2'
+      compile 'org.grails.plugins:api-framework:0.2.1.1'
       compile "org.springframework.boot:spring-boot-starter-logging"
       compile "org.springframework.boot:spring-boot-autoconfigure"
       compile "org.grails:grails-dependencies"
