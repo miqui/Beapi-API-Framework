@@ -105,7 +105,14 @@ class ApiFrameworkInterceptor extends Params{
 			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
 
 			LinkedHashMap cache = (params.controller)? apiCacheService.getApiCache(params.controller.toString()):[:]
-
+			if(params.controller=='apidoc'){
+				if(cache){
+					params.apiObject = (params.apiObjectVersion) ? params.apiObjectVersion : cache['currentStable']['value']
+					params.action = (params.action == null) ? cache[params.apiObject]['defaultAction'] : params.action
+					return true
+				}
+				return false
+			}else{
 				if(cache) {
 					params.apiObject = (params.apiObjectVersion) ? params.apiObjectVersion : cache['currentStable']['value']
 					params.action = (params.action == null) ? cache[params.apiObject]['defaultAction'] : params.action
@@ -118,6 +125,7 @@ class ApiFrameworkInterceptor extends Params{
 
 					// Check for REST alternatives
 					if (!restAlt) {
+
 						// Check that sent request params match expected endpoint params for principal ROLE
 						LinkedHashMap receives = cache[params.apiObject][params.action.toString()]['receives'] as LinkedHashMap
 						boolean requestKeysMatch = checkURIDefinitions(params, receives)
@@ -155,7 +163,7 @@ class ApiFrameworkInterceptor extends Params{
 					boolean result = apiRequestService.handleApiRequest(cachedEndpoint, request, response, params)
 					return result
 				}
-			//}
+			}
 			return false
 
 		}catch(Exception e){
@@ -165,17 +173,22 @@ class ApiFrameworkInterceptor extends Params{
 	}
 
 	boolean after(){
-		//log.info('##### FILTER (AFTER)')
+		log.info('##### FILTER (AFTER)')
 
 		try{
 			LinkedHashMap newModel = [:]
 
-			if (!model) {
-				render(status:HttpServletResponse.SC_NOT_FOUND , text: 'No resource returned / domain is empty')
-				return false
-			} else {
-				newModel = apiResponseService.convertModel(model)
+			if(params.controller!='apidoc') {
+				if (!model) {
+					render(status: HttpServletResponse.SC_NOT_FOUND, text: 'No resource returned / domain is empty')
+					return false
+				} else {
+					newModel = apiResponseService.convertModel(model)
+				}
+			}else{
+				newModel = model as LinkedHashMap
 			}
+
 
 			LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
 			ApiDescriptor cachedEndpoint = cache[params.apiObject][(String)params.action] as ApiDescriptor

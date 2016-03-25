@@ -96,7 +96,7 @@ abstract class ApiLayer{
 					break;
 			}
 
-			paramsList.removeAll(optionalParams)
+			paramsList?.removeAll(optionalParams)
 
 			if(!responseList.containsAll(paramsList)){
 
@@ -115,8 +115,7 @@ abstract class ApiLayer{
 			}
 
 		}catch(Exception e){
-			//throw new Exception("[ApiLayer :: parseURIDefinitions] : Exception - full stack trace follows:",e)
-			println("[ApiLayer :: parseURIDefinitions] : Exception - full stack trace follows:"+e)
+			throw new Exception("[ApiLayer :: parseURIDefinitions] : Exception - full stack trace follows:",e)
 		}
 	}
 

@@ -40,7 +40,6 @@ class ApiFrameworkUrlMappings {
         String metricsEntryPoint = "m${apiVersion}"
 
 
-
         "/login/$action" {
             controller = 'login'
             action = action

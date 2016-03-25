@@ -48,14 +48,18 @@ class ApiResponseService extends ApiLayer{
 
 
 	def handleApiResponse(ApiDescriptor cache, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
-		//println("#### [ApiResponseService : handleApiResponse ] ####")
 		try{
 			response.setHeader('Authorization', cache['roles'].toString().join(', '))
 			List responseList = getApiParams((LinkedHashMap)cache['returns'])
-			LinkedHashMap result = parseURIDefinitions(model,responseList)
+			LinkedHashMap content = [:]
+			if(params.controller!='apidoc') {
+				LinkedHashMap result = parseURIDefinitions(model, responseList)
 
-			// will parse empty map the same as map with content
-			LinkedHashMap content = parseResponseMethod(request, params, result)
+				// will parse empty map the same as map with content
+				content = parseResponseMethod(request, params, result)
+			}else{
+				content = parseResponseMethod(request, params, model)
+			}
 			return content
 
 		}catch(Exception e){

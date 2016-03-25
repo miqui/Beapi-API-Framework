@@ -129,7 +129,21 @@ class ApiObjectService{
 		
 		return ioSet
 	}
-	
+
+	public LinkedHashMap convertApiDescriptor(ApiDescriptor desc){
+		LinkedHashMap newDesc = [
+			'empty':false,
+			'method':desc.method,
+			'fkeys':desc.fkeys,
+			'description':desc.description,
+			'roles':desc.roles,
+			'batchRoles':desc.batchRoles,
+			'receives':desc.receives,
+			'returns':desc.returns
+		]
+		return newDesc
+	}
+
 	private ApiDescriptor createApiDescriptor(String apiname,String apiMethod, String apiDescription, List apiRoles, List batchRoles, String uri, JSONObject values, JSONObject json){
 		LinkedHashMap<String,ParamsDescriptor> apiObject = [:]
 		ApiParams param = new ApiParams()

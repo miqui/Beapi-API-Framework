@@ -66,7 +66,7 @@ class CorsInterceptor {
 	}
 
 	boolean after() {
-		//log.info('##### CORS FILTER (BEFORE)')
+		//log.info('##### CORS FILTER (AFTER)')
 		return true
 	}
 
