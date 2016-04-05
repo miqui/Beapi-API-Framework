@@ -173,7 +173,7 @@ class ApiFrameworkInterceptor extends Params{
 	}
 
 	boolean after(){
-		log.info('##### FILTER (AFTER)')
+		//log.info('##### FILTER (AFTER)')
 
 		try{
 			LinkedHashMap newModel = [:]
