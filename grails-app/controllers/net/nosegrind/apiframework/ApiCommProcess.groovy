@@ -30,6 +30,7 @@ package net.nosegrind.apiframework
 import grails.converters.JSON
 import grails.converters.XML
 import javax.servlet.http.HttpServletRequest
+import java.text.SimpleDateFormat
 
 import static groovyx.gpars.GParsPool.withPool
 import grails.converters.JSON
@@ -41,18 +42,23 @@ import javax.servlet.forward.*
 import org.grails.groovy.grails.commons.*
 
 import grails.util.Holders
+import org.grails.core.DefaultGrailsDomainClass
+import net.nosegrind.apiframework.ApiDescriptor
+import javax.servlet.http.HttpServletResponse
 
-abstract class Params{
+abstract class ApiCommProcess{
+
+    def springSecurityService
+    ApiCacheService apiCacheService
 
     List formats = ['text/html','text/json','application/json','text/xml','application/xml']
-    List optionalParams = ['method','format','contentType','encoding','action','controller','v','apiCombine', 'apiObject','entryPoint','uri','testvar']
+    List optionalParams = ['method','format','contentType','encoding','action','controller','v','apiCombine', 'apiObject','entryPoint','uri']
+
     boolean batchEnabled = Holders.grailsApplication.config.apitoolkit.batching.enabled
     boolean chainEnabled = Holders.grailsApplication.config.apitoolkit.chaining.enabled
 
 
-    /* set params for this 'loop'; these will NOT forward
-    *
-     */
+    // set params for this 'loop'; these will NOT forward
     void setBatchParams(GrailsParameterMap params){
         if (batchEnabled) {
             def batchVars = request.getAttribute(request.format.toUpperCase())
@@ -63,12 +69,12 @@ abstract class Params{
         }
     }
 
+/*
     void setChainParams(GrailsParameterMap params){
         if (chainEnabled) {
             params.apiChain = content?.chain
         }
     }
-
 
     LinkedHashMap getApiObjectParams(LinkedHashMap definitions){
         try{
@@ -88,8 +94,9 @@ abstract class Params{
         }
         return [:]
     }
+*/
 
-    List getApiParams(LinkedHashMap definitions){
+    private List getApiParams(LinkedHashMap definitions){
         try{
             List apiList = []
             definitions.each(){ key, val ->
@@ -106,6 +113,7 @@ abstract class Params{
         }
     }
 
+
     boolean checkRequestMethod(String method, boolean restAlt){
         if(!restAlt) {
             return (method == request.method.toUpperCase()) ? true : false
@@ -113,9 +121,10 @@ abstract class Params{
         return true
     }
 
+    // TODO: put in OPTIONAL toggle in application.yml to allow for this check
     boolean checkURIDefinitions(GrailsParameterMap params,LinkedHashMap requestDefinitions){
         List reservedNames = ['batchLength','batchInc']
-        // put in check to see if if app.properties allow for this check
+
         try{
             List requestList = getApiParams(requestDefinitions)
 
@@ -160,10 +169,12 @@ abstract class Params{
         return ['apiToolkitContent':data.content,'apiToolkitType':request.getAttribute('contentType'),'apiToolkitEncoding':encoding]
     }
 
+    /*
     List getRedirectParams(GrailsParameterMap params){
         def uri = grailsApplication.mainContext.servletContext.getControllerActionUri(request)
         return uri[1..(uri.size()-1)].split('/')
     }
+    */
 
     Map getMethodParams(GrailsParameterMap params){
         try{
@@ -271,7 +282,7 @@ abstract class Params{
         }
     }
 
-
+    // Used by getApiDoc
     private String processJson(LinkedHashMap returns){
         // TODO: Need to compare multiple authorities
         try{
@@ -321,4 +332,58 @@ abstract class Params{
         }
     }
 
+    LinkedHashMap convertModel(Map map){
+        try{
+            LinkedHashMap newMap = [:]
+            String k = map.entrySet().toList().first().key
+            if(map && (!map?.response && !map?.metaClass && !map?.params)){
+                if(grailsApplication.isDomainClass(map[k].getClass())){
+                    newMap = formatDomainObject(map[k])
+                    return newMap
+                }else if(['class java.util.LinkedList','class java.util.ArrayList'].contains(map[k].getClass())) {
+                    newMap = formatList(map[k])
+                    return newMap
+                }else if(['class java.util.Map','class java.util.LinkedHashMap'].contains(map[k].getClass())) {
+                    newMap = formatMap(map[k])
+                    return newMap
+                }
+            }
+            return newMap
+        }catch(Exception e){
+            throw new Exception("[ApiResponseService :: convertModel] : Exception - full stack trace follows:",e)
+        }
+    }
+
+    // PostProcessService
+    LinkedHashMap formatDomainObject(Object data){
+        try{
+            LinkedHashMap newMap = [:]
+
+            newMap.put('id',data?.id)
+            newMap.put('version',data?.version)
+
+            def d = new DefaultGrailsDomainClass(data.class)
+            d.persistentProperties.each() { it ->
+                newMap[it.name] = (grailsApplication.isDomainClass(data[it.name].getClass())) ? data."${it.name}".id : data[it.name]
+            }
+            return newMap
+        }catch(Exception e){
+            throw new Exception("[ApiResponseService :: formatDomainObject] : Exception - full stack trace follows:",e)
+        }
+    }
+
+    // PostProcessService
+    LinkedHashMap formatList(List list){
+        LinkedHashMap newMap = [:]
+        list.eachWithIndex(){ val, key ->
+            if(val){
+                if(grailsApplication.isDomainClass(val.getClass())){
+                    newMap[key]=formatDomainObject(val)
+                }else{
+                    newMap[key] = ((val in java.util.ArrayList || val in java.util.List) || val in java.util.Map)?val:val.toString()
+                }
+            }
+        }
+        return newMap
+    }
 }
