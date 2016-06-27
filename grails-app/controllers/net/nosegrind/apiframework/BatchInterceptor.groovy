@@ -32,8 +32,8 @@ import grails.core.GrailsApplication
 import grails.plugin.springsecurity.SpringSecurityService
 import grails.util.Metadata
 import groovy.json.JsonSlurper
-import net.nosegrind.apiframework.comm.BatchRequestService
-import net.nosegrind.apiframework.comm.BatchResponseService
+//import net.nosegrind.apiframework.comm.BatchRequestService
+//import net.nosegrind.apiframework.comm.BatchResponseService
 import org.grails.web.util.WebUtils
 
 import org.grails.web.util.WebUtils
@@ -43,15 +43,15 @@ import groovy.transform.CompileStatic
 
 
 @CompileStatic
-class BatchInterceptor extends Params{
+class BatchInterceptor extends ApiCommLayer{
 
-	int order = HIGHEST_PRECEDENCE + 999
+	//int order = HIGHEST_PRECEDENCE + 999
 
 	@Resource
 	GrailsApplication grailsApplication
 
-	BatchRequestService batchRequestService
-	BatchResponseService batchResponseService
+	//BatchRequestService batchRequestService
+	//BatchResponseService batchResponseService
 	ApiCacheService apiCacheService
 	SpringSecurityService springSecurityService
 
@@ -63,7 +63,7 @@ class BatchInterceptor extends Params{
 	}
 
 	boolean before(){
-		//log.info('##### BATCHINTERCEPTOR (BEFORE)')
+		log.info('##### BATCHINTERCEPTOR (BEFORE)')
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 		boolean restAlt = (['OPTIONS','TRACE','HEAD'].contains(request.method))?true:false
@@ -143,7 +143,7 @@ class BatchInterceptor extends Params{
 				}
 
 				// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
-				boolean result = batchRequestService.handleApiRequest(cache[params.apiObject.toString()][params.action.toString()], request, response, params)
+				boolean result = handleBatchRequest(cache[params.apiObject.toString()][params.action.toString()], request, response, params)
 				return result
 			}
 
@@ -165,7 +165,7 @@ class BatchInterceptor extends Params{
 				render(status:HttpServletResponse.SC_NOT_FOUND , text: 'No resource returned')
 				return false
 			} else {
-				newModel = batchResponseService.convertModel(model)
+				newModel = convertModel(model)
 			}
 
 			LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
@@ -180,7 +180,7 @@ class BatchInterceptor extends Params{
 				return false
 			}
 
-			content = batchResponseService.handleApiResponse(cache[params.apiObject][params.action.toString()],request,response,newModel,params) as LinkedHashMap
+			content = handleBatchResponse(cache[params.apiObject][params.action.toString()],request,response,newModel,params) as LinkedHashMap
 
 			if(content){
 				render(text:content.apiToolkitContent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)

@@ -29,6 +29,8 @@ package net.nosegrind.apiframework
 
 import grails.converters.JSON
 import grails.converters.XML
+
+import javax.annotation.Resource
 import javax.servlet.http.HttpServletRequest
 import java.text.SimpleDateFormat
 
@@ -36,19 +38,22 @@ import static groovyx.gpars.GParsPool.withPool
 import grails.converters.JSON
 import grails.converters.XML
 import grails.web.servlet.mvc.GrailsParameterMap
-import groovy.json.JsonSlurper
 
 import javax.servlet.forward.*
 import org.grails.groovy.grails.commons.*
-
+import grails.core.GrailsApplication
 import grails.util.Holders
 import org.grails.core.DefaultGrailsDomainClass
-import net.nosegrind.apiframework.ApiDescriptor
-import javax.servlet.http.HttpServletResponse
+import org.springframework.beans.factory.annotation.Autowired
+import groovy.transform.CompileStatic
 
+// extended by ApiCommLayer
+// TODO : @CompileStatic
 abstract class ApiCommProcess{
 
-    def springSecurityService
+    @Resource
+    GrailsApplication grailsApplication
+
     ApiCacheService apiCacheService
 
     List formats = ['text/html','text/json','application/json','text/xml','application/xml']
@@ -96,7 +101,7 @@ abstract class ApiCommProcess{
     }
 */
 
-    private List getApiParams(LinkedHashMap definitions){
+    public List getApiParams(LinkedHashMap definitions){
         try{
             List apiList = []
             definitions.each(){ key, val ->
@@ -113,6 +118,42 @@ abstract class ApiCommProcess{
         }
     }
 
+    boolean checkAuth(HttpServletRequest request, List roles){
+
+        try {
+            boolean hasAuth = false
+            if (springSecurityService.loggedIn) {
+                def principal = springSecurityService.principal
+                List userRoles = principal.authorities*.authority
+                roles.each {
+                    if (userRoles.contains(it) || it=='permitAll') {
+                        hasAuth = true
+                    }
+                }
+            }else{
+                //println("NOT LOGGED IN!!!")
+            }
+            return hasAuth
+        }catch(Exception e) {
+            //throw new Exception("[ApiLayer :: checkAuth] : Exception - full stack trace follows:",e)
+            println("[ApiLayer :: checkAuth] : Exception - full stack trace follows:"+e)
+        }
+    }
+
+
+    boolean checkDeprecationDate(String deprecationDate){
+        try{
+            def ddate = new SimpleDateFormat("MM/dd/yyyy").parse(deprecationDate)
+            def deprecated = new Date(ddate.time)
+            def today = new Date()
+            if(deprecated < today ) {
+                return true
+            }
+            return false
+        }catch(Exception e){
+            throw new Exception("[ApiLayer :: checkDeprecationDate] : Exception - full stack trace follows:",e)
+        }
+    }
 
     boolean checkRequestMethod(String method, boolean restAlt){
         if(!restAlt) {
@@ -146,6 +187,42 @@ abstract class ApiCommProcess{
         return false
     }
 
+    LinkedHashMap parseResponseMethod(HttpServletRequest request, GrailsParameterMap params, LinkedHashMap result){
+        LinkedHashMap data = [:]
+        String defaultEncoding = Holders.grailsApplication.config.apitoolkit.encoding
+        String encoding = request.getHeader('accept-encoding')?request.getHeader('accept-encoding'):defaultEncoding
+        switch(request.method) {
+            case 'PURGE':
+                // cleans cache; disabled for now
+                break;
+            case 'TRACE':
+                break;
+            case 'HEAD':
+                break;
+            case 'OPTIONS':
+                String doc = getApiDoc(params)
+                data = ['content':doc,'contentType':request.getAttribute('contentType'),'encoding':encoding]
+                break;
+            case 'GET':
+            case 'PUT':
+            case 'POST':
+            case 'DELETE':
+                String content
+                switch(request.format.toUpperCase()){
+                    case 'XML':
+                        content = result as XML
+                        break
+                    case 'JSON':
+                    default:
+                        content = result as JSON
+                        data = ['content':content,'contentType':request.getAttribute('contentType'),'encoding':encoding]
+                }
+                break;
+        }
+
+        return ['apiToolkitContent':data.content,'apiToolkitType':request.getAttribute('contentType'),'apiToolkitEncoding':encoding]
+    }
+
     LinkedHashMap parseRequestMethod(HttpServletRequest request, GrailsParameterMap params){
         LinkedHashMap data = [:]
         String defaultEncoding = grailsApplication.config.apitoolkit.encoding
@@ -167,6 +244,60 @@ abstract class ApiCommProcess{
         }
 
         return ['apiToolkitContent':data.content,'apiToolkitType':request.getAttribute('contentType'),'apiToolkitEncoding':encoding]
+    }
+
+    LinkedHashMap parseURIDefinitions(LinkedHashMap model,List responseList){
+        try{
+            String msg = 'Error. Invalid variables being returned. Please see your administrator'
+
+            List paramsList
+            Integer msize = model.size()
+            switch(msize) {
+                case 0:
+                    return [:]
+                    break;
+                case 1:
+                    paramsList = (model.keySet()!=['id'])?model.entrySet().iterator().next() as List : model.keySet() as List
+                    break;
+                default:
+                    paramsList = model.keySet() as List
+                    break;
+            }
+
+            paramsList?.removeAll(optionalParams)
+
+            if(!responseList.containsAll(paramsList)){
+
+                paramsList.removeAll(responseList)
+                paramsList.each() { it2 ->
+                    model.remove("${it2}".toString())
+                }
+
+                if(!paramsList){
+                    return [:]
+                }else{
+                    return model
+                }
+            }else{
+                return model
+            }
+
+        }catch(Exception e){
+            throw new Exception("[ApiLayer :: parseURIDefinitions] : Exception - full stack trace follows:",e)
+        }
+    }
+
+    boolean isRequestMatch(String protocol,String method){
+        if(['TRACERT','OPTIONS','HEAD'].contains(method)){
+            return true
+        }else{
+            if(protocol == method){
+                return true
+            }else{
+                return false
+            }
+        }
+        return false
     }
 
     /*
@@ -337,13 +468,13 @@ abstract class ApiCommProcess{
             LinkedHashMap newMap = [:]
             String k = map.entrySet().toList().first().key
             if(map && (!map?.response && !map?.metaClass && !map?.params)){
-                if(grailsApplication.isDomainClass(map[k].getClass())){
+                if (grailsApplication.isDomainClass(map[k].getClass())) {
                     newMap = formatDomainObject(map[k])
                     return newMap
-                }else if(['class java.util.LinkedList','class java.util.ArrayList'].contains(map[k].getClass())) {
+                } else if (['class java.util.LinkedList', 'class java.util.ArrayList'].contains(map[k].getClass())) {
                     newMap = formatList(map[k])
                     return newMap
-                }else if(['class java.util.Map','class java.util.LinkedHashMap'].contains(map[k].getClass())) {
+                } else if (['class java.util.Map', 'class java.util.LinkedHashMap'].contains(map[k].getClass())) {
                     newMap = formatMap(map[k])
                     return newMap
                 }
@@ -386,4 +517,6 @@ abstract class ApiCommProcess{
         }
         return newMap
     }
+
+
 }

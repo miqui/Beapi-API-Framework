@@ -39,7 +39,6 @@ import org.grails.groovy.grails.commons.*
 import grails.core.GrailsApplication
 import net.nosegrind.apiframework.ApiDescriptor
 
-
 import static groovyx.gpars.GParsPool.withPool
 
 class ApiCacheService{
@@ -157,7 +156,6 @@ class ApiCacheService{
 		List cacheNames = []
 		cacheNames = grailsCacheManager?.getCache('ApiCache')?.getAllKeys() as List
 		return cacheNames
-
 	}
 
 	/*

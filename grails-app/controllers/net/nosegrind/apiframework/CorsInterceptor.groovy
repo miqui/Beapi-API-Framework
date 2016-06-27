@@ -7,6 +7,7 @@ import grails.util.Environment
 import groovy.transform.CompileStatic
 import grails.compiler.GrailsCompileStatic
 
+
 /**
  * Add Cross-Origin Resource Sharing (CORS) headers for Grails applications. These headers make it possible for
  * Javascript code served from a different host to easily make calls to your application.
@@ -17,6 +18,7 @@ import grails.compiler.GrailsCompileStatic
 class CorsInterceptor {
 
 	int order = HIGHEST_PRECEDENCE + 999
+
 
 	CorsInterceptor() {
 		matchAll() // match all controllers

@@ -48,21 +48,12 @@ class ApiObjectService{
 			if(grailsApplication.config.apitoolkit.serverType=='master'){
 				String ioPath
 				if(grailsApplication.isWarDeployed()){
-					//ioPath = Holders.servletContext.getRealPath('/')
 					ioPath = grailsApplication.mainContext.servletContext.getRealPath('/')
-					if(Environment.current == Environment.DEVELOPMENT || Environment.current == Environment.TEST){
-						ioPath += 'WEB-INF/classes/iostate'
-					}else{
+					if(Environment.current == Environment.DEVELOPMENT || Environment.current == Environment.TEST) {
 						ioPath += 'WEB-INF/classes/iostate'
 					}
 				}else{
-					if(Environment.current == Environment.DEVELOPMENT || Environment.current == Environment.TEST){
-						//ioPath = grailsApplication.mainContext.getResources("conf/iostate").path
-						ioPath = 'src/iostate'
-					}else{
-						ioPath = 'src/iostate'
-					}
-					
+					ioPath = 'src/iostate'
 				}
 				parseFiles(ioPath)
 			}

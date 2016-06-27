@@ -36,8 +36,8 @@ import net.nosegrind.apiframework.ApiDescriptor
 import grails.plugin.springsecurity.SpringSecurityService
 
 import groovy.json.JsonSlurper
-import net.nosegrind.apiframework.comm.ApiRequestService
-import net.nosegrind.apiframework.comm.ApiResponseService
+//import net.nosegrind.apiframework.comm.ApiRequestService
+//import net.nosegrind.apiframework.comm.ApiResponseService
 import grails.util.Metadata
 
 import javax.servlet.http.HttpServletRequest
@@ -46,15 +46,15 @@ import groovy.transform.CompileStatic
 
 
 @CompileStatic
-class ApiFrameworkInterceptor extends Params{
+class ApiFrameworkInterceptor extends ApiCommLayer{
 
-	//int order = HIGHEST_PRECEDENCE + 998
+	int order = HIGHEST_PRECEDENCE + 998
 
 	@Resource
 	GrailsApplication grailsApplication
 
-	ApiRequestService apiRequestService
-	ApiResponseService apiResponseService
+	//ApiRequestService apiRequestService
+	//ApiResponseService apiResponseService
 	ApiCacheService apiCacheService
 	SpringSecurityService springSecurityService
 
@@ -69,12 +69,11 @@ class ApiFrameworkInterceptor extends Params{
 	boolean before(){
 		//log.info('##### FILTER (BEFORE)')
 
+		String format = (request?.format)?request.format:'JSON';
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 		boolean restAlt = (['OPTIONS','TRACE','HEAD'].contains(request.method))?true:false
 
 		// Init params
-		String format =request.format.toUpperCase()
-
 		if (['XML', 'JSON'].contains(format)) {
 			LinkedHashMap dataParams = [:]
 			switch (format) {
@@ -101,10 +100,13 @@ class ApiFrameworkInterceptor extends Params{
 			}
 		}
 
+
 		try{
 			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
 
 			LinkedHashMap cache = (params.controller)? apiCacheService.getApiCache(params.controller.toString()):[:]
+
+
 			if(params.controller=='apidoc'){
 				if(cache){
 					params.apiObject = (params.apiObjectVersion) ? params.apiObjectVersion : cache['currentStable']['value']
@@ -160,10 +162,13 @@ class ApiFrameworkInterceptor extends Params{
 
 					// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
 					ApiDescriptor cachedEndpoint = cache[(String)params.apiObject][(String)params.action] as ApiDescriptor
-					boolean result = apiRequestService.handleApiRequest(cachedEndpoint, request, response, params)
+					boolean result = handleApiRequest(cachedEndpoint, request, response, params)
+
 					return result
 				}
 			}
+			// no cache found
+
 			return false
 
 		}catch(Exception e){
@@ -174,7 +179,6 @@ class ApiFrameworkInterceptor extends Params{
 
 	boolean after(){
 		//log.info('##### FILTER (AFTER)')
-
 		try{
 			LinkedHashMap newModel = [:]
 
@@ -183,7 +187,7 @@ class ApiFrameworkInterceptor extends Params{
 					render(status: HttpServletResponse.SC_NOT_FOUND, text: 'No resource returned / domain is empty')
 					return false
 				} else {
-					newModel = apiResponseService.convertModel(model)
+					newModel = convertModel(model)
 				}
 			}else{
 				newModel = model as LinkedHashMap
@@ -192,7 +196,7 @@ class ApiFrameworkInterceptor extends Params{
 
 			LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
 			ApiDescriptor cachedEndpoint = cache[params.apiObject][(String)params.action] as ApiDescriptor
-			LinkedHashMap content = apiResponseService.handleApiResponse(cachedEndpoint,request,response,newModel,params) as LinkedHashMap
+			LinkedHashMap content = handleApiResponse(cachedEndpoint,request,response,newModel,params) as LinkedHashMap
 
 			if(content){
 				render(text:content.apiToolkitContent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)

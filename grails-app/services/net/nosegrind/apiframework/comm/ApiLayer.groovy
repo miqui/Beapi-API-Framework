@@ -33,7 +33,7 @@ import grails.util.Holders
 import org.grails.validation.routines.UrlValidator
 import org.grails.web.util.GrailsApplicationAttributes
 import org.grails.core.DefaultGrailsDomainClass
-import javax.servlet.http.HttpServletResponse
+
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.forward.*
 import java.text.SimpleDateFormat
@@ -60,6 +60,8 @@ abstract class ApiLayer{
 	}
 
 
+
+	// BOTH
 	List getApiParams(LinkedHashMap definitions){
 		try{
 			List apiList = []
@@ -78,6 +80,8 @@ abstract class ApiLayer{
 		}
 	}
 
+
+	// BOTH
 	LinkedHashMap parseURIDefinitions(LinkedHashMap model,List responseList){
 		try{
 			String msg = 'Error. Invalid variables being returned. Please see your administrator'
@@ -244,25 +248,7 @@ abstract class ApiLayer{
 		}
 	}
 
-	boolean checkAuth(HttpServletRequest request, List roles){
-		try {
-			boolean hasAuth = false
-			if (springSecurityService.loggedIn) {
-				def principal = springSecurityService.principal
-				List userRoles = principal.authorities*.authority
-				roles.each {
-					if (userRoles.contains(it) || it=='permitAll') {
-						hasAuth = true
-					}
-				}
-			}else{
-				//println("NOT LOGGED IN!!!")
-			}
-			return hasAuth
-		}catch(Exception e) {
-			throw new Exception("[ApiLayer :: checkAuth] : Exception - full stack trace follows:",e)
-		}
-	}
+
 
 	// set version,controller,action / controller,action
 	List parseUri(String uri, String entrypoint){
@@ -284,19 +270,7 @@ abstract class ApiLayer{
 	}
 
 
-	boolean checkDeprecationDate(String deprecationDate){
-		try{
-			def ddate = new SimpleDateFormat("MM/dd/yyyy").parse(deprecationDate)
-			def deprecated = new Date(ddate.time)
-			def today = new Date()
-			if(deprecated < today ) {
-				return true
-			}
-			return false
-		}catch(Exception e){
-			throw new Exception("[ApiLayer :: checkDeprecationDate] : Exception - full stack trace follows:",e)
-		}
-	}
+
 
 	// api call now needs to detect request method and see if it matches anno request method
 	boolean isApiCall(){
@@ -447,18 +421,7 @@ abstract class ApiLayer{
 		}
 	}
 
-	boolean isRequestMatch(String protocol,String method){
-		if(['TRACERT','OPTIONS','HEAD'].contains(method)){
-			return true
-		}else{
-			if(protocol == method){
-				return true
-			}else{
-				return false
-			}
-		}
-		return false
-	}
+
 
 	boolean validateUrl(String url){
 		String[] schemes = ["http","https"]
@@ -488,59 +451,9 @@ abstract class ApiLayer{
 		return ['validation.customRuntimeMessage', 'ApiCommandObject does not validate. Check that your data validates or that requesting user has access to api method and all fields in api command object.']
 	}
 
-	LinkedHashMap convertModel(Map map){
-		try{
-			LinkedHashMap newMap = [:]
-			String k = map.entrySet().toList().first().key
-			if(map && (!map?.response && !map?.metaClass && !map?.params)){
-				if(grailsApplication.isDomainClass(map[k].getClass())){
-					newMap = formatDomainObject(map[k])
-					return newMap
-				}else if(['class java.util.LinkedList','class java.util.ArrayList'].contains(map[k].getClass())) {
-					newMap = formatList(map[k])
-					return newMap
-				}else if(['class java.util.Map','class java.util.LinkedHashMap'].contains(map[k].getClass())) {
-					newMap = formatMap(map[k])
-					return newMap
-				}
-			}
-			return newMap
-		}catch(Exception e){
-			throw new Exception("[ApiResponseService :: convertModel] : Exception - full stack trace follows:",e)
-		}
-	}
 
-	LinkedHashMap formatDomainObject(Object data){
-		try{
-			LinkedHashMap newMap = [:]
 
-			newMap.put('id',data?.id)
-			newMap.put('version',data?.version)
-
-			def d = new DefaultGrailsDomainClass(data.class)
-			d.persistentProperties.each() { it ->
-				newMap[it.name] = (grailsApplication.isDomainClass(data[it.name].getClass())) ? data."${it.name}".id : data[it.name]
-			}
-			return newMap
-		}catch(Exception e){
-			throw new Exception("[ApiResponseService :: formatDomainObject] : Exception - full stack trace follows:",e)
-		}
-	}
-
-	LinkedHashMap formatList(List list){
-		LinkedHashMap newMap = [:]
-		list.eachWithIndex(){ val, key ->
-			if(val){
-				if(grailsApplication.isDomainClass(val.getClass())){
-					newMap[key]=formatDomainObject(val)
-				}else{
-					newMap[key] = ((val in java.util.ArrayList || val in java.util.List) || val in java.util.Map)?val:val.toString()
-				}
-			}
-		}
-		return newMap
-	}
-
+	// PostProcessService
 	LinkedHashMap formatMap(Map map) {
 		LinkedHashMap newMap = [:]
 

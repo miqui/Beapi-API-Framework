@@ -30,5 +30,6 @@ if(Environment.current == Environment.DEVELOPMENT) {
             }
         }
         logger("StackTrace", ERROR, ['FULL_STACKTRACE'], false )
+        logger("net.nosegrind.apiframework", INFO, ['STDOUT'], false)
     }
 }
