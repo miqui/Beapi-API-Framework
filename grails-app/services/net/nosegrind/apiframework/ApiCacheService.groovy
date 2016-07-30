@@ -28,16 +28,16 @@
 package net.nosegrind.apiframework
 
 import grails.converters.JSON
-import grails.converters.XML
+//import grails.converters.XML
 import grails.util.Metadata
 import grails.plugin.cache.CacheEvict
-import grails.plugin.cache.Cacheable
+//import grails.plugin.cache.Cacheable
 import grails.plugin.cache.CachePut
-import grails.plugin.cache.GrailsValueWrapper
+//import grails.plugin.cache.GrailsValueWrapper
 import grails.plugin.cache.GrailsCacheManager
 import org.grails.groovy.grails.commons.*
 import grails.core.GrailsApplication
-import net.nosegrind.apiframework.ApiDescriptor
+//import net.nosegrind.apiframework.ApiDescriptor
 
 import static groovyx.gpars.GParsPool.withPool
 
@@ -48,8 +48,6 @@ class ApiCacheService{
 	GrailsApplication grailsApplication
 	GrailsCacheManager grailsCacheManager
 
-
-	
 	/*
 	 * Only flush on RESTART.
 	 * DO NOT flush while LIVE!!!
@@ -205,7 +203,7 @@ class ApiCacheService{
 			}
 			return jsonReturn
 		}catch(Exception e){
-			throw new Exception("[ApiLayerService :: processJson] : Exception - full stack trace follows:",e)
+			throw new Exception("[ApiCacheService :: processJson] : Exception - full stack trace follows:",e)
 		}
 	}
 }

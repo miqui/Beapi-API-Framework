@@ -45,7 +45,7 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class BatchInterceptor extends ApiCommLayer{
 
-	//int order = HIGHEST_PRECEDENCE + 999
+	int order = HIGHEST_PRECEDENCE + 998
 
 	@Resource
 	GrailsApplication grailsApplication

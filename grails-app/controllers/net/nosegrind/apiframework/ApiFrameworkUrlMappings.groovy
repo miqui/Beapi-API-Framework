@@ -29,6 +29,7 @@ package net.nosegrind.apiframework
 
 import grails.util.Metadata
 
+
 class ApiFrameworkUrlMappings {
 
     static mappings = {
@@ -37,7 +38,7 @@ class ApiFrameworkUrlMappings {
         String api = "v${apiVersion}"
         String batchEntryPoint = "b${apiVersion}"
         String chainEntryPoint = "c${apiVersion}"
-        String metricsEntryPoint = "m${apiVersion}"
+        String traceEntryPoint = "t${apiVersion}"
 
 
         "/login/$action" {
@@ -128,6 +129,43 @@ class ApiFrameworkUrlMappings {
             }
         }
 
+
+        // TRACE API ENDPOINTS
+        "/$traceEntryPoint/$controller/$action"{
+            if(action?.toInteger()==action && action!=null){
+                id=action
+                action = null
+            }
+            entryPoint = traceEntryPoint
+            parseRequest = true
+        }
+
+        "/$traceEntryPoint/$controller/$action/$id?**"{
+            entryPoint = traceEntryPoint
+            parseRequest = true
+        }
+
+        "/${traceEntryPoint}-$apiObjectVersion/$controller/$action/$id**" {
+            entryPoint = traceEntryPoint
+            apiObjectVersion = apiObjectVersion
+            parseRequest = true
+            constraints {
+                apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
+            }
+        }
+
+        "/${traceEntryPoint}-$apiObjectVersion/$controller/$action" {
+            if(action?.toInteger()==action && action!=null){
+                id=action
+                action = null
+            }
+            entryPoint = traceEntryPoint
+            apiObjectVersion = apiObjectVersion
+            parseRequest = true
+            constraints {
+                apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
+            }
+        }
 
         "200"{
             id = '200'

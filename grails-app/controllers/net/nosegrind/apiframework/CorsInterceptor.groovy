@@ -1,8 +1,8 @@
 package net.nosegrind.apiframework
 
 
-import javax.annotation.Resource
-import grails.core.GrailsApplication
+//import javax.annotation.Resource
+//import grails.core.GrailsApplication
 import grails.util.Environment
 import groovy.transform.CompileStatic
 import grails.compiler.GrailsCompileStatic

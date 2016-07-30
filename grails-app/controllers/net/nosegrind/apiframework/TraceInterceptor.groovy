@@ -27,11 +27,13 @@
 
 package net.nosegrind.apiframework
 
+import grails.converters.JSON
 import javax.annotation.Resource
 import grails.core.GrailsApplication
 //import net.nosegrind.apiframework.ApiDescriptor
 import grails.plugin.springsecurity.SpringSecurityService
 import groovy.json.JsonSlurper
+import groovy.util.XmlSlurper;
 import grails.util.Metadata
 
 //import javax.servlet.http.HttpServletRequest
@@ -40,9 +42,9 @@ import groovy.transform.CompileStatic
 
 
 @CompileStatic
-class ApiFrameworkInterceptor extends ApiCommLayer{
+class TraceInterceptor extends TraceCommLayer{
 
-	int order = HIGHEST_PRECEDENCE + 999
+	int order = HIGHEST_PRECEDENCE + 997
 
 	@Resource
 	GrailsApplication grailsApplication
@@ -50,18 +52,20 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 	//ApiRequestService apiRequestService
 	//ApiResponseService apiResponseService
 	ApiCacheService apiCacheService
+	TraceService traceService
 	SpringSecurityService springSecurityService
 
 	// TODO: detect and assign apiObjectVersion from uri
-	String entryPoint = "v${Metadata.current.getProperty(Metadata.APPLICATION_VERSION, String.class)}"
+	String entryPoint = "t${Metadata.current.getProperty(Metadata.APPLICATION_VERSION, String.class)}"
 
-	ApiFrameworkInterceptor(){
+	TraceInterceptor(){
 		// TODO: detect and assign apiObjectVersion from uri
 		match(uri:"/${entryPoint}/**")
 	}
 
 	boolean before(){
 		//log.info('##### FILTER (BEFORE)')
+		traceService.startTrace('TraceInterceptor','before')
 
 		String format = (request?.format)?request.format:'JSON';
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
@@ -105,9 +109,10 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 				if(cache){
 					params.apiObject = (params.apiObjectVersion) ? params.apiObjectVersion : cache['currentStable']['value']
 					params.action = (params.action == null) ? cache[params.apiObject]['defaultAction'] : params.action
+					traceService.endTrace('TraceInterceptor','before')
 					return true
 				}
-				return false
+				// TODO : return false and render message/error code ???
 			}else{
 				if(cache) {
 					params.apiObject = (params.apiObjectVersion) ? params.apiObjectVersion : cache['currentStable']['value']
@@ -116,6 +121,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 					String expectedMethod = cache[params.apiObject][params.action.toString()]['method'] as String
 					if(!checkRequestMethod(expectedMethod,restAlt)) {
 						render(status: HttpServletResponse.SC_BAD_REQUEST, text: "Expected request method '${expectedMethod}' does not match sent method '${request.method}'")
+						traceService.endTrace('TraceInterceptor','before')
 						return false
 					}
 
@@ -128,6 +134,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 
 						if (!requestKeysMatch) {
 							render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Expected request variables do not match sent variables')
+							traceService.endTrace('TraceInterceptor','before')
 							return false
 						}
 					}else{
@@ -135,6 +142,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 						if(result){
 							render(text:result.apiToolkitContent, contentType:"${result.apiToolkitType}", encoding:result.apiToolkitEncoding)
 						}
+						traceService.endTrace('TraceInterceptor','before')
 						return false
 					}
 
@@ -149,6 +157,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 							String[] tempUri = request.getRequestURI().split("/")
 							if(tempUri[2].contains('dispatch') && "${params.controller}.dispatch" == tempUri[2] && !cache[params.apiObject]['domainPackage']){
 								forward(controller:params.controller,action:params.action)
+								traceService.endTrace('TraceInterceptor','before')
 								return false
 							}
 						}
@@ -157,28 +166,31 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 					// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
 					ApiDescriptor cachedEndpoint = cache[(String)params.apiObject][(String)params.action] as ApiDescriptor
 					boolean result = handleApiRequest(cachedEndpoint, request, response, params)
-
+					traceService.endTrace('TraceInterceptor','before')
 					return result
 				}
 			}
 			// no cache found
-
+			traceService.endTrace('TraceInterceptor','before')
 			return false
 
 		}catch(Exception e){
 			log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
+			traceService.endTrace('TraceInterceptor','before')
 			return false
 		}
 	}
 
 	boolean after(){
 		//log.info('##### FILTER (AFTER)')
+		traceService.startTrace('TraceInterceptor','after')
 		try{
 			LinkedHashMap newModel = [:]
 
 			if(params.controller!='apidoc') {
 				if (!model) {
 					render(status: HttpServletResponse.SC_NOT_FOUND, text: 'No resource returned / domain is empty')
+					traceService.endTrace('TraceInterceptor','after')
 					return false
 				} else {
 					newModel = convertModel(model)
@@ -193,13 +205,19 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 			LinkedHashMap content = handleApiResponse(cachedEndpoint,request,response,newModel,params) as LinkedHashMap
 
 			if(content){
-				render(text:content.apiToolkitContent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)
+				traceService.endTrace('TraceInterceptor','after')
+				LinkedHashMap traceContent = traceService.endAndReturnTrace('TraceInterceptor','after');
+				String tcontent = traceContent as JSON
+				render(text:tcontent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)
+
+
 				return false
 			}
 
 			return false
 		}catch(Exception e){
 			log.error("[ApiToolkitFilters :: apitoolkit.after] : Exception - full stack trace follows:", e);
+			traceService.endTrace('TraceInterceptor','after')
 			return false
 		}
 	}

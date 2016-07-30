@@ -52,13 +52,14 @@ import org.grails.core.DefaultGrailsDomainClass
 import org.codehaus.groovy.grails.commons.DomainClassArtefactHandler
 
 
-// extended by ApiCommLayer
-abstract class ApiCommProcess{
+// extended by TraceCommLayer
+abstract class TraceCommProcess{
 
     @Resource
     GrailsApplication grailsApplication
 
     ApiCacheService apiCacheService
+    TraceService traceService
 
     List formats = ['text/html','text/json','application/json','text/xml','application/xml']
     List optionalParams = ['method','format','contentType','encoding','action','controller','v','apiCombine', 'apiObject','entryPoint','uri']

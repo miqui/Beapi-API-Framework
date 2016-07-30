@@ -32,7 +32,7 @@ import grails.core.GrailsApplication
 
 import grails.converters.JSON
 import grails.util.Environment
-import net.nosegrind.apiframework.ApiDescriptor
+//import net.nosegrind.apiframework.ApiDescriptor
 import org.grails.groovy.grails.commons.*
 
 // TODO: rename to IOSTATESERVICE
