@@ -8,34 +8,19 @@ String chainEntryPoint = "c${apiVersion}".toString()
 String metricsEntryPoint = "m${apiVersion}".toString()
 String domainEntryPoint = "d${apiVersion}".toString()
 
-
-
 // move to RequestMap once stabilized
 grails.plugin.springsecurity.securityConfigType = "InterceptUrlMap"
 grails.plugin.springsecurity.rejectIfNoRule = false
 grails.plugin.springsecurity.fii.rejectPublicInvocations = false
 
-//'JOINED_FILTERS,-securityContextPersistenceFilter,-logoutFilter,-authenticationProcessingFilter,-securityContextHolderAwareRequestFilter,-rememberMeAuthenticationFilter,-anonymousAuthenticationFilter,-exceptionTranslationFilter,-FilterSecurityInterceptor'
-
-grails.plugin.springsecurity.filterChain.chainMap = [
-        "/${batchEntryPoint}/**": 'JOINED_FILTERS, -mutableLogoutFilter, -logoutFilter, -grailsUsernamePasswordAuthenticationFilter, -grailsRememberMeAuthenticationFilter, -restAuthenticationFilter, -filterSecurityInterceptor',
-        "/${chainEntryPoint}/**": 'JOINED_FILTERS, -mutableLogoutFilter, -logoutFilter, -grailsUsernamePasswordAuthenticationFilter, -grailsRememberMeAuthenticationFilter, -restAuthenticationFilter, -filterSecurityInterceptor',
-        "/${metricsEntryPoint}/**": 'JOINED_FILTERS, -mutableLogoutFilter, -logoutFilter, -grailsUsernamePasswordAuthenticationFilter, -grailsRememberMeAuthenticationFilter, -restAuthenticationFilter, -filterSecurityInterceptor',
-        "/${domainEntryPoint}/**": 'JOINED_FILTERS, -mutableLogoutFilter, -logoutFilter, -grailsUsernamePasswordAuthenticationFilter, -grailsRememberMeAuthenticationFilter, -restAuthenticationFilter, -filterSecurityInterceptor'
-]
-
-
 grails.plugin.springsecurity.userLookup.userDomainClassName = 'net.nosegrind.apiframework.Person'
 grails.plugin.springsecurity.userLookup.authorityJoinClassName = 'net.nosegrind.apiframework.PersonRole'
 grails.plugin.springsecurity.authority.className = 'net.nosegrind.apiframework.Role'
 
-
 // grails.plugin.springsecurity.rememberMe.persistent = true		  // grails.plugin.springsecurity.rememberMe.persistent = true
 // grails.plugin.springsecurity.rememberMe.persistentToken.domainClassName = 'net.nosegrind.apiframework.PersistentLogin'		  // grails.plugin.springsecurity.rememberMe.persistentToken.domainClassName = 'net.nosegrind.apiframework.PersistentLogin'
 
-
 grails.plugin.springsecurity.adh.errorPage = null
-
 
 grails.plugin.springsecurity.providerNames = ['daoAuthenticationProvider', 'anonymousAuthenticationProvider', 'rememberMeAuthenticationProvider']
 
@@ -53,9 +38,6 @@ grails.plugin.springsecurity.successHandler.defaultTargetUrl = '/login/ajaxSucce
 grails.plugin.springsecurity.failureHandler.defaultFailureUrl = '/login/ajaxDenied'
 grails.plugin.springsecurity.failureHandler.ajaxAuthFailUrl = '/login/ajaxDenied'
 
-
-//        [pattern:"/${entryPoint}/**",   access:["permitAll && \"{'GET','PUT','POST','DELETE','OPTIONS'}\".contains(request.getMethod())"]],
-//[pattern:'/**',                 access:["permitAll && \"{'GET','PUT','POST','DELETE','OPTIONS'}\".contains(request.getMethod())"]],
 grails.plugin.springsecurity.interceptUrlMap = [
         [pattern:'/api/**',            access:['permitAll']],
 
@@ -82,10 +64,6 @@ grails.plugin.springsecurity.rest.login.failureStatusCode = '401'
 grails.plugin.springsecurity.rest.login.useJsonCredentials  = true
 grails.plugin.springsecurity.rest.login.usernamePropertyName =  'username'
 grails.plugin.springsecurity.rest.login.passwordPropertyName =  'password'
-
-
-
-
 
 grails.plugin.springsecurity.rest.token.generation.useSecureRandom  = true
 grails.plugin.springsecurity.rest.token.generation.useUUID  = false

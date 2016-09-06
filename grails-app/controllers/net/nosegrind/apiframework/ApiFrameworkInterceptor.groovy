@@ -63,6 +63,9 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 	boolean before(){
 		//log.info('##### FILTER (BEFORE)')
 
+		//def filterChain = grailsApplication.getParentContext().getBean('springSecurityFilterChain')
+		//println(filterChain)
+
 		String format = (request?.format)?request.format:'JSON';
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 		boolean restAlt = (['OPTIONS','TRACE','HEAD'].contains(request.method))?true:false

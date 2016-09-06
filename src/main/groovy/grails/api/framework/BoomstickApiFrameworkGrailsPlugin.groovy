@@ -121,6 +121,7 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
 
         println "### Installing API Framework ..."
 
+
         def iostateDir = "${basedir}/src/iostate/"
         def iofile = new File(iostateDir)
         if(!iofile.exists()) {
@@ -168,7 +169,7 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
                 writer.writeLine "apitoolkit.serverType= 'master'"
                 writer.writeLine "apitoolkit.webhook.services= ['iostate']"
                 // set this per environment
-                //writer.writeLine "apitoolkit.iostate.preloadDir= '/user/home/.iostate'"
+               	writer.writeLine "apitoolkit.iostate.preloadDir= '"+System.getProperty('user.home')+"/.iostate'"
                 writer.writeLine "apitoolkit.corsInterceptor.includeEnvironments= ['development','test']"
                 writer.writeLine "apitoolkit.corsInterceptor.excludeEnvironments= ['production']"
                 writer.writeLine "apitoolkit.corsInterceptor.allowedOrigins= ['localhost:3000']"
