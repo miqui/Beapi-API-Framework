@@ -63,9 +63,6 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 	boolean before(){
 		//log.info('##### FILTER (BEFORE)')
 
-		//def filterChain = grailsApplication.getParentContext().getBean('springSecurityFilterChain')
-		//println(filterChain)
-
 		String format = (request?.format)?request.format:'JSON';
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 		boolean restAlt = (['OPTIONS','TRACE','HEAD'].contains(request.method))?true:false
@@ -100,7 +97,6 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 
 		try{
 			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
-
 			LinkedHashMap cache = (params.controller)? apiCacheService.getApiCache(params.controller.toString()):[:]
 
 
@@ -189,7 +185,6 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 			}else{
 				newModel = model as LinkedHashMap
 			}
-
 
 			LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
 			ApiDescriptor cachedEndpoint = cache[params.apiObject][(String)params.action] as ApiDescriptor

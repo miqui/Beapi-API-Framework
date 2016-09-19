@@ -24,7 +24,7 @@ group "org.grails.plugins"
 
 apply plugin: "maven-publish"
 apply plugin: "spring-boot"
-apply plugin: "org.grails.grails-plugin"
+//apply plugin: "org.grails.grails-plugin"
 // Used for publishing to central repository, remove if not needed
 apply plugin: "org.grails.grails-plugin"
 apply plugin: "org.grails.grails-plugin-publish"

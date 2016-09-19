@@ -6,6 +6,8 @@ package net.nosegrind.apiframework
 import grails.util.Environment
 import groovy.transform.CompileStatic
 import grails.compiler.GrailsCompileStatic
+import javax.annotation.Resource
+import grails.core.GrailsApplication
 
 
 /**
@@ -19,6 +21,8 @@ class CorsInterceptor {
 
 	int order = HIGHEST_PRECEDENCE + 999
 
+	@Resource
+	GrailsApplication grailsApplication
 
 	CorsInterceptor() {
 		matchAll() // match all controllers
@@ -27,6 +31,10 @@ class CorsInterceptor {
 
 	boolean before() {
 		//log.info('##### CORS FILTER (BEFORE)')
+
+		//def filterChain = grailsApplication.getParentContext().getBean('springSecurityFilterChain')
+		//println(filterChain)
+
 		Map corsInterceptorConfig = (Map) grailsApplication.config.corsInterceptor
 		String[] includeEnvironments = corsInterceptorConfig['includeEnvironments']?: null
 		String[] excludeEnvironments = corsInterceptorConfig['excludeEnvironments']?: null
