@@ -45,12 +45,14 @@ abstract class ApiCommLayer extends ApiCommProcess{
     boolean handleApiRequest(ApiDescriptor cache, HttpServletRequest request, HttpServletResponse response, GrailsParameterMap params){
         try{
             // CHECK ACCESS TO METHOD
+            /*
             List roles = cache['roles'] as List
             if(!checkAuth(request,roles)){
                 response.status = 401
                 response.setHeader('ERROR','Unauthorized Access attempted')
                 return false
             }
+            */
 
             // CHECK VERSION DEPRECATION DATE
             List deprecated = cache['deprecated'] as List

@@ -68,7 +68,14 @@ dependencies {
     compile 'org.springframework.boot:spring-boot-starter-logging'
     compile 'org.springframework.boot:spring-boot-autoconfigure'
     provided 'org.springframework.boot:spring-boot-starter-tomcat'
-    compile 'org.grails.plugins:spring-security-core:3.0.3'
+    compile('org.grails.plugins:spring-security-core:3.0.3'){
+        exclude(module:'org.springframework.security:spring-security-web')
+    }
+    compile('org.grails.plugins:spring-security-rest:2.0.0.M2'){
+        exclude(module:'org.springframework.security:spring-security-web')
+        exclude(module:'org.pac4j:pac4j-cas')
+        exclude(module:'com.fasterxml.jackson.core:jackson-databind')
+    }
     compile 'org.grails:grails-web'
     compile('org.grails:grails-dependencies'){
         //exclude(module:'grails-plugin-rest')

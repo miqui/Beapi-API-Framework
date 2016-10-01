@@ -58,6 +58,7 @@ class ApiObjectService{
 				parseFiles(ioPath)
 			}
 
+
 			String apiObjectSrc = grailsApplication.config.iostate.preloadDir
 			parseFiles(apiObjectSrc.toString())
 
@@ -253,7 +254,7 @@ class ApiObjectService{
 				def cache = apiCacheService.setApiCache(apiName,methods)
 
 				cache[vers.key].each(){ key1,val1 ->
-					if(!['deprecated','defaultAction','domainPackage'].contains(key1)){
+					if(!['deprecated','defaultAction'].contains(key1)){
 						apiCacheService.setApiCache(apiName,key1, val1, vers.key)
 					}
 				}
