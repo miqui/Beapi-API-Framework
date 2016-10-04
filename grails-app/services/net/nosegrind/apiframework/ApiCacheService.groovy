@@ -31,13 +31,11 @@ import grails.converters.JSON
 //import grails.converters.XML
 import grails.util.Metadata
 import grails.plugin.cache.CacheEvict
-//import grails.plugin.cache.Cacheable
 import grails.plugin.cache.CachePut
-//import grails.plugin.cache.GrailsValueWrapper
 import grails.plugin.cache.GrailsCacheManager
 import org.grails.groovy.grails.commons.*
 import grails.core.GrailsApplication
-//import net.nosegrind.apiframework.ApiDescriptor
+
 
 import static groovyx.gpars.GParsPool.withPool
 
@@ -166,7 +164,7 @@ class ApiCacheService{
 			returns.each{ p ->
 				p.value.each{ it ->
 					if(it) {
-						ParamsDescriptor paramDesc = it
+						def paramDesc = it
 
 						LinkedHashMap j = [:]
 						if (paramDesc?.values) {

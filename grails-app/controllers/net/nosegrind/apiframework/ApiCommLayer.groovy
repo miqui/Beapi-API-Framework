@@ -84,12 +84,14 @@ abstract class ApiCommLayer extends ApiCommProcess{
         int status = 400
         try{
             // CHECK ACCESS TO METHOD
+            /*
             List roles = cache['roles'] as List
             if(!checkAuth(request,roles)){
                 response.status = 401
                 response.setHeader('ERROR','Unauthorized Access attempted')
                 return false
             }
+            */
 
             // CHECK VERSION DEPRECATION DATE
             List deprecated = cache['deprecated'] as List
@@ -119,10 +121,14 @@ abstract class ApiCommLayer extends ApiCommProcess{
     /***************************
     * RESPONSES
      ***************************/
-    def handleApiResponse(ApiDescriptor cache, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
-        try{
-            response.setHeader('Authorization', cache['roles'].toString().join(', '))
-            List responseList = getApiParams((LinkedHashMap)cache['returns'])
+    def handleApiResponse(LinkedHashMap requestDefinitions, Object roles, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
+        //try{
+            String authority = getUserRole() as String
+            response.setHeader('Authorization', roles.toString().join(', '))
+
+            List<HashMap> temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as List<HashMap>:requestDefinitions['permitAll'] as List<HashMap>
+            List responseList = temp.collect(){ it.name }
+
             LinkedHashMap content = [:]
             if(params.controller!='apidoc') {
                 LinkedHashMap result = parseURIDefinitions(model, responseList)
@@ -134,16 +140,21 @@ abstract class ApiCommLayer extends ApiCommProcess{
             }
             return content
 
-        }catch(Exception e){
-            throw new Exception("[ApiCommLayer : handleApiResponse] : Exception - full stack trace follows:",e)
-        }
+        //}catch(Exception e){
+        //    throw new Exception("[ApiCommLayer : handleApiResponse] : Exception - full stack trace follows:",e)
+        //}
     }
 
-    def handleBatchResponse(Object cache, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
-
+    def handleBatchResponse(Object requestDefinitions, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
         try{
-            response.setHeader('Authorization', cache['roles'].toString().join(', '))
-            List responseList = getApiParams((LinkedHashMap)cache['returns'])
+            String authority = getUserRole() as String
+            response.setHeader('Authorization', requestDefinitions['roles'].toString().join(', '))
+
+            List temp = (requestDefinitions['returns']["${authority}"])?requestDefinitions['returns']["${authority}"] as List:requestDefinitions['returns']['permitAll'] as List
+            List responseList = []
+            temp[0].each(){
+                //responseList.add(it.get('name'))
+            }
             LinkedHashMap result = parseURIDefinitions(model,responseList)
 
             // TODO : add combine functionality for batching

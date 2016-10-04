@@ -27,7 +27,7 @@
 
 package net.nosegrind.apiframework
 
-
+import javax.annotation.Resource
 import javax.servlet.http.HttpServletRequest
 import grails.web.servlet.mvc.GrailsParameterMap
 import javax.servlet.forward.*
@@ -40,6 +40,8 @@ import groovy.transform.CompileStatic
 abstract class TraceCommLayer extends TraceCommProcess{
 
 
+    @Resource
+    TraceService traceService
 
     /***************************
      * REQUESTS
@@ -48,12 +50,14 @@ abstract class TraceCommLayer extends TraceCommProcess{
         traceService.startTrace('TraceCommLayer','handleApiRequest')
         try{
             // CHECK ACCESS TO METHOD
+            /*
             List roles = cache['roles'] as List
             if(!checkAuth(request,roles)){
                 response.status = 401
                 response.setHeader('ERROR','Unauthorized Access attempted')
                 return false
             }
+            */
 
             // CHECK VERSION DEPRECATION DATE
             List deprecated = cache['deprecated'] as List
@@ -88,11 +92,15 @@ abstract class TraceCommLayer extends TraceCommProcess{
     /***************************
     * RESPONSES
      ***************************/
-    def handleApiResponse(ApiDescriptor cache, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
+    def handleApiResponse(LinkedHashMap requestDefinitions, Object roles, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
         traceService.startTrace('TraceCommLayer','handleApiResponse')
         try{
-            response.setHeader('Authorization', cache['roles'].toString().join(', '))
-            List responseList = getApiParams((LinkedHashMap)cache['returns'])
+            String authority = getUserRole() as String
+            response.setHeader('Authorization', roles.toString().join(', '))
+
+            List<HashMap> temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as List<HashMap>:requestDefinitions['permitAll'] as List<HashMap>
+            List responseList = temp.collect(){ it.name }
+
             LinkedHashMap content = [:]
             if(params.controller!='apidoc') {
                 LinkedHashMap result = parseURIDefinitions(model, responseList)

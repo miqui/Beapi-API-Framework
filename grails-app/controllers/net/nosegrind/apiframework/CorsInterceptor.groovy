@@ -1,10 +1,7 @@
 package net.nosegrind.apiframework
 
 
-//import javax.annotation.Resource
-//import grails.core.GrailsApplication
 import grails.util.Environment
-import groovy.transform.CompileStatic
 import grails.compiler.GrailsCompileStatic
 import javax.annotation.Resource
 import grails.core.GrailsApplication
@@ -32,8 +29,6 @@ class CorsInterceptor {
 	boolean before() {
 		//log.info('##### CORS FILTER (BEFORE)')
 
-		//def filterChain = grailsApplication.getParentContext().getBean('springSecurityFilterChain')
-		//println(filterChain)
 
 		Map corsInterceptorConfig = (Map) grailsApplication.config.corsInterceptor
 		String[] includeEnvironments = corsInterceptorConfig['includeEnvironments']?: null

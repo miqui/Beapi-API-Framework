@@ -32,8 +32,6 @@ import grails.core.GrailsApplication
 import grails.plugin.springsecurity.SpringSecurityService
 import grails.util.Metadata
 import groovy.json.JsonSlurper
-//import net.nosegrind.apiframework.comm.BatchRequestService
-//import net.nosegrind.apiframework.comm.BatchResponseService
 import org.grails.web.util.WebUtils
 
 import org.grails.web.util.WebUtils
@@ -50,8 +48,6 @@ class BatchInterceptor extends ApiCommLayer{
 	@Resource
 	GrailsApplication grailsApplication
 
-	//BatchRequestService batchRequestService
-	//BatchResponseService batchResponseService
 	ApiCacheService apiCacheService
 	SpringSecurityService springSecurityService
 

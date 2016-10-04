@@ -29,9 +29,6 @@ package net.nosegrind.apiframework
 
 import grails.converters.JSON
 //import grails.converters.XML
-import grails.util.Metadata
-import grails.plugin.cache.CacheEvict
-import grails.plugin.cache.Cacheable
 import grails.plugin.cache.CachePut
 import grails.plugin.cache.GrailsCacheManager
 import org.grails.groovy.grails.commons.*

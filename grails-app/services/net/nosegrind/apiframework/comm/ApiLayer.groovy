@@ -32,7 +32,6 @@ import grails.converters.XML
 import grails.util.Holders
 import org.grails.validation.routines.UrlValidator
 import org.grails.web.util.GrailsApplicationAttributes
-import org.grails.core.DefaultGrailsDomainClass
 
 import javax.servlet.http.HttpServletRequest
 import org.springframework.web.context.request.RequestContextHolder as RCH

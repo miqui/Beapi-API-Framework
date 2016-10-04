@@ -80,7 +80,14 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
     def developers = [ [ name: "Owen Rubel", email: "orubel@gmail.com" ]]
 
     Closure doWithSpring() { { ->
-            def conf = SpringSecurityUtils.securityConfig
+        def conf = SpringSecurityUtils.securityConfig
+        if (!conf || !conf.active) {
+            return
+        }
+
+        SpringSecurityUtils.loadSecondaryConfig 'DefaultRestSecurityConfig'
+        conf = SpringSecurityUtils.securityConfig
+
             /* restTokenValidationFilter */
             SpringSecurityUtils.registerFilter 'tokenCacheValidationFilter', SecurityFilterPosition.ANONYMOUS_FILTER.order + 2
 
@@ -174,7 +181,7 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
             writeFile("templates/iostate/Apidoc.json.template", "${iostateDir}Apidoc.json")
             writeFile("templates/iostate/Hook.json.template", "${iostateDir}Hook.json")
             writeFile("templates/iostate/IOState.json.template", "${iostateDir}IOState.json")
-            println " ... installing IOstate dir/files ..."
+            println " ... installing IO state dir/files ..."
         }
 
         def contDir = "${basedir}/grails-app/controllers/net/nosegrind/apiframework/"
@@ -485,14 +492,33 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
         }
 
         // add permitAll vars to other roles after processing
+        def permitAll = ioSet['permitAll']
         ioSet.each(){ key, val ->
             if(key!='permitAll'){
-                ioSet['permitAll'].each(){ it ->
+                permitAll.each(){ it ->
                     ioSet[key].add(it)
                 }
             }
         }
 
         return ioSet
+    }
+
+    public List getApiParams(LinkedHashMap definitions){
+        try{
+            traceService.startTrace('TraceCommProcess','getApiParams')
+            List apiList = []
+            definitions.each(){ key, val ->
+                if (request.isUserInRole(key) || key == 'permitAll') {
+                    val.each(){ it2 ->
+                        apiList.add(it2.name)
+                    }
+                }
+            }
+            traceService.endTrace('TraceCommProcess','getApiParams')
+            return apiList
+        }catch(Exception e){
+            throw new Exception("[ParamsService :: getApiParams] : Exception - full stack trace follows:",e)
+        }
     }
 }

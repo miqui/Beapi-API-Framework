@@ -122,6 +122,14 @@ abstract class ApiCommProcess{
         }
     }
 
+    String getUserRole() {
+        String authority = 'permitAll'
+        if (springSecurityService.loggedIn){
+            authority = springSecurityService.principal.authorities*.authority[0]
+        }
+        return authority
+    }
+
     boolean checkAuth(HttpServletRequest request, List roles){
 
         try {
@@ -168,9 +176,10 @@ abstract class ApiCommProcess{
     // TODO: put in OPTIONAL toggle in application.yml to allow for this check
     boolean checkURIDefinitions(GrailsParameterMap params,LinkedHashMap requestDefinitions){
         List reservedNames = ['batchLength','batchInc']
-
         try{
-            List requestList = getApiParams(requestDefinitions)
+            String authority = getUserRole() as String
+            List temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as List:requestDefinitions['permitAll'] as List
+            List requestList = temp.collect(){ it.name }
 
             Map methodParams = getMethodParams(params)
 

@@ -48,8 +48,6 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 	@Resource
 	GrailsApplication grailsApplication
 
-	//ApiRequestService apiRequestService
-	//ApiResponseService apiResponseService
 	ApiCacheService apiCacheService
 	SpringSecurityService springSecurityService
 
@@ -189,7 +187,8 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 
 			LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
 			ApiDescriptor cachedEndpoint = cache[params.apiObject][(String)params.action] as ApiDescriptor
-			LinkedHashMap content = handleApiResponse(cachedEndpoint,request,response,newModel,params) as LinkedHashMap
+
+			LinkedHashMap content = handleApiResponse(cachedEndpoint['returns'] as LinkedHashMap,cachedEndpoint['roles'],request,response,newModel,params) as LinkedHashMap
 
 			if(content){
 				render(text:content.apiToolkitContent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)

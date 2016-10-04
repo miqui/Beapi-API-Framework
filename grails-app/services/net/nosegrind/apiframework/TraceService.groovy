@@ -28,14 +28,12 @@ package net.nosegrind.apiframework
  */
 
 import grails.core.GrailsApplication
-import grails.web.servlet.mvc.GrailsParameterMap
+
 import org.grails.groovy.grails.commons.*
 import javax.servlet.http.HttpServletRequest
 import org.springframework.web.context.request.RequestContextHolder as RCH
 import org.springframework.web.context.request.ServletRequestAttributes
 
-//import grails.application.springsecurity.SpringSecurityService
-import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
 
 import javax.servlet.http.HttpServletRequest
@@ -43,7 +41,6 @@ import javax.servlet.http.HttpServletRequest
 class TraceService {
 
 	GrailsApplication grailsApplication
-	//SpringSecurityService springSecurityService
 	TraceCacheService traceCacheService
 
 	static transactional = false

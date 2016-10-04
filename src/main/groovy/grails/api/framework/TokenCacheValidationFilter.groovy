@@ -101,24 +101,12 @@ class TokenCacheValidationFilter extends GenericFilterBean {
     }
 
 // ehcache may not be accessible at filter. need to grab bean
-    boolean checkAuth(ServletRequest request, List roles, AccessToken accessToken){
+    boolean checkAuth(List roles, AccessToken accessToken){
         try {
-            boolean hasAuth = false
-
-            List userRoles = []
-            List temp = accessToken.getAuthorities() as List
-            temp.each(){
-                userRoles.add(it.toString())
+            if(accessToken.getAuthorities()*.authority.any { roles.contains(it.toString()) }){
+                return true
             }
-
-            for(int i=0;i<=roles.size();i++){
-                if (userRoles.contains(roles[i]) || roles[i]=='permitAll') {
-                    hasAuth = true
-                    break;
-                }
-            }
-
-            return hasAuth
+            return false
         }catch(Exception e) {
             throw new Exception("[ApiCommProcess :: checkAuth] : Exception - full stack trace follows:",e)
         }
@@ -162,7 +150,7 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                 String version = cache['cacheversion']
 
                 List roles = cache[version][action]['roles'] as List
-                if(!checkAuth(request,roles,authenticationResult)) {
+                if(!checkAuth(roles,authenticationResult)) {
                     httpResponse.status = 401
                     httpResponse.setHeader('ERROR', 'Unauthorized Access attempted')
                     return

@@ -202,7 +202,7 @@ class TraceInterceptor extends TraceCommLayer{
 
 			LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
 			ApiDescriptor cachedEndpoint = cache[params.apiObject][(String)params.action] as ApiDescriptor
-			LinkedHashMap content = handleApiResponse(cachedEndpoint,request,response,newModel,params) as LinkedHashMap
+			LinkedHashMap content = handleApiResponse(cachedEndpoint['returns'] as LinkedHashMap,cachedEndpoint['roles'],request,response,newModel,params) as LinkedHashMap
 
 			if(content){
 				traceService.endTrace('TraceInterceptor','after')
