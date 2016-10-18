@@ -42,7 +42,7 @@ abstract class ApiCommLayer extends ApiCommProcess{
     /***************************
      * REQUESTS
      ***************************/
-    boolean handleApiRequest(ApiDescriptor cache, HttpServletRequest request, HttpServletResponse response, GrailsParameterMap params){
+    boolean handleApiRequest(List deprecated, String method, HttpServletRequest request, HttpServletResponse response, GrailsParameterMap params){
         try{
             // CHECK ACCESS TO METHOD
             /*
@@ -55,7 +55,7 @@ abstract class ApiCommLayer extends ApiCommProcess{
             */
 
             // CHECK VERSION DEPRECATION DATE
-            List deprecated = cache['deprecated'] as List
+            //List deprecated = cache['deprecated'] as List
 
             if(deprecated?.get(0)){
                 if(checkDeprecationDate(deprecated[0].toString())){
@@ -66,7 +66,7 @@ abstract class ApiCommLayer extends ApiCommProcess{
                 }
             }
 
-            def method = cache['method']?.toString().trim()
+            //def method = cache['method']?.toString().trim()
 
             // DOES api.methods.contains(request.method)
             if(!isRequestMatch(method,request.method.toString())){
@@ -80,21 +80,12 @@ abstract class ApiCommLayer extends ApiCommProcess{
         }
     }
 
-    boolean handleBatchRequest(Object cache, HttpServletRequest request, HttpServletResponse response, GrailsParameterMap params){
+    boolean handleBatchRequest(List deprecated, String method, HttpServletRequest request, HttpServletResponse response, GrailsParameterMap params){
         int status = 400
         try{
-            // CHECK ACCESS TO METHOD
-            /*
-            List roles = cache['roles'] as List
-            if(!checkAuth(request,roles)){
-                response.status = 401
-                response.setHeader('ERROR','Unauthorized Access attempted')
-                return false
-            }
-            */
 
             // CHECK VERSION DEPRECATION DATE
-            List deprecated = cache['deprecated'] as List
+            //List deprecated = cache['deprecated'] as List
             if(deprecated?.get(0)){
                 if(checkDeprecationDate(deprecated[0].toString())){
                     String depMsg = deprecated[1].toString()
@@ -104,7 +95,36 @@ abstract class ApiCommLayer extends ApiCommProcess{
                 }
             }
 
-            def method = cache['method']?.toString().trim()
+            //def method = cache['method']?.toString().trim()
+
+            // DOES api.methods.contains(request.method)
+            if(!isRequestMatch(method,request.method.toString())){
+                response.status = status
+                response.setHeader('ERROR',"Request method doesn't match expected method.")
+                return false
+            }
+            return true
+        }catch(Exception e){
+            throw new Exception("[ApiCommLayer : handleBatchRequest] : Exception - full stack trace follows:",e)
+        }
+    }
+
+    boolean handleChainRequest(List deprecated, String method, HttpServletRequest request, HttpServletResponse response, GrailsParameterMap params){
+        int status = 400
+        try{
+
+            // CHECK VERSION DEPRECATION DATE
+            //List deprecated = cache['deprecated'] as List
+            if(deprecated?.get(0)){
+                if(checkDeprecationDate(deprecated[0].toString())){
+                    String depMsg = deprecated[1].toString()
+                    response.status = status
+                    response.setHeader('ERROR',depMsg)
+                    return false
+                }
+            }
+
+            //def method = cache['method']?.toString().trim()
 
             // DOES api.methods.contains(request.method)
             if(!isRequestMatch(method,request.method.toString())){
@@ -145,16 +165,14 @@ abstract class ApiCommLayer extends ApiCommProcess{
         //}
     }
 
-    def handleBatchResponse(Object requestDefinitions, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
+    def handleBatchResponse(LinkedHashMap requestDefinitions, Object roles, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
         try{
             String authority = getUserRole() as String
-            response.setHeader('Authorization', requestDefinitions['roles'].toString().join(', '))
+            response.setHeader('Authorization', roles.toString().join(', '))
 
-            List temp = (requestDefinitions['returns']["${authority}"])?requestDefinitions['returns']["${authority}"] as List:requestDefinitions['returns']['permitAll'] as List
-            List responseList = []
-            temp[0].each(){
-                //responseList.add(it.get('name'))
-            }
+            List<HashMap> temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as List<HashMap>:requestDefinitions['permitAll'] as List<HashMap>
+            List responseList = temp.collect(){ it.name }
+
             LinkedHashMap result = parseURIDefinitions(model,responseList)
 
             // TODO : add combine functionality for batching
@@ -171,7 +189,31 @@ abstract class ApiCommLayer extends ApiCommProcess{
         }catch(Exception e){
             throw new Exception("[ApiCommLayer : handleBatchResponse] : Exception - full stack trace follows:",e)
         }
-
     }
 
+    def handleChainResponse(LinkedHashMap requestDefinitions, Object roles, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
+        try{
+            String authority = getUserRole() as String
+            response.setHeader('Authorization', roles.toString().join(', '))
+
+            List<HashMap> temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as List<HashMap>:requestDefinitions['permitAll'] as List<HashMap>
+            List responseList = temp.collect(){ it.name }
+
+            LinkedHashMap result = parseURIDefinitions(model,responseList)
+
+            // TODO : add combine functionality for batching
+            //if(params?.apiBatch.combine=='true'){
+            //	params.apiCombine["${params.uri}"] = result
+            //}
+
+            if(!result){
+                response.status = 400
+            }else{
+                //LinkedHashMap content = parseResponseMethod(request, params, result)
+                return parseResponseMethod(request, params, result)
+            }
+        }catch(Exception e){
+            throw new Exception("[ApiCommLayer : handleBatchResponse] : Exception - full stack trace follows:",e)
+        }
+    }
 }

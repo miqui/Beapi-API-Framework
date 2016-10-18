@@ -78,12 +78,19 @@ abstract class ApiCommProcess{
         }
     }
 
-/*
     void setChainParams(GrailsParameterMap params){
         if (chainEnabled) {
-            params.apiChain = content?.chain
+            if(!params.apiChain){ params.apiChain = [:] }
+            def chainVars = request.JSON
+            println(chainVars)
+            if(!request.getAttribute('chainLength')){ request.setAttribute('chainLength',chainVars['chain'].size()) }
+            chainVars['chain'][request.getAttribute('chainInc').toInteger()].each() { k,v ->
+                params.apiChain[k] = v
+            }
+            params.apiChain = params?.chain
         }
     }
+
 
     LinkedHashMap getApiObjectParams(LinkedHashMap definitions){
         try{
@@ -103,7 +110,7 @@ abstract class ApiCommProcess{
         }
         return [:]
     }
-*/
+
 
     public List getApiParams(LinkedHashMap definitions){
         try{
@@ -532,4 +539,18 @@ abstract class ApiCommProcess{
     }
 
 
+    boolean isCachedResult(Integer version, String className){
+        Class clazz = grailsApplication.domainClasses.find { it.clazz.simpleName == className }.clazz
+
+        def c = clazz.createCriteria()
+        def currentVersion = c.get {
+            projections {
+                property('version')
+            }
+            maxResults(1)
+            order("version", "desc")
+        }
+
+        return (currentVersion > version)?false:true
+    }
 }

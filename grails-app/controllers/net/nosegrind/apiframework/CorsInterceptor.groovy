@@ -27,7 +27,7 @@ class CorsInterceptor {
 	}
 
 	boolean before() {
-		//log.info('##### CORS FILTER (BEFORE)')
+		//println('##### CORS FILTER (BEFORE)')
 
 
 		Map corsInterceptorConfig = (Map) grailsApplication.config.corsInterceptor
@@ -71,7 +71,7 @@ class CorsInterceptor {
 	}
 
 	boolean after() {
-		//log.info('##### CORS FILTER (AFTER)')
+		//println('##### CORS FILTER (AFTER)')
 		return true
 	}
 

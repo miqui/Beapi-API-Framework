@@ -25,6 +25,7 @@ class ApiDescriptor implements Validateable {
 	Map doc
     LinkedHashMap<String,ParamsDescriptor> receives
     LinkedHashMap<String,ParamsDescriptor> returns
+	LinkedHashMap cachedResult
 
 
 	static constraints = { 
@@ -45,6 +46,7 @@ class ApiDescriptor implements Validateable {
 		doc(nullable:true)
 		receives(nullable:true)
 		returns(nullable:true)
+		cachedResult(nullable:true)
 	}
 
 }

@@ -51,6 +51,7 @@ class BatchInterceptor extends ApiCommLayer{
 	ApiCacheService apiCacheService
 	SpringSecurityService springSecurityService
 
+
 	String entryPoint = "b${Metadata.current.getProperty(Metadata.APPLICATION_VERSION, String.class)}"
 
 
@@ -59,7 +60,7 @@ class BatchInterceptor extends ApiCommLayer{
 	}
 
 	boolean before(){
-		log.info('##### BATCHINTERCEPTOR (BEFORE)')
+		//println('##### BATCHINTERCEPTOR (BEFORE)')
 
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 		boolean restAlt = (['OPTIONS','TRACE','HEAD'].contains(request.method))?true:false
@@ -67,27 +68,21 @@ class BatchInterceptor extends ApiCommLayer{
 		// Init params
 		String format =request.format.toUpperCase()
 
-		if(['XML','JSON'].contains(format)) {
-			LinkedHashMap dataParams = [:]
-			switch (format) {
-				case 'XML':
-					String xml = request.XML.toString()
-					def slurper = new XmlSlurper()
-					slurper.parseText(xml).each() { k, v ->
-						dataParams[k] = v
-					}
-					request.setAttribute("XML", dataParams)
-					break
-				case 'JSON':
-					String json = request.JSON.toString()
-					def slurper = new JsonSlurper()
-					slurper.parseText(json).each() { k, v ->
-						dataParams[k] = v
-					}
-					request.setAttribute("JSON", dataParams)
-					break
-			}
+		LinkedHashMap dataParams = [:]
+		switch (format) {
+			case 'JSON':
+				String json = request.JSON.toString()
+				def slurper = new JsonSlurper()
+				slurper.parseText(json).each() { k, v ->
+					dataParams[k] = v
+				}
+				request.setAttribute("JSON", dataParams)
+				break
+			default:
+				render(status:HttpServletResponse.SC_BAD_REQUEST  , text: 'Expecting JSON Formatted batch data')
+				return false
 		}
+
 
 
 		try{
@@ -139,7 +134,9 @@ class BatchInterceptor extends ApiCommLayer{
 				}
 
 				// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
-				boolean result = handleBatchRequest(cache[params.apiObject.toString()][params.action.toString()], request, response, params)
+				ApiDescriptor cachedEndpoint = cache[(String)params.apiObject][(String)params.action] as ApiDescriptor
+				boolean result = handleBatchRequest(cachedEndpoint['deprecated'] as List, cachedEndpoint['method']?.toString().trim(), request, response, params)
+				//boolean result = handleBatchRequest(cache[params.apiObject.toString()][params.action.toString()], request, response, params)
 				return result
 			}
 
@@ -153,7 +150,7 @@ class BatchInterceptor extends ApiCommLayer{
 	}
 
 	boolean after(){
-		//log.info('##### BATCHFILTER (AFTER)')
+		//println('##### BATCHFILTER (AFTER)')
 		try{
 			LinkedHashMap newModel = [:]
 
@@ -165,7 +162,7 @@ class BatchInterceptor extends ApiCommLayer{
 			}
 
 			LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
-			LinkedHashMap content
+			//LinkedHashMap content
 			int batchLength = (int) request.getAttribute('batchLength')
 			int batchInc = (int) request.getAttribute('batchInc')
 			if(batchEnabled && (batchLength > batchInc+1)){
@@ -176,7 +173,10 @@ class BatchInterceptor extends ApiCommLayer{
 				return false
 			}
 
-			content = handleBatchResponse(cache[params.apiObject][params.action.toString()],request,response,newModel,params) as LinkedHashMap
+			ApiDescriptor cachedEndpoint = cache[params.apiObject][(String)params.action] as ApiDescriptor
+			LinkedHashMap content = handleBatchResponse(cachedEndpoint['returns'] as LinkedHashMap,cachedEndpoint['roles'],request,response,newModel,params) as LinkedHashMap
+
+			//content = handleBatchResponse(cache[params.apiObject][params.action.toString()],request,response,newModel,params) as LinkedHashMap
 
 			if(content){
 				render(text:content.apiToolkitContent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)

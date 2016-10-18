@@ -33,7 +33,9 @@ import grails.core.GrailsApplication
 import grails.plugin.springsecurity.SpringSecurityService
 import groovy.json.JsonSlurper
 import grails.util.Metadata
-
+import groovy.json.internal.LazyMap
+import grails.converters.JSON
+import grails.converters.XML
 
 //import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
@@ -60,7 +62,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 	}
 
 	boolean before(){
-		//log.info('##### FILTER (BEFORE)')
+		//println('##### FILTER (BEFORE)')
 
 		String format = (request?.format)?request.format:'JSON';
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
@@ -81,6 +83,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 					}
 					break
 				case 'JSON':
+				default:
 					String json = request.JSON.toString()
 					if(json!='[:]') {
 						def slurper = new JsonSlurper()
@@ -95,10 +98,10 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 
 
 		try{
-			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
+			// INITIALIZE CACHE
 			LinkedHashMap cache = (params.controller)? apiCacheService.getApiCache(params.controller.toString()):[:]
 
-
+			// IS APIDOC??
 			if(params.controller=='apidoc'){
 				if(cache){
 					params.apiObject = (params.apiObjectVersion) ? params.apiObjectVersion : cache['currentStable']['value']
@@ -108,11 +111,12 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 				return false
 			}else{
 				if(cache) {
+
 					params.apiObject = (params.apiObjectVersion) ? params.apiObjectVersion : cache['currentStable']['value']
 					params.action = (params.action == null) ? cache[params.apiObject]['defaultAction'] : params.action
 
 					String expectedMethod = cache[params.apiObject][params.action.toString()]['method'] as String
-					if(!checkRequestMethod(expectedMethod,restAlt)) {
+					if (!checkRequestMethod(expectedMethod, restAlt)) {
 						render(status: HttpServletResponse.SC_BAD_REQUEST, text: "Expected request method '${expectedMethod}' does not match sent method '${request.method}'")
 						return false
 					}
@@ -128,13 +132,31 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 							render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Expected request variables do not match sent variables')
 							return false
 						}
-					}else{
+					} else {
 						LinkedHashMap result = parseRequestMethod(request, params)
-						if(result){
-							render(text:result.apiToolkitContent, contentType:"${result.apiToolkitType}", encoding:result.apiToolkitEncoding)
+						if (result) {
+							render(text: result.apiToolkitContent, contentType: "${result.apiToolkitType}", encoding: result.apiToolkitEncoding)
+							return false
 						}
-						return false
 					}
+
+
+					// RETRIEVE CACHED RESULT
+					if (cache[params.apiObject][params.action.toString()]['cachedResult']) {
+						String authority = getUserRole() as String
+						String domain = ((String) params.controller).capitalize()
+						//Integer version = (Integer) JSON.parseText((String)cache[params.apiObject][params.action.toString()]['cachedResult'][authority]).version
+						def slurper = new JsonSlurper()
+						groovy.json.internal.LazyMap json = (groovy.json.internal.LazyMap) slurper.parseText((String)cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()])
+
+						if (isCachedResult((Integer)json.get('version'), domain)) {
+							def result = cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()]
+							render(text: result, contentType: request.contentType)
+							return false
+						}
+
+					}
+
 
 					if(params.action==null || !params.action){
 						String methodAction = methods[request.method]
@@ -154,7 +176,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 
 					// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
 					ApiDescriptor cachedEndpoint = cache[(String)params.apiObject][(String)params.action] as ApiDescriptor
-					boolean result = handleApiRequest(cachedEndpoint, request, response, params)
+					boolean result = handleApiRequest(cachedEndpoint['deprecated'] as List, cachedEndpoint['method']?.toString().trim(), request, response, params)
 
 					return result
 				}
@@ -170,7 +192,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 	}
 
 	boolean after(){
-		//log.info('##### FILTER (AFTER)')
+		//println('##### FILTER (AFTER)')
 		try{
 			LinkedHashMap newModel = [:]
 
@@ -191,6 +213,15 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 			LinkedHashMap content = handleApiResponse(cachedEndpoint['returns'] as LinkedHashMap,cachedEndpoint['roles'],request,response,newModel,params) as LinkedHashMap
 
 			if(content){
+				// STORE CACHED RESULT
+				//def format = request.getHeader('Content-Type').split('/')[1].toUpperCase()
+				def format = request.format.toUpperCase()
+				String authority = getUserRole() as String
+				LinkedHashMap cachedResult = [:]
+				cachedResult[authority] = [:]
+				cachedResult[authority][format] = content.apiToolkitContent
+				apiCacheService.setApiCachedResult((String)params.controller, (String) params.apiObject,(String)params.action, cachedResult)
+
 				render(text:content.apiToolkitContent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)
 				return false
 			}

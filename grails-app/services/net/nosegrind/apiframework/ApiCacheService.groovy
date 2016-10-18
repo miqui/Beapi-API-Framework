@@ -94,6 +94,17 @@ class ApiCacheService{
 			throw new Exception("[ApiCacheService :: setApiCache] : Exception - full stack trace follows:",e)
 		}
 	}
+
+	@CachePut(value="ApiCache",key="#controllername")
+	LinkedHashMap setApiCachedResult(String controllername, String apiversion, String methodname, LinkedHashMap result){
+		try{
+			def cache = getApiCache(controllername)
+			cache[apiversion][methodname]['cachedResult'] = result
+			return cache
+		}catch(Exception e){
+			throw new Exception("[ApiCacheService :: setApiCache] : Exception - full stack trace follows:",e)
+		}
+	}
 	
 	Map generateApiDoc(String controllername, String actionname, String apiversion){
 		try{

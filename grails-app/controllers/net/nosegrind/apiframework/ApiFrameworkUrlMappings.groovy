@@ -130,6 +130,44 @@ class ApiFrameworkUrlMappings {
         }
 
 
+        // CHAIN API ENDPOINTS
+        "/$chainEntryPoint/$controller/$action"{
+            if(action?.toInteger()==action && action!=null){
+                id=action
+                action = null
+            }
+            entryPoint = chainEntryPoint
+            parseRequest = true
+        }
+
+        "/$chainEntryPoint/$controller/$action/$id?**"{
+            entryPoint = chainEntryPoint
+            parseRequest = true
+        }
+
+        "/${chainEntryPoint}-$apiObjectVersion/$controller/$action/$id**" {
+            entryPoint = chainEntryPoint
+            apiObjectVersion = apiObjectVersion
+            parseRequest = true
+            constraints {
+                apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
+            }
+        }
+
+
+        "/${chainEntryPoint}-$apiObjectVersion/$controller/$action" {
+            if(action?.toInteger()==action && action!=null){
+                id=action
+                action = null
+            }
+            entryPoint = chainEntryPoint
+            apiObjectVersion = apiObjectVersion
+            parseRequest = true
+            constraints {
+                apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
+            }
+        }
+
         // TRACE API ENDPOINTS
         "/$traceEntryPoint/$controller/$action"{
             if(action?.toInteger()==action && action!=null){

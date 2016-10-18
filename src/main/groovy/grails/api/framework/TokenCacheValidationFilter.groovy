@@ -103,9 +103,14 @@ class TokenCacheValidationFilter extends GenericFilterBean {
 // ehcache may not be accessible at filter. need to grab bean
     boolean checkAuth(List roles, AccessToken accessToken){
         try {
-            if(accessToken.getAuthorities()*.authority.any { roles.contains(it.toString()) }){
+            if(roles.size()==1 && roles[0]=='permitAll'){
                 return true
             }
+
+            if (accessToken.getAuthorities()*.authority.any { roles.contains(it.toString())}) {
+                return true
+            }
+
             return false
         }catch(Exception e) {
             throw new Exception("[ApiCommProcess :: checkAuth] : Exception - full stack trace follows:",e)
@@ -140,7 +145,12 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                     action = params[3]
                 }else{
                     System.out.println(actualUri)
+                    httpResponse.status = 401
+                    httpResponse.setHeader('ERROR', 'BAD Access attempted')
+                    return
                 }
+
+
 
                 //ApplicationContext ctx = Holders.grailsApplication.mainContext
                 //ApiCacheService apiCacheService = ctx.getBean("apiCacheService");
@@ -148,17 +158,16 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                 def apiCacheService = ctx.getBean("apiCacheService")
                 LinkedHashMap cache = (controller)?apiCacheService.getApiCache(controller.toString()):[:]
                 String version = cache['cacheversion']
-
                 List roles = cache[version][action]['roles'] as List
                 if(!checkAuth(roles,authenticationResult)) {
                     httpResponse.status = 401
                     httpResponse.setHeader('ERROR', 'Unauthorized Access attempted')
                     return
+                }else {
+                    //System.out.println("####[TokenCacheValidationFilter :: processFilterChain] ${actualUri} / ${validationEndpointUrl}")
+                    //log.debug "Continuing the filter chain"
+                    chain.doFilter(request, response)
                 }
-
-                //System.out.println("####[TokenCacheValidationFilter :: processFilterChain] ${actualUri} / ${validationEndpointUrl}")
-                //log.debug "Continuing the filter chain"
-                chain.doFilter(request, response)
             }
         } else {
             //log.debug "Request does not contain any token. Letting it continue through the filter chain"
