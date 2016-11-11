@@ -42,7 +42,6 @@ grailsPublish {
 
 ext {
     grailsVersion = '3.1.1'
-    //grailsVersion = project.grailsVersion
     gradleWrapperVersion = project.gradleWrapperVersion
 }
 
@@ -71,6 +70,7 @@ dependencies {
     compile('org.grails.plugins:spring-security-core:3.0.3') {
         exclude(module: 'org.springframework.security:spring-security-web')
     }
+
     compile('org.grails.plugins:spring-security-rest:2.0.0.M2') {
         exclude(module: 'com.google.guava:guava-io')
         exclude(module: 'org.springframework.security:spring-security-web')

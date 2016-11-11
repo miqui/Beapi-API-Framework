@@ -32,7 +32,7 @@ import grails.core.GrailsApplication
 import grails.plugin.springsecurity.SpringSecurityService
 import grails.util.Metadata
 import groovy.json.JsonSlurper
-import org.grails.web.util.WebUtils
+import net.nosegrind.apiframework.RequestMethod
 
 import org.grails.web.util.WebUtils
 
@@ -53,7 +53,9 @@ class BatchInterceptor extends ApiCommLayer{
 
 
 	String entryPoint = "b${Metadata.current.getProperty(Metadata.APPLICATION_VERSION, String.class)}"
-
+	String format
+	String mthdKey
+	RequestMethod mthd
 
 	BatchInterceptor(){
 		match(uri:"/${entryPoint}/**")
@@ -62,11 +64,15 @@ class BatchInterceptor extends ApiCommLayer{
 	boolean before(){
 		//println('##### BATCHINTERCEPTOR (BEFORE)')
 
+		format = (request?.format)?request.format:'JSON';
+		mthdKey = request.method.toUpperCase()
+		mthd = (RequestMethod) RequestMethod[mthdKey]
+
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
-		boolean restAlt = (['OPTIONS','TRACE','HEAD'].contains(request.method))?true:false
+		boolean restAlt = RequestMethod.isRestAlt(mthd.getKey())
 
 		// Init params
-		String format =request.format.toUpperCase()
+		//String format =request.format.toUpperCase()
 
 		LinkedHashMap dataParams = [:]
 		switch (format) {
@@ -95,7 +101,7 @@ class BatchInterceptor extends ApiCommLayer{
 				params.action = (params.action==null)?cache['defaultAction']:params.action
 
 				String expectedMethod = cache[params.apiObject][params.action.toString()]['method'] as String
-				if(!checkRequestMethod(expectedMethod,restAlt)) {
+				if(!checkRequestMethod(mthd,expectedMethod,restAlt)) {
 					render(status: HttpServletResponse.SC_BAD_REQUEST, text: "Expected request method '${expectedMethod}' does not match sent method '${request.method}'")
 					return false
 				}
@@ -117,6 +123,25 @@ class BatchInterceptor extends ApiCommLayer{
 					return false
 				}
 
+
+
+				// RETRIEVE CACHED RESULT
+				/*
+				if (cache[params.apiObject][params.action.toString()]['cachedResult']) {
+					String authority = getUserRole() as String
+					String domain = ((String) params.controller).capitalize()
+					//Integer version = (Integer) JSON.parseText((String)cache[params.apiObject][params.action.toString()]['cachedResult'][authority]).version
+					def slurper = new JsonSlurper()
+					groovy.json.internal.LazyMap json = (groovy.json.internal.LazyMap) slurper.parseText((String)cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()])
+
+					if (isCachedResult((Integer)json.get('version'), domain)) {
+						def result = cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()]
+						render(text: result, contentType: request.contentType)
+						return false
+					}
+				}
+				*/
+
 				if(!params.action){
 					String methodAction = methods[request.method]
 					if(!cache[params.apiObject][methodAction]){
@@ -135,7 +160,7 @@ class BatchInterceptor extends ApiCommLayer{
 
 				// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
 				ApiDescriptor cachedEndpoint = cache[(String)params.apiObject][(String)params.action] as ApiDescriptor
-				boolean result = handleBatchRequest(cachedEndpoint['deprecated'] as List, cachedEndpoint['method']?.toString().trim(), request, response, params)
+				boolean result = handleBatchRequest(cachedEndpoint['deprecated'] as List, cachedEndpoint['method']?.toString().trim(), mthd, response, params)
 				//boolean result = handleBatchRequest(cache[params.apiObject.toString()][params.action.toString()], request, response, params)
 				return result
 			}
@@ -174,12 +199,12 @@ class BatchInterceptor extends ApiCommLayer{
 			}
 
 			ApiDescriptor cachedEndpoint = cache[params.apiObject][(String)params.action] as ApiDescriptor
-			LinkedHashMap content = handleBatchResponse(cachedEndpoint['returns'] as LinkedHashMap,cachedEndpoint['roles'],request,response,newModel,params) as LinkedHashMap
+			String content = handleBatchResponse(cachedEndpoint['returns'] as LinkedHashMap,cachedEndpoint['roles'],mthd,format,response,newModel,params) as LinkedHashMap
 
 			//content = handleBatchResponse(cache[params.apiObject][params.action.toString()],request,response,newModel,params) as LinkedHashMap
 
 			if(content){
-				render(text:content.apiToolkitContent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)
+				render(text:content, contentType:request.contentType)
 				return false
 			}
 

@@ -31,11 +31,14 @@ import javax.annotation.Resource
 import grails.core.GrailsApplication
 //import net.nosegrind.apiframework.ApiDescriptor
 import grails.plugin.springsecurity.SpringSecurityService
+
+import net.nosegrind.apiframework.RequestMethod
 import groovy.json.JsonSlurper
 import grails.util.Metadata
 import groovy.json.internal.LazyMap
 import grails.converters.JSON
 import grails.converters.XML
+import org.grails.web.json.JSONObject
 
 //import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
@@ -55,6 +58,9 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 
 	// TODO: detect and assign apiObjectVersion from uri
 	String entryPoint = "v${Metadata.current.getProperty(Metadata.APPLICATION_VERSION, String.class)}"
+	String format
+	String mthdKey
+	RequestMethod mthd
 
 	ApiFrameworkInterceptor(){
 		// TODO: detect and assign apiObjectVersion from uri
@@ -62,11 +68,23 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 	}
 
 	boolean before(){
-		//println('##### FILTER (BEFORE)')
+		// println('##### FILTER (BEFORE)')
 
-		String format = (request?.format)?request.format:'JSON';
+		// TESTING: SHOW ALL FILTERS IN CHAIN
+		//def filterChain = grailsApplication.mainContext.getBean('springSecurityFilterChain')
+		//println(filterChain)
+
+		format = (request?.format)?request.format:'JSON';
+		mthdKey = request.method.toUpperCase()
+		mthd = (RequestMethod) RequestMethod[mthdKey]
+		//println(mthd.getClass())
+		//println(RequestMethod.fromString(mthd.getKey()))
+		//println(RequestMethod.isRestAlt(mthd.getKey()))
+		//println(RequestMethod.isRestAlt('OPTIONS'))
+
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
-		boolean restAlt = (['OPTIONS','TRACE','HEAD'].contains(request.method))?true:false
+		boolean restAlt = RequestMethod.isRestAlt(mthd.getKey())
+
 
 		// Init params
 		if (['XML', 'JSON'].contains(format)) {
@@ -111,74 +129,69 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 				return false
 			}else{
 				if(cache) {
-
 					params.apiObject = (params.apiObjectVersion) ? params.apiObjectVersion : cache['currentStable']['value']
 					params.action = (params.action == null) ? cache[params.apiObject]['defaultAction'] : params.action
 
+					// CHECK REQUEST METHOD FOR ENDPOINT
+					// NOTE: expectedMethod must be capitolized in IO State file
 					String expectedMethod = cache[params.apiObject][params.action.toString()]['method'] as String
-					if (!checkRequestMethod(expectedMethod, restAlt)) {
-						render(status: HttpServletResponse.SC_BAD_REQUEST, text: "Expected request method '${expectedMethod}' does not match sent method '${request.method}'")
+					if (!checkRequestMethod(mthd,expectedMethod, restAlt)) {
+						render(status: HttpServletResponse.SC_BAD_REQUEST, text: "Expected request method '${expectedMethod}' does not match sent method '${mthd.getKey()}'")
 						return false
 					}
 
-					// Check for REST alternatives
-					if (!restAlt) {
-
-						// Check that sent request params match expected endpoint params for principal ROLE
-						LinkedHashMap receives = cache[params.apiObject][params.action.toString()]['receives'] as LinkedHashMap
-						boolean requestKeysMatch = checkURIDefinitions(params, receives)
-
-						if (!requestKeysMatch) {
-							render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Expected request variables do not match sent variables')
-							return false
-						}
-					} else {
-						LinkedHashMap result = parseRequestMethod(request, params)
+					// CHECK FOR REST ALTERNATIVES
+					if (restAlt) {
+						// PARSE REST ALTS (TRACE, OPTIONS, ETC)
+						String result = parseRequestMethod(mthd, params)
 						if (result) {
-							render(text: result.apiToolkitContent, contentType: "${result.apiToolkitType}", encoding: result.apiToolkitEncoding)
+							render(text: result, contentType: request.contentType)
 							return false
 						}
 					}
 
+					// CHECK REQUEST VARIABLES MATCH ENDPOINTS EXPECTED VARIABLES
+					LinkedHashMap receives = cache[params.apiObject][params.action.toString()]['receives'] as LinkedHashMap
+					//boolean requestKeysMatch = checkURIDefinitions(params, receives)
+					if (!checkURIDefinitions(params, receives)) {
+						render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Expected request variables do not match sent variables')
+						return false
+					}
 
 					// RETRIEVE CACHED RESULT
 					if (cache[params.apiObject][params.action.toString()]['cachedResult']) {
 						String authority = getUserRole() as String
 						String domain = ((String) params.controller).capitalize()
-						//Integer version = (Integer) JSON.parseText((String)cache[params.apiObject][params.action.toString()]['cachedResult'][authority]).version
-						def slurper = new JsonSlurper()
-						groovy.json.internal.LazyMap json = (groovy.json.internal.LazyMap) slurper.parseText((String)cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()])
 
-						if (isCachedResult((Integer)json.get('version'), domain)) {
+						JSONObject json = (JSONObject) cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()]
+						if (isCachedResult((Integer) json.get('version'), domain)) {
 							def result = cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()]
 							render(text: result, contentType: request.contentType)
 							return false
 						}
+					} else {
+						if (params.action == null || !params.action) {
+							String methodAction = methods[request.method]
+							if (!cache[(String) params.apiObject][methodAction]) {
+								params.action = cache[(String) params.apiObject]['defaultAction']
+							} else {
+								params.action = methods[request.method]
 
-					}
-
-
-					if(params.action==null || !params.action){
-						String methodAction = methods[request.method]
-						if(!cache[(String)params.apiObject][methodAction]){
-							params.action = cache[(String)params.apiObject]['defaultAction']
-						}else{
-							params.action = methods[request.method]
-
-							// FORWARD FOR REST DEFAULTS WITH NO ACTION
-							String[] tempUri = request.getRequestURI().split("/")
-							if(tempUri[2].contains('dispatch') && "${params.controller}.dispatch" == tempUri[2] && !cache[params.apiObject]['domainPackage']){
-								forward(controller:params.controller,action:params.action)
-								return false
+								// FORWARD FOR REST DEFAULTS WITH NO ACTION
+								String[] tempUri = request.getRequestURI().split("/")
+								if (tempUri[2].contains('dispatch') && "${params.controller}.dispatch" == tempUri[2] && !cache[params.apiObject]['domainPackage']) {
+									forward(controller: params.controller, action: params.action)
+									return false
+								}
 							}
 						}
+
+						// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
+						ApiDescriptor cachedEndpoint = cache[(String) params.apiObject][(String) params.action] as ApiDescriptor
+						boolean result = handleApiRequest(cachedEndpoint['deprecated'] as List, cachedEndpoint['method']?.toString().trim(), mthd, response, params)
+
+						return result
 					}
-
-					// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
-					ApiDescriptor cachedEndpoint = cache[(String)params.apiObject][(String)params.action] as ApiDescriptor
-					boolean result = handleApiRequest(cachedEndpoint['deprecated'] as List, cachedEndpoint['method']?.toString().trim(), request, response, params)
-
-					return result
 				}
 			}
 			// no cache found
@@ -210,19 +223,15 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 			LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
 			ApiDescriptor cachedEndpoint = cache[params.apiObject][(String)params.action] as ApiDescriptor
 
-			LinkedHashMap content = handleApiResponse(cachedEndpoint['returns'] as LinkedHashMap,cachedEndpoint['roles'],request,response,newModel,params) as LinkedHashMap
+			String content = handleApiResponse(cachedEndpoint['returns'] as LinkedHashMap,cachedEndpoint['roles'],mthd,format,response,newModel,params)
 
 			if(content){
 				// STORE CACHED RESULT
-				//def format = request.getHeader('Content-Type').split('/')[1].toUpperCase()
-				def format = request.format.toUpperCase()
+				String format = request.format.toUpperCase()
 				String authority = getUserRole() as String
-				LinkedHashMap cachedResult = [:]
-				cachedResult[authority] = [:]
-				cachedResult[authority][format] = content.apiToolkitContent
-				apiCacheService.setApiCachedResult((String)params.controller, (String) params.apiObject,(String)params.action, cachedResult)
+				apiCacheService.setApiCachedResult((String)params.controller, (String) params.apiObject,(String)params.action, authority, format, content)
 
-				render(text:content.apiToolkitContent, contentType:"${content.apiToolkitType}", encoding:content.apiToolkitEncoding)
+				render(text:content, contentType:request.contentType)
 				return false
 			}
 

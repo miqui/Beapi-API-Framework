@@ -34,6 +34,7 @@ import javax.servlet.forward.*
 import org.grails.groovy.grails.commons.*
 import javax.servlet.http.HttpServletResponse
 import groovy.transform.CompileStatic
+import net.nosegrind.apiframework.RequestMethod
 
 // extended by Intercepters
 @CompileStatic
@@ -42,7 +43,7 @@ abstract class ApiCommLayer extends ApiCommProcess{
     /***************************
      * REQUESTS
      ***************************/
-    boolean handleApiRequest(List deprecated, String method, HttpServletRequest request, HttpServletResponse response, GrailsParameterMap params){
+    boolean handleApiRequest(List deprecated, String method, RequestMethod mthd, HttpServletResponse response, GrailsParameterMap params){
         try{
             // CHECK ACCESS TO METHOD
             /*
@@ -69,7 +70,7 @@ abstract class ApiCommLayer extends ApiCommProcess{
             //def method = cache['method']?.toString().trim()
 
             // DOES api.methods.contains(request.method)
-            if(!isRequestMatch(method,request.method.toString())){
+            if(!isRequestMatch(method,mthd)){
                 response.status = 400
                 response.setHeader('ERROR',"Request method doesn't match expected method.")
                 return false
@@ -80,7 +81,7 @@ abstract class ApiCommLayer extends ApiCommProcess{
         }
     }
 
-    boolean handleBatchRequest(List deprecated, String method, HttpServletRequest request, HttpServletResponse response, GrailsParameterMap params){
+    boolean handleBatchRequest(List deprecated, String method, RequestMethod mthd, HttpServletResponse response, GrailsParameterMap params){
         int status = 400
         try{
 
@@ -98,7 +99,7 @@ abstract class ApiCommLayer extends ApiCommProcess{
             //def method = cache['method']?.toString().trim()
 
             // DOES api.methods.contains(request.method)
-            if(!isRequestMatch(method,request.method.toString())){
+            if(!isRequestMatch(method,mthd)){
                 response.status = status
                 response.setHeader('ERROR',"Request method doesn't match expected method.")
                 return false
@@ -109,7 +110,7 @@ abstract class ApiCommLayer extends ApiCommProcess{
         }
     }
 
-    boolean handleChainRequest(List deprecated, String method, HttpServletRequest request, HttpServletResponse response, GrailsParameterMap params){
+    boolean handleChainRequest(List deprecated, String method, RequestMethod mthd, HttpServletResponse response, GrailsParameterMap params){
         int status = 400
         try{
 
@@ -127,7 +128,7 @@ abstract class ApiCommLayer extends ApiCommProcess{
             //def method = cache['method']?.toString().trim()
 
             // DOES api.methods.contains(request.method)
-            if(!isRequestMatch(method,request.method.toString())){
+            if(!isRequestMatch(method,mthd)){
                 response.status = status
                 response.setHeader('ERROR',"Request method doesn't match expected method.")
                 return false
@@ -141,7 +142,7 @@ abstract class ApiCommLayer extends ApiCommProcess{
     /***************************
     * RESPONSES
      ***************************/
-    def handleApiResponse(LinkedHashMap requestDefinitions, Object roles, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
+    def handleApiResponse(LinkedHashMap requestDefinitions, Object roles, RequestMethod mthd, String format, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
         //try{
             String authority = getUserRole() as String
             response.setHeader('Authorization', roles.toString().join(', '))
@@ -149,14 +150,14 @@ abstract class ApiCommLayer extends ApiCommProcess{
             List<HashMap> temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as List<HashMap>:requestDefinitions['permitAll'] as List<HashMap>
             List responseList = temp.collect(){ it.name }
 
-            LinkedHashMap content = [:]
+            String content
             if(params.controller!='apidoc') {
                 LinkedHashMap result = parseURIDefinitions(model, responseList)
 
                 // will parse empty map the same as map with content
-                content = parseResponseMethod(request, params, result)
+                content = parseResponseMethod(mthd, format, params, result)
             }else{
-                content = parseResponseMethod(request, params, model)
+                content = parseResponseMethod(mthd, format, params, model)
             }
             return content
 
@@ -165,7 +166,7 @@ abstract class ApiCommLayer extends ApiCommProcess{
         //}
     }
 
-    def handleBatchResponse(LinkedHashMap requestDefinitions, Object roles, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
+    def handleBatchResponse(LinkedHashMap requestDefinitions, Object roles, RequestMethod mthd, String format, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
         try{
             String authority = getUserRole() as String
             response.setHeader('Authorization', roles.toString().join(', '))
@@ -184,14 +185,14 @@ abstract class ApiCommLayer extends ApiCommProcess{
                 response.status = 400
             }else{
                 //LinkedHashMap content = parseResponseMethod(request, params, result)
-                return parseResponseMethod(request, params, result)
+                return parseResponseMethod(mthd, format, params, result)
             }
         }catch(Exception e){
             throw new Exception("[ApiCommLayer : handleBatchResponse] : Exception - full stack trace follows:",e)
         }
     }
 
-    def handleChainResponse(LinkedHashMap requestDefinitions, Object roles, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
+    def handleChainResponse(LinkedHashMap requestDefinitions, Object roles, RequestMethod mthd, String format, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
         try{
             String authority = getUserRole() as String
             response.setHeader('Authorization', roles.toString().join(', '))
@@ -210,7 +211,7 @@ abstract class ApiCommLayer extends ApiCommProcess{
                 response.status = 400
             }else{
                 //LinkedHashMap content = parseResponseMethod(request, params, result)
-                return parseResponseMethod(request, params, result)
+                return parseResponseMethod(mthd, format, params, result)
             }
         }catch(Exception e){
             throw new Exception("[ApiCommLayer : handleBatchResponse] : Exception - full stack trace follows:",e)

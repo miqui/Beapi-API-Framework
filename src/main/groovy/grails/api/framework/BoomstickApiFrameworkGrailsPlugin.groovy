@@ -91,6 +91,12 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
             /* restTokenValidationFilter */
             SpringSecurityUtils.registerFilter 'tokenCacheValidationFilter', SecurityFilterPosition.ANONYMOUS_FILTER.order + 2
 
+            SpringSecurityUtils.registerFilter 'springSecurityCORSFilter', SecurityFilterPosition.ANONYMOUS_FILTER.order + 3
+
+
+            springSecurityCORSFilter(SpringSecurityCORSFilter){}
+
+
             tokenCacheValidationFilter(TokenCacheValidationFilter) {
                 headerName = conf.rest.token.validation.headerName
                 validationEndpointUrl = conf.rest.token.validation.endpointUrl

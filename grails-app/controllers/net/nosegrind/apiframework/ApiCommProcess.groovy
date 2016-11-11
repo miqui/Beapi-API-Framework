@@ -34,6 +34,7 @@ import javax.annotation.Resource
 import javax.servlet.http.HttpServletRequest
 import java.text.SimpleDateFormat
 
+import net.nosegrind.apiframework.RequestMethod
 import static groovyx.gpars.GParsPool.withPool
 import grails.converters.JSON
 import grails.converters.XML
@@ -173,9 +174,9 @@ abstract class ApiCommProcess{
         }
     }
 
-    boolean checkRequestMethod(String method, boolean restAlt){
+    boolean checkRequestMethod(RequestMethod mthd,String method, boolean restAlt){
         if(!restAlt) {
-            return (method == request.method.toUpperCase()) ? true : false
+            return (mthd.getKey() == method) ? true : false
         }
         return true
     }
@@ -206,11 +207,11 @@ abstract class ApiCommProcess{
         return false
     }
 
-    LinkedHashMap parseResponseMethod(HttpServletRequest request, GrailsParameterMap params, LinkedHashMap result){
-        LinkedHashMap data = [:]
-        String defaultEncoding = Holders.grailsApplication.config.apitoolkit.encoding
-        String encoding = request.getHeader('accept-encoding')?request.getHeader('accept-encoding'):defaultEncoding
-        switch(request.method) {
+    String parseResponseMethod(RequestMethod mthd, String format, GrailsParameterMap params, LinkedHashMap result){
+        String content
+        //String defaultEncoding = Holders.grailsApplication.config.apitoolkit.encoding
+        //String encoding = request.getHeader('accept-encoding')?request.getHeader('accept-encoding'):defaultEncoding
+        switch(mthd.getKey()) {
             case 'PURGE':
                 // cleans cache; disabled for now
                 break;
@@ -220,33 +221,31 @@ abstract class ApiCommProcess{
                 break;
             case 'OPTIONS':
                 String doc = getApiDoc(params)
-                data = ['content':doc,'contentType':request.getAttribute('contentType'),'encoding':encoding]
+                content = doc
                 break;
             case 'GET':
             case 'PUT':
             case 'POST':
             case 'DELETE':
-                String content
-                switch(request.format.toUpperCase()){
+                switch(format){
                     case 'XML':
                         content = result as XML
                         break
                     case 'JSON':
                     default:
                         content = result as JSON
-                        data = ['content':content,'contentType':request.getAttribute('contentType'),'encoding':encoding]
                 }
                 break;
         }
 
-        return ['apiToolkitContent':data.content,'apiToolkitType':request.getAttribute('contentType'),'apiToolkitEncoding':encoding]
+        return content
     }
 
-    LinkedHashMap parseRequestMethod(HttpServletRequest request, GrailsParameterMap params){
-        LinkedHashMap data = [:]
-        String defaultEncoding = grailsApplication.config.apitoolkit.encoding
-        String encoding = request.getHeader('accept-encoding')?request.getHeader('accept-encoding'):defaultEncoding
-        switch(request.method) {
+    String parseRequestMethod(RequestMethod mthd, GrailsParameterMap params){
+        String content
+        //String defaultEncoding = grailsApplication.config.apitoolkit.encoding
+        //String encoding = request.getHeader('accept-encoding')?request.getHeader('accept-encoding'):defaultEncoding
+        switch(mthd.getKey()) {
             case 'PURGE':
                 // cleans cache; disabled for now
                 break;
@@ -257,12 +256,11 @@ abstract class ApiCommProcess{
                 // placeholder
                 break;
             case 'OPTIONS':
-                String doc = getApiDoc(params)
-                data = ['content':doc,'contentType':request.getAttribute('contentType'),'encoding':encoding]
+                content = getApiDoc(params)
                 break;
         }
 
-        return ['apiToolkitContent':data.content,'apiToolkitType':request.getAttribute('contentType'),'apiToolkitEncoding':encoding]
+        return content
     }
 
     LinkedHashMap parseURIDefinitions(LinkedHashMap model,List responseList){
@@ -306,11 +304,11 @@ abstract class ApiCommProcess{
         }
     }
 
-    boolean isRequestMatch(String protocol,String method){
-        if(['TRACERT','OPTIONS','HEAD'].contains(method)){
+    boolean isRequestMatch(String protocol,RequestMethod mthd){
+        if(RequestMethod.isRestAlt(mthd.getKey())){
             return true
         }else{
-            if(protocol == method){
+            if(protocol == mthd.getKey()){
                 return true
             }else{
                 return false

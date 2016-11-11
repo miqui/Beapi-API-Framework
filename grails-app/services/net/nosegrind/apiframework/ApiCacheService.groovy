@@ -29,6 +29,7 @@ package net.nosegrind.apiframework
 
 import grails.converters.JSON
 //import grails.converters.XML
+import org.grails.web.json.JSONObject
 import grails.util.Metadata
 import grails.plugin.cache.CacheEvict
 import grails.plugin.cache.CachePut
@@ -96,10 +97,15 @@ class ApiCacheService{
 	}
 
 	@CachePut(value="ApiCache",key="#controllername")
-	LinkedHashMap setApiCachedResult(String controllername, String apiversion, String methodname, LinkedHashMap result){
+	LinkedHashMap setApiCachedResult(String controllername, String apiversion, String methodname, String authority, String format, String content){
 		try{
+			JSONObject json = JSON.parse(content)
+			LinkedHashMap cachedResult = [:]
+			cachedResult[authority] = [:]
+			cachedResult[authority][format] = json
+
 			def cache = getApiCache(controllername)
-			cache[apiversion][methodname]['cachedResult'] = result
+			cache[apiversion][methodname]['cachedResult'] = cachedResult
 			return cache
 		}catch(Exception e){
 			throw new Exception("[ApiCacheService :: setApiCache] : Exception - full stack trace follows:",e)

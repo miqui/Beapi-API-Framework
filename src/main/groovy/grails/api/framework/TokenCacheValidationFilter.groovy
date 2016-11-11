@@ -13,6 +13,7 @@ import org.springframework.security.web.authentication.AuthenticationFailureHand
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler
 import org.springframework.web.filter.GenericFilterBean
 
+
 import javax.annotation.Resource
 import javax.servlet.FilterChain
 import javax.servlet.ServletException
@@ -47,6 +48,7 @@ class TokenCacheValidationFilter extends GenericFilterBean {
     AuthenticationFailureHandler authenticationFailureHandler
     RestAuthenticationEventPublisher authenticationEventPublisher
 
+
     //ApiCacheService apiCacheService
 
     TokenReader tokenReader
@@ -64,6 +66,8 @@ class TokenCacheValidationFilter extends GenericFilterBean {
         AccessToken accessToken
 
         try {
+
+
             accessToken = tokenReader.findToken(httpRequest)
             if (accessToken) {
                 //log.debug "Token found: ${accessToken.accessToken}"

@@ -1,15 +1,13 @@
 //package net.nosegrind.apiframework
 
-import net.nosegrind.apiframework.*
+import grails.plugin.springsecurity.SecurityFilterPosition
+import grails.plugin.springsecurity.SpringSecurityUtils
 
 class ApiBootStrap {
 
-	def grailsApplication
-	def apiObjectService
-	ApiCacheService apiCacheService
 
 	def init = { servletContext ->
-		//apiObjectService.initialize()
+
 	}
 	
 	def destroy = {}
