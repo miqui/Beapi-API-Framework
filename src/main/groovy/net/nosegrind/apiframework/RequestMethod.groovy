@@ -1,5 +1,18 @@
 package net.nosegrind.apiframework;
 
+/*
+ * Method		Idempotent	Safe
+ * OPTIONS		yes			yes
+ * HEAD			yes			yes
+ *
+ * GET			yes			yes
+ * PUT			yes			no
+ * POST			no			no
+ * DELETE		yes			no
+ * PATCH		no			no
+ * TRACE		no			yes
+ */
+
 public enum RequestMethod {
 	 GET("get"),
 	 PUT("put"),

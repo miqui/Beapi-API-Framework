@@ -56,8 +56,6 @@ abstract class ApiCommLayer extends ApiCommProcess{
             */
 
             // CHECK VERSION DEPRECATION DATE
-            //List deprecated = cache['deprecated'] as List
-
             if(deprecated?.get(0)){
                 if(checkDeprecationDate(deprecated[0].toString())){
                     String depMsg = deprecated[1].toString()
@@ -142,10 +140,10 @@ abstract class ApiCommLayer extends ApiCommProcess{
     /***************************
     * RESPONSES
      ***************************/
-    def handleApiResponse(LinkedHashMap requestDefinitions, Object roles, RequestMethod mthd, String format, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
+    def handleApiResponse(LinkedHashMap requestDefinitions, List roles, RequestMethod mthd, String format, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
         //try{
             String authority = getUserRole() as String
-            response.setHeader('Authorization', roles.toString().join(', '))
+            response.setHeader('Authorization', roles.join(', '))
 
             List<HashMap> temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as List<HashMap>:requestDefinitions['permitAll'] as List<HashMap>
             List responseList = temp.collect(){ it.name }
@@ -166,10 +164,10 @@ abstract class ApiCommLayer extends ApiCommProcess{
         //}
     }
 
-    def handleBatchResponse(LinkedHashMap requestDefinitions, Object roles, RequestMethod mthd, String format, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
+    def handleBatchResponse(LinkedHashMap requestDefinitions, List roles, RequestMethod mthd, String format, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
         try{
             String authority = getUserRole() as String
-            response.setHeader('Authorization', roles.toString().join(', '))
+            response.setHeader('Authorization', roles.join(', '))
 
             List<HashMap> temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as List<HashMap>:requestDefinitions['permitAll'] as List<HashMap>
             List responseList = temp.collect(){ it.name }
@@ -192,10 +190,10 @@ abstract class ApiCommLayer extends ApiCommProcess{
         }
     }
 
-    def handleChainResponse(LinkedHashMap requestDefinitions, Object roles, RequestMethod mthd, String format, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
+    def handleChainResponse(LinkedHashMap requestDefinitions, List roles, RequestMethod mthd, String format, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
         try{
             String authority = getUserRole() as String
-            response.setHeader('Authorization', roles.toString().join(', '))
+            response.setHeader('Authorization', roles.join(', '))
 
             List<HashMap> temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as List<HashMap>:requestDefinitions['permitAll'] as List<HashMap>
             List responseList = temp.collect(){ it.name }

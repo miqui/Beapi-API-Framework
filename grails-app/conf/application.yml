@@ -80,7 +80,7 @@ config:
 
 ---
 apitoolkit:
-    apiName: api
+    apiName: 'api'
     attempts: 5
     roles: ['ROLE_USER','ROLE_ROOT','ROLE_ADMIN','ROLE_ARCH']
     apichain:
@@ -94,6 +94,8 @@ apitoolkit:
     encoding: 'UTF-8'
     user:
         roles: ['ROLE_USER']
+        rateLimit: {'ROLE_USER':1000}
+        limitTimeout: 86400
     admin:
         roles: ['ROLE_ROOT','ROLE_ADMIN','ROLE_ARCH']
     serverType: 'master'

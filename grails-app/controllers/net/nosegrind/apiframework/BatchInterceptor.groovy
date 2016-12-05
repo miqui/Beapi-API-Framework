@@ -68,7 +68,7 @@ class BatchInterceptor extends ApiCommLayer{
 		mthdKey = request.method.toUpperCase()
 		mthd = (RequestMethod) RequestMethod[mthdKey]
 
-		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
+		//Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 		boolean restAlt = RequestMethod.isRestAlt(mthd.getKey())
 
 		// Init params
@@ -143,11 +143,11 @@ class BatchInterceptor extends ApiCommLayer{
 				*/
 
 				if(!params.action){
-					String methodAction = methods[request.method]
+					String methodAction = mthd.toString()
 					if(!cache[params.apiObject][methodAction]){
 						params.action = cache[params.apiObject]['defaultAction']
 					}else{
-						params.action = methods[request.method]
+						params.action = mthd.toString()
 
 						// FORWARD FOR REST DEFAULTS WITH NO ACTION
 						String[] tempUri = request.getRequestURI().split("/")
@@ -199,7 +199,7 @@ class BatchInterceptor extends ApiCommLayer{
 			}
 
 			ApiDescriptor cachedEndpoint = cache[params.apiObject][(String)params.action] as ApiDescriptor
-			String content = handleBatchResponse(cachedEndpoint['returns'] as LinkedHashMap,cachedEndpoint['roles'],mthd,format,response,newModel,params) as LinkedHashMap
+			String content = handleBatchResponse(cachedEndpoint['returns'] as LinkedHashMap,cachedEndpoint['roles'] as List,mthd,format,response,newModel,params) as LinkedHashMap
 
 			//content = handleBatchResponse(cache[params.apiObject][params.action.toString()],request,response,newModel,params) as LinkedHashMap
 

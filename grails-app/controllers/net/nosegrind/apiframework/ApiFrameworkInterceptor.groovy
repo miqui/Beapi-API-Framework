@@ -32,12 +32,12 @@ import grails.core.GrailsApplication
 //import net.nosegrind.apiframework.ApiDescriptor
 import grails.plugin.springsecurity.SpringSecurityService
 
-import net.nosegrind.apiframework.RequestMethod
+//import net.nosegrind.apiframework.RequestMethod
 import groovy.json.JsonSlurper
 import grails.util.Metadata
-import groovy.json.internal.LazyMap
-import grails.converters.JSON
-import grails.converters.XML
+//import groovy.json.internal.LazyMap
+//import grails.converters.JSON
+//import grails.converters.XML
 import org.grails.web.json.JSONObject
 
 //import javax.servlet.http.HttpServletRequest
@@ -61,15 +61,15 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 	String format
 	String mthdKey
 	RequestMethod mthd
+	LinkedHashMap cache = [:]
 
 	ApiFrameworkInterceptor(){
-		// TODO: detect and assign apiObjectVersion from uri
 		match(uri:"/${entryPoint}/**")
 	}
 
 	boolean before(){
-		// println('##### FILTER (BEFORE)')
-
+		//println('##### FILTER (BEFORE)')
+		
 		// TESTING: SHOW ALL FILTERS IN CHAIN
 		//def filterChain = grailsApplication.mainContext.getBean('springSecurityFilterChain')
 		//println(filterChain)
@@ -77,13 +77,11 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 		format = (request?.format)?request.format:'JSON';
 		mthdKey = request.method.toUpperCase()
 		mthd = (RequestMethod) RequestMethod[mthdKey]
-		//println(mthd.getClass())
-		//println(RequestMethod.fromString(mthd.getKey()))
-		//println(RequestMethod.isRestAlt(mthd.getKey()))
-		//println(RequestMethod.isRestAlt('OPTIONS'))
 
-		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
+		//Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 		boolean restAlt = RequestMethod.isRestAlt(mthd.getKey())
+
+		// TODO: Check if user in USER roles and if this request puts user over 'rateLimit'
 
 
 		// Init params
@@ -117,7 +115,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 
 		try{
 			// INITIALIZE CACHE
-			LinkedHashMap cache = (params.controller)? apiCacheService.getApiCache(params.controller.toString()):[:]
+			cache = (params.controller)? apiCacheService.getApiCache(params.controller.toString()) as LinkedHashMap:[:]
 
 			// IS APIDOC??
 			if(params.controller=='apidoc'){
@@ -171,11 +169,11 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 						}
 					} else {
 						if (params.action == null || !params.action) {
-							String methodAction = methods[request.method]
+							String methodAction = mthd.toString()
 							if (!cache[(String) params.apiObject][methodAction]) {
 								params.action = cache[(String) params.apiObject]['defaultAction']
 							} else {
-								params.action = methods[request.method]
+								params.action = mthd.toString()
 
 								// FORWARD FOR REST DEFAULTS WITH NO ACTION
 								String[] tempUri = request.getRequestURI().split("/")
@@ -220,10 +218,10 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 				newModel = model as LinkedHashMap
 			}
 
-			LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
+			//LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
 			ApiDescriptor cachedEndpoint = cache[params.apiObject][(String)params.action] as ApiDescriptor
 
-			String content = handleApiResponse(cachedEndpoint['returns'] as LinkedHashMap,cachedEndpoint['roles'],mthd,format,response,newModel,params)
+			String content = handleApiResponse(cachedEndpoint['returns'] as LinkedHashMap,cachedEndpoint['roles'] as List,mthd,format,response,newModel,params)
 
 			if(content){
 				// STORE CACHED RESULT

@@ -92,11 +92,11 @@ abstract class TraceCommLayer extends TraceCommProcess{
     /***************************
     * RESPONSES
      ***************************/
-    def handleApiResponse(LinkedHashMap requestDefinitions, Object roles, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
+    def handleApiResponse(LinkedHashMap requestDefinitions, List roles, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
         traceService.startTrace('TraceCommLayer','handleApiResponse')
         try{
             String authority = getUserRole() as String
-            response.setHeader('Authorization', roles.toString().join(', '))
+            response.setHeader('Authorization', roles.join(', '))
 
             List<HashMap> temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as List<HashMap>:requestDefinitions['permitAll'] as List<HashMap>
             List responseList = temp.collect(){ it.name }
