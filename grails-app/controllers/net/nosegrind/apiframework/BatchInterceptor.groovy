@@ -27,6 +27,8 @@
 
 package net.nosegrind.apiframework
 
+import org.grails.web.json.JSONObject
+
 import javax.annotation.Resource
 import grails.core.GrailsApplication
 import grails.plugin.springsecurity.SpringSecurityService
@@ -51,11 +53,13 @@ class BatchInterceptor extends ApiCommLayer{
 	ApiCacheService apiCacheService
 	SpringSecurityService springSecurityService
 
-
+	// TODO: detect and assign apiObjectVersion from uri
 	String entryPoint = "b${Metadata.current.getProperty(Metadata.APPLICATION_VERSION, String.class)}"
 	String format
+	List formats = ['XML', 'JSON']
 	String mthdKey
 	RequestMethod mthd
+	LinkedHashMap cache = [:]
 
 	BatchInterceptor(){
 		match(uri:"/${entryPoint}/**")
@@ -64,6 +68,10 @@ class BatchInterceptor extends ApiCommLayer{
 	boolean before(){
 		//println('##### BATCHINTERCEPTOR (BEFORE)')
 
+		// TESTING: SHOW ALL FILTERS IN CHAIN
+		//def filterChain = grailsApplication.mainContext.getBean('springSecurityFilterChain')
+		//println(filterChain)
+
 		format = (request?.format)?request.format:'JSON';
 		mthdKey = request.method.toUpperCase()
 		mthd = (RequestMethod) RequestMethod[mthdKey]
@@ -71,40 +79,56 @@ class BatchInterceptor extends ApiCommLayer{
 		//Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 		boolean restAlt = RequestMethod.isRestAlt(mthd.getKey())
 
-		// Init params
-		//String format =request.format.toUpperCase()
+		// TODO: Check if user in USER roles and if this request puts user over 'rateLimit'
 
-		LinkedHashMap dataParams = [:]
-		switch (format) {
-			case 'JSON':
-				String json = request.JSON.toString()
-				def slurper = new JsonSlurper()
-				slurper.parseText(json).each() { k, v ->
-					dataParams[k] = v
-				}
-				request.setAttribute("JSON", dataParams)
-				break
-			default:
-				render(status:HttpServletResponse.SC_BAD_REQUEST  , text: 'Expecting JSON Formatted batch data')
-				return false
+
+		// Init params
+		if (formats.contains(format)) {
+			LinkedHashMap dataParams = [:]
+			switch (format) {
+				case 'XML':
+					String xml = request.XML.toString()
+					if(xml!='[:]') {
+						def slurper = new XmlSlurper()
+						slurper.parseText(xml).each() { k, v ->
+							dataParams[k] = v
+						}
+						request.setAttribute('XML', dataParams)
+					}
+					break
+				case 'JSON':
+					String json = request.JSON.toString()
+					if(json!='[:]') {
+						def slurper = new JsonSlurper()
+						slurper.parseText(json).each() { k, v ->
+							dataParams[k] = v
+						}
+						request.setAttribute('JSON', dataParams)
+					}
+					break
+				default:
+					render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Expecting JSON Formatted batch data')
+					return false
+			}
 		}
 
 
-
 		try{
-			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
-
-			LinkedHashMap cache = (params.controller)? apiCacheService.getApiCache(params.controller.toString()):[:]
+			// INITIALIZE CACHE
+			cache = (params.controller)? apiCacheService.getApiCache(params.controller.toString()) as LinkedHashMap:[:]
 
 			if(cache) {
-				params.apiObject = (params.apiObjectVersion)?params.apiObjectVersion:cache['currentStable']['value']
-				params.action = (params.action==null)?cache['defaultAction']:params.action
+				params.apiObject = (params.apiObjectVersion) ? params.apiObjectVersion : cache['currentStable']['value']
+				params.action = (params.action == null) ? cache[params.apiObject]['defaultAction'] : params.action
 
+				// CHECK REQUEST METHOD FOR ENDPOINT
+				// NOTE: expectedMethod must be capitolized in IO State file
 				String expectedMethod = cache[params.apiObject][params.action.toString()]['method'] as String
-				if(!checkRequestMethod(mthd,expectedMethod,restAlt)) {
-					render(status: HttpServletResponse.SC_BAD_REQUEST, text: "Expected request method '${expectedMethod}' does not match sent method '${request.method}'")
+				if (!checkRequestMethod(mthd,expectedMethod, restAlt)) {
+					render(status: HttpServletResponse.SC_BAD_REQUEST, text: "Expected request method '${expectedMethod}' does not match sent method '${mthd.getKey()}'")
 					return false
 				}
+
 
 				if (request?.getAttribute('batchInc')==null) {
 					request.setAttribute('batchInc',0)
@@ -115,57 +139,58 @@ class BatchInterceptor extends ApiCommLayer{
 
 				setBatchParams(params)
 
-				LinkedHashMap receives = cache[params.apiObject.toString()][params.action.toString()]['receives'] as LinkedHashMap
+				// CHECK REQUEST VARIABLES MATCH ENDPOINTS EXPECTED VARIABLES
+				LinkedHashMap receives = cache[params.apiObject][params.action.toString()]['receives'] as LinkedHashMap
+				//boolean requestKeysMatch = checkURIDefinitions(params, receives)
+				if (!checkURIDefinitions(params, receives)) {
+					render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Expected request variables for endpoint do not match sent variables')
+					return false
+				}
+
 				boolean requestKeysMatch = checkURIDefinitions(params,receives)
 
 				if(!requestKeysMatch){
-					render(status:HttpServletResponse.SC_BAD_REQUEST, text: 'Expected request variables do not match sent variables')
+					render(status:HttpServletResponse.SC_BAD_REQUEST, text: 'Expected request variables for endpoint do not match sent variables')
 					return false
 				}
 
 
-
 				// RETRIEVE CACHED RESULT
-				/*
 				if (cache[params.apiObject][params.action.toString()]['cachedResult']) {
 					String authority = getUserRole() as String
 					String domain = ((String) params.controller).capitalize()
-					//Integer version = (Integer) JSON.parseText((String)cache[params.apiObject][params.action.toString()]['cachedResult'][authority]).version
-					def slurper = new JsonSlurper()
-					groovy.json.internal.LazyMap json = (groovy.json.internal.LazyMap) slurper.parseText((String)cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()])
 
-					if (isCachedResult((Integer)json.get('version'), domain)) {
+					JSONObject json = (JSONObject) cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()]
+					if (isCachedResult((Integer) json.get('version'), domain)) {
 						def result = cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()]
 						render(text: result, contentType: request.contentType)
 						return false
 					}
-				}
-				*/
+				} else {
+					if (params.action == null || !params.action) {
+						String methodAction = mthd.toString()
+						if (!cache[(String) params.apiObject][methodAction]) {
+							params.action = cache[(String) params.apiObject]['defaultAction']
+						} else {
+							params.action = mthd.toString()
 
-				if(!params.action){
-					String methodAction = mthd.toString()
-					if(!cache[params.apiObject][methodAction]){
-						params.action = cache[params.apiObject]['defaultAction']
-					}else{
-						params.action = mthd.toString()
-
-						// FORWARD FOR REST DEFAULTS WITH NO ACTION
-						String[] tempUri = request.getRequestURI().split("/")
-						if(tempUri[2].contains('dispatch') && "${params.controller}.dispatch" == tempUri[2] && !cache[params.apiObject]['domainPackage']){
-							forward(controller:params.controller,action:params.action,params:params)
-							return false
+							// FORWARD FOR REST DEFAULTS WITH NO ACTION
+							String[] tempUri = request.getRequestURI().split("/")
+							if (tempUri[2].contains('dispatch') && "${params.controller}.dispatch" == tempUri[2] && !cache[params.apiObject]['domainPackage']) {
+								forward(controller: params.controller, action: params.action)
+								return false
+							}
 						}
 					}
-				}
 
-				// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
-				ApiDescriptor cachedEndpoint = cache[(String)params.apiObject][(String)params.action] as ApiDescriptor
-				boolean result = handleBatchRequest(cachedEndpoint['deprecated'] as List, cachedEndpoint['method']?.toString().trim(), mthd, response, params)
-				//boolean result = handleBatchRequest(cache[params.apiObject.toString()][params.action.toString()], request, response, params)
-				return result
+					// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
+					ApiDescriptor cachedEndpoint = cache[(String) params.apiObject][(String) params.action] as ApiDescriptor
+					boolean result = handleApiRequest(cachedEndpoint['deprecated'] as List, cachedEndpoint['method']?.toString().trim(), mthd, response, params)
+
+					return result
+				}
 			}
 
-			//}
 			return false
 
 		}catch(Exception e) {

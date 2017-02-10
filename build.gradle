@@ -86,6 +86,10 @@ dependencies {
         exclude(module:'grails-bootstrap')
         exclude(module:'grails-plugin-gsp')
     }
+
+    // UNCOMMENT NOSQL DB AS NEEDED FOR LIBRARIES
+    compile 'org.grails.plugins:mongodb:5.0.2'
+
     compile('org.grails:grails-logging:3.1.1')
     compile('org.codehaus.groovy:groovy-ant:2.4.5')
 
@@ -94,6 +98,8 @@ dependencies {
     compile "org.hibernate:hibernate-ehcache"
 
     //testCompile "org.grails:grails-plugin-testing"
+    //testCompile "org.grails.plugins:geb"
+    //testRuntime "net.sourceforge.htmlunit:htmlunit:2.18"
 }
 
 task wrapper(type: Wrapper) {

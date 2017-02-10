@@ -59,6 +59,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 	// TODO: detect and assign apiObjectVersion from uri
 	String entryPoint = "v${Metadata.current.getProperty(Metadata.APPLICATION_VERSION, String.class)}"
 	String format
+	List formats = ['XML', 'JSON']
 	String mthdKey
 	RequestMethod mthd
 	LinkedHashMap cache = [:]
@@ -69,7 +70,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 
 	boolean before(){
 		//println('##### FILTER (BEFORE)')
-		
+
 		// TESTING: SHOW ALL FILTERS IN CHAIN
 		//def filterChain = grailsApplication.mainContext.getBean('springSecurityFilterChain')
 		//println(filterChain)
@@ -83,9 +84,8 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 
 		// TODO: Check if user in USER roles and if this request puts user over 'rateLimit'
 
-
 		// Init params
-		if (['XML', 'JSON'].contains(format)) {
+		if (formats.contains(format)) {
 			LinkedHashMap dataParams = [:]
 			switch (format) {
 				case 'XML':
@@ -152,7 +152,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 					LinkedHashMap receives = cache[params.apiObject][params.action.toString()]['receives'] as LinkedHashMap
 					//boolean requestKeysMatch = checkURIDefinitions(params, receives)
 					if (!checkURIDefinitions(params, receives)) {
-						render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Expected request variables do not match sent variables')
+						render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Expected request variables for endpoint do not match sent variables')
 						return false
 					}
 
