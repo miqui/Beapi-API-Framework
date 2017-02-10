@@ -60,7 +60,6 @@ abstract class ApiLayer{
 	}
 
 
-
 	// BOTH
 	List getApiParams(LinkedHashMap definitions){
 		try{
@@ -83,43 +82,52 @@ abstract class ApiLayer{
 
 	// BOTH
 	LinkedHashMap parseURIDefinitions(LinkedHashMap model,List responseList){
-		try{
-			String msg = 'Error. Invalid variables being returned. Please see your administrator'
-
-			List paramsList
-			Integer msize = model.size()
-			switch(msize) {
-				case 0:
-					return [:]
-					break;
-				case 1:
-					paramsList = (model.keySet()!=['id'])?model.entrySet().iterator().next() as List : model.keySet() as List
-					break;
-				default:
-					paramsList = model.keySet() as List
-					break;
+		println(model[0].getClass().getName())
+		if(model[0].getClass()=='java.util.LinkedHashMap'){
+			println("##### recursive check #####")
+			model.each(){ key,val ->
+				model[key] = this.parseUriDefinitions(val,responseList)
 			}
+			return model
+		}else {
+			try {
+				String msg = 'Error. Invalid variables being returned. Please see your administrator'
 
-			paramsList?.removeAll(optionalParams)
-
-			if(!responseList.containsAll(paramsList)){
-
-				paramsList.removeAll(responseList)
-				paramsList.each() { it2 ->
-					model.remove("${it2}".toString())
+				List paramsList
+				Integer msize = model.size()
+				switch (msize) {
+					case 0:
+						return [:]
+						break;
+					case 1:
+						paramsList = (model.keySet() != ['id']) ? model.entrySet().iterator().next() as List : model.keySet() as List
+						break;
+					default:
+						paramsList = model.keySet() as List
+						break;
 				}
 
-				if(!paramsList){
-					return [:]
-				}else{
+				paramsList?.removeAll(optionalParams)
+
+				if (!responseList.containsAll(paramsList)) {
+
+					paramsList.removeAll(responseList)
+					paramsList.each() { it2 ->
+						model.remove("${it2}".toString())
+					}
+
+					if (!paramsList) {
+						return [:]
+					} else {
+						return model
+					}
+				} else {
 					return model
 				}
-			}else{
-				return model
-			}
 
-		}catch(Exception e){
-			throw new Exception("[ApiLayer :: parseURIDefinitions] : Exception - full stack trace follows:",e)
+			} catch (Exception e) {
+				throw new Exception("[ApiLayer :: parseURIDefinitions] : Exception - full stack trace follows:", e)
+			}
 		}
 	}
 

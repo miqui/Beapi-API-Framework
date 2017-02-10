@@ -162,10 +162,14 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 						String domain = ((String) params.controller).capitalize()
 
 						JSONObject json = (JSONObject) cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()]
-						if (isCachedResult((Integer) json.get('version'), domain)) {
-							def result = cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()]
-							render(text: result, contentType: request.contentType)
+						if(!json){
 							return false
+						}else{
+							if (isCachedResult((Integer) json.get('version'), domain)) {
+								def result = cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()]
+								render(text: result, contentType: request.contentType)
+								return false
+							}
 						}
 					} else {
 						if (params.action == null || !params.action) {

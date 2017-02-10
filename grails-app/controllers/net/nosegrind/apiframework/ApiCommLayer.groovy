@@ -141,17 +141,18 @@ abstract class ApiCommLayer extends ApiCommProcess{
     * RESPONSES
      ***************************/
     def handleApiResponse(LinkedHashMap requestDefinitions, List roles, RequestMethod mthd, String format, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
+
         //try{
             String authority = getUserRole() as String
             response.setHeader('Authorization', roles.join(', '))
 
-            List<HashMap> temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as List<HashMap>:requestDefinitions['permitAll'] as List<HashMap>
-            List responseList = temp.collect(){ it.name }
+            ArrayList<HashMap> temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as ArrayList<HashMap>:requestDefinitions['permitAll'] as ArrayList<HashMap>
+
+            ArrayList responseList = (ArrayList)temp.collect(){ it.name }
 
             String content
             if(params.controller!='apidoc') {
                 LinkedHashMap result = parseURIDefinitions(model, responseList)
-
                 // will parse empty map the same as map with content
                 content = parseResponseMethod(mthd, format, params, result)
             }else{
@@ -169,8 +170,8 @@ abstract class ApiCommLayer extends ApiCommProcess{
             String authority = getUserRole() as String
             response.setHeader('Authorization', roles.join(', '))
 
-            List<HashMap> temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as List<HashMap>:requestDefinitions['permitAll'] as List<HashMap>
-            List responseList = temp.collect(){ it.name }
+            ArrayList<HashMap> temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as ArrayList<HashMap>:requestDefinitions['permitAll'] as ArrayList<HashMap>
+            ArrayList responseList = (ArrayList)temp.collect(){ it.name }
 
             LinkedHashMap result = parseURIDefinitions(model,responseList)
 
@@ -195,8 +196,8 @@ abstract class ApiCommLayer extends ApiCommProcess{
             String authority = getUserRole() as String
             response.setHeader('Authorization', roles.join(', '))
 
-            List<HashMap> temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as List<HashMap>:requestDefinitions['permitAll'] as List<HashMap>
-            List responseList = temp.collect(){ it.name }
+            ArrayList<HashMap> temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as ArrayList<HashMap>:requestDefinitions['permitAll'] as ArrayList<HashMap>
+            ArrayList responseList = (ArrayList)temp.collect(){ it.name }
 
             LinkedHashMap result = parseURIDefinitions(model,responseList)
 

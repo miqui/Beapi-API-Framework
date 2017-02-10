@@ -155,7 +155,6 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                 }
 
 
-
                 //ApplicationContext ctx = Holders.grailsApplication.mainContext
                 //ApiCacheService apiCacheService = ctx.getBean("apiCacheService");
                 ApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext(getServletContext());

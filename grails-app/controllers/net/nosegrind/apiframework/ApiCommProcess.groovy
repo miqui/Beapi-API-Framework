@@ -27,8 +27,6 @@
 
 package net.nosegrind.apiframework
 
-import grails.converters.JSON
-import grails.converters.XML
 
 import javax.annotation.Resource
 import javax.servlet.http.HttpServletRequest
@@ -263,44 +261,51 @@ abstract class ApiCommProcess{
         return content
     }
 
-    LinkedHashMap parseURIDefinitions(LinkedHashMap model,List responseList){
-        try{
-            String msg = 'Error. Invalid variables being returned. Please see your administrator'
-
-            List paramsList
-            Integer msize = model.size()
-            switch(msize) {
-                case 0:
-                    return [:]
-                    break;
-                case 1:
-                    paramsList = (model.keySet()!=['id'])?model.entrySet().iterator().next() as List : model.keySet() as List
-                    break;
-                default:
-                    paramsList = model.keySet() as List
-                    break;
+    LinkedHashMap parseURIDefinitions(LinkedHashMap model,ArrayList responseList){
+        if(model[0].getClass().getName()=='java.util.LinkedHashMap'){
+            model.each(){ key,val ->
+                model[key] = this.parseURIDefinitions(val,responseList)
             }
+            return model
+        }else {
+            //try {
+                String msg = 'Error. Invalid variables being returned. Please see your administrator'
 
-            paramsList?.removeAll(optionalParams)
-
-            if(!responseList.containsAll(paramsList)){
-
-                paramsList.removeAll(responseList)
-                paramsList.each() { it2 ->
-                    model.remove("${it2}".toString())
+                List paramsList
+                Integer msize = model.size()
+                switch (msize) {
+                    case 0:
+                        return [:]
+                        break;
+                    case 1:
+                        paramsList = (model.keySet() != ['id']) ? model.entrySet().iterator().next() as List : model.keySet() as List
+                        break;
+                    default:
+                        paramsList = model.keySet() as List
+                        break;
                 }
 
-                if(!paramsList){
-                    return [:]
-                }else{
+                paramsList?.removeAll(optionalParams)
+
+
+                if (!responseList.containsAll(paramsList)) {
+                    paramsList.removeAll(responseList)
+                    paramsList.each() { it2 ->
+                        model.remove("${it2}".toString())
+                    }
+
+                    if (!paramsList) {
+                        return [:]
+                    } else {
+                        return model
+                    }
+                } else {
                     return model
                 }
-            }else{
-                return model
-            }
 
-        }catch(Exception e){
-            throw new Exception("[ApiCommProcess :: parseURIDefinitions] : Exception - full stack trace follows:",e)
+            //} catch (Exception e) {
+             //   throw new Exception("[ApiCommProcess :: parseURIDefinitions] : Exception - full stack trace follows:", e)
+            //}
         }
     }
 
@@ -485,14 +490,15 @@ abstract class ApiCommProcess{
         try{
             LinkedHashMap newMap = [:]
             String k = map.entrySet().toList().first().key
+
             if(map && (!map?.response && !map?.metaClass && !map?.params)){
                 if (DomainClassArtefactHandler.isDomainClass(map[k].getClass())) {
                     newMap = formatDomainObject(map[k])
                     return newMap
-                } else if (['class java.util.LinkedList', 'class java.util.ArrayList'].contains(map[k].getClass())) {
+                } else if(['class java.util.LinkedList', 'class java.util.ArrayList'].contains(map[k].getClass().toString())) {
                     newMap = formatList(map[k])
                     return newMap
-                } else if (['class java.util.Map', 'class java.util.LinkedHashMap'].contains(map[k].getClass())) {
+                } else if(['class java.util.Map', 'class java.util.LinkedHashMap'].contains(map[k].getClass().toString())) {
                     newMap = formatMap(map[k])
                     return newMap
                 }
@@ -513,7 +519,12 @@ abstract class ApiCommProcess{
 
             DefaultGrailsDomainClass d = new DefaultGrailsDomainClass(data.class)
             d.persistentProperties.each() { it ->
-                newMap[it.name] = (DomainClassArtefactHandler.isDomainClass(data[it.name].getClass())) ? data."${it.name}".id : data[it.name]
+                if((DomainClassArtefactHandler.isDomainClass(data[it.name].getClass()))){
+                    newMap["${it.name}Id"] = data[it.name]
+                }else{
+                    newMap[it.name] = data[it.name]
+                    
+                }
             }
             return newMap
         }catch(Exception e){
