@@ -88,7 +88,7 @@ dependencies {
     }
 
     // UNCOMMENT NOSQL DB AS NEEDED FOR LIBRARIES
-    compile 'org.grails.plugins:mongodb:5.0.2'
+    //compile 'org.grails.plugins:mongodb:5.0.2'
 
     compile('org.grails:grails-logging:3.1.1')
     compile('org.codehaus.groovy:groovy-ant:2.4.5')

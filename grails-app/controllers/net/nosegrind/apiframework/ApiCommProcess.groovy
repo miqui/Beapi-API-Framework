@@ -181,7 +181,7 @@ abstract class ApiCommProcess{
 
     // TODO: put in OPTIONAL toggle in application.yml to allow for this check
     boolean checkURIDefinitions(GrailsParameterMap params,LinkedHashMap requestDefinitions){
-        List reservedNames = ['batchLength','batchInc']
+        List reservedNames = ['batchLength','batchInc','_']
         try{
             String authority = getUserRole() as String
             List temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as List:requestDefinitions['permitAll'] as List

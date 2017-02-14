@@ -69,7 +69,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 	}
 
 	boolean before(){
-		//println('##### FILTER (BEFORE)')
+		println('##### FILTER (BEFORE)')
 
 		// TESTING: SHOW ALL FILTERS IN CHAIN
 		//def filterChain = grailsApplication.mainContext.getBean('springSecurityFilterChain')
@@ -156,7 +156,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 						return false
 					}
 
-					// RETRIEVE CACHED RESULT
+					// RETRIEVE CACHED RESULT; DON'T CACHE LISTS
 					if (cache[params.apiObject][params.action.toString()]['cachedResult']) {
 						String authority = getUserRole() as String
 						String domain = ((String) params.controller).capitalize()
@@ -207,7 +207,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 	}
 
 	boolean after(){
-		//println('##### FILTER (AFTER)')
+		println('##### FILTER (AFTER)')
 		try{
 			LinkedHashMap newModel = [:]
 
@@ -225,14 +225,18 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 			//LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
 			ApiDescriptor cachedEndpoint = cache[params.apiObject][(String)params.action] as ApiDescriptor
 
+			boolean isNested = false
+			if(newModel[0].getClass().getName()=='java.util.LinkedHashMap'){ isNested = true }
 			String content = handleApiResponse(cachedEndpoint['returns'] as LinkedHashMap,cachedEndpoint['roles'] as List,mthd,format,response,newModel,params)
 
 			if(content){
 				// STORE CACHED RESULT
 				String format = request.format.toUpperCase()
 				String authority = getUserRole() as String
-				apiCacheService.setApiCachedResult((String)params.controller, (String) params.apiObject,(String)params.action, authority, format, content)
 
+				if(!newModel) {
+					apiCacheService.setApiCachedResult((String) params.controller, (String) params.apiObject, (String) params.action, authority, format, content)
+				}
 				render(text:content, contentType:request.contentType)
 				return false
 			}

@@ -90,7 +90,6 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
 
             /* restTokenValidationFilter */
             SpringSecurityUtils.registerFilter 'tokenCacheValidationFilter', SecurityFilterPosition.ANONYMOUS_FILTER.order + 2
-
             SpringSecurityUtils.registerFilter 'springSecurityCORSFilter', SecurityFilterPosition.ANONYMOUS_FILTER.order + 3
 
 
@@ -125,7 +124,7 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
             servletRegistration.setAsyncSupported(Boolean.TRUE)
             servletRegistration.setLoadOnStartup(1)
 
-            servletRegistration.setInitParameter("org.atmosphere.cpr.asyncSupport", "org.atmosphere.container.JettyServlet30AsyncSupportWithWebSocket")
+            // servletRegistration.setInitParameter("org.atmosphere.cpr.asyncSupport", "org.atmosphere.container.JettyServlet30AsyncSupportWithWebSocket")
 
             def initParams = parameters.initParams
             if (initParams != "none") {

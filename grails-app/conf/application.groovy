@@ -59,11 +59,11 @@ grails.plugin.springsecurity.logout.postOnly = false
 grails.plugin.springsecurity.ui.encodePassword = false
 grails.plugin.springsecurity.auth.forceHttps = false
 grails.plugin.springsecurity.auth.loginFormUrl = '/login/auth/'
-grails.plugin.springsecurity.auth.ajaxLoginFormUrl = '/login/authAjax/'
+//grails.plugin.springsecurity.auth.ajaxLoginFormUrl = '/login/authAjax/'
 
-grails.plugin.springsecurity.successHandler.defaultTargetUrl = '/login/ajaxSuccess'
-grails.plugin.springsecurity.failureHandler.defaultFailureUrl = '/login/ajaxDenied'
-grails.plugin.springsecurity.failureHandler.ajaxAuthFailUrl = '/login/ajaxDenied'
+//grails.plugin.springsecurity.successHandler.defaultTargetUrl = '/login/ajaxSuccess'
+//grails.plugin.springsecurity.failureHandler.defaultFailureUrl = '/login/ajaxDenied'
+//grails.plugin.springsecurity.failureHandler.ajaxAuthFailUrl = '/login/ajaxDenied'
 
 grails.plugin.springsecurity.interceptUrlMap = [
         [pattern:'/api/**',            access:['permitAll']],
@@ -103,7 +103,7 @@ grails.plugin.springsecurity.rest.token.storage.gorm.usernamePropertyName   = 'u
 grails.plugin.springsecurity.rest.token.rendering.usernamePropertyName  = 'username'
 grails.plugin.springsecurity.rest.token.rendering.authoritiesPropertyName = 'authorities'
 
-//grails.plugin.springsecurity.rest.token.validation.useBearerToken = false
+grails.plugin.springsecurity.rest.token.validation.useBearerToken = true
 //grails.plugin.springsecurity.rest.token.validation.active   = true
 //grails.plugin.springsecurity.rest.token.validation.headerName   = 'X-Auth-Token'
 //grails.plugin.springsecurity.rest.token.validation.endpointUrl  = '/api/validate'

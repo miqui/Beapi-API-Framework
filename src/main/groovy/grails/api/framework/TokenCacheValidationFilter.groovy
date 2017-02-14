@@ -61,19 +61,17 @@ class TokenCacheValidationFilter extends GenericFilterBean {
 
     @Override
     void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+        println("#### TokenCacheValidationFilter > dofilter ####")
         HttpServletRequest httpRequest = request as HttpServletRequest
         HttpServletResponse httpResponse = response as HttpServletResponse
         AccessToken accessToken
 
         try {
-
-
             accessToken = tokenReader.findToken(httpRequest)
             if (accessToken) {
                 //log.debug "Token found: ${accessToken.accessToken}"
                 //log.debug "Trying to authenticate the token"
                 accessToken = restAuthenticationProvider.authenticate(accessToken) as AccessToken
-
 
                 //Object getCredentials()
                 if (accessToken.authenticated) {
@@ -123,6 +121,7 @@ class TokenCacheValidationFilter extends GenericFilterBean {
 
     @CompileDynamic
     private void processFilterChain(ServletRequest request, ServletResponse response, FilterChain chain, AccessToken authenticationResult) {
+        println("#### TokenCacheValidationFilter > processFilterChain ####")
         HttpServletRequest httpRequest = request as HttpServletRequest
         HttpServletResponse httpResponse = response as HttpServletResponse
 
@@ -130,7 +129,6 @@ class TokenCacheValidationFilter extends GenericFilterBean {
 
         if (!active) {
             //log.debug "Token validation is disabled. Continuing the filter chain"
-            chain.doFilter(request, response)
             return
         }
 
@@ -161,6 +159,11 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                 def apiCacheService = ctx.getBean("apiCacheService")
                 LinkedHashMap cache = (controller)?apiCacheService.getApiCache(controller.toString()):[:]
                 String version = cache['cacheversion']
+                if(!cache[version]){
+                    httpResponse.status = 401
+                    httpResponse.setHeader('ERROR', 'IO State Not properly Formatted for this URI. Please contact the Administrator.')
+                    return
+                }
                 List roles = cache[version][action]['roles'] as List
                 if(!checkAuth(roles,authenticationResult)) {
                     httpResponse.status = 401
@@ -169,13 +172,13 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                 }else {
                     //System.out.println("####[TokenCacheValidationFilter :: processFilterChain] ${actualUri} / ${validationEndpointUrl}")
                     //log.debug "Continuing the filter chain"
-                    chain.doFilter(request, response)
                 }
             }
         } else {
             //log.debug "Request does not contain any token. Letting it continue through the filter chain"
-            chain.doFilter(request, response)
         }
 
+        chain.doFilter(request, response)
     }
+
 }

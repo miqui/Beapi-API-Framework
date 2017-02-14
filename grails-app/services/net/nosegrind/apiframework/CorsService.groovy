@@ -5,6 +5,10 @@ import grails.util.Environment
 
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
+import groovy.json.JsonSlurper
+import groovy.util.XmlSlurper
+
+import java.util.Enumeration
 
 @Transactional
 class CorsService {
@@ -26,29 +30,38 @@ class CorsService {
             false
         }
 
-
         String origin = request.getHeader("Origin");
         boolean options = ("OPTIONS" == request.method)
         if (options) {
-            response.addHeader("Allow", "GET, HEAD, POST, PUT, DELETE, TRACE, PATCH, OPTIONS")
+            response.setHeader("Allow", "GET, HEAD, POST, PUT, DELETE, TRACE, PATCH, OPTIONS")
             if (origin != null) {
-                //response.addHeader("Access-Control-Allow-Headers", "origin, authorization, accept, content-type, x-requested-with")
-                //response.addHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, PATCH, OPTIONS")
-                //response.addHeader("Access-Control-Max-Age", "3600")
+                response.setHeader("Access-Control-Allow-Headers", "Cache-Control, Pragma, WWW-Authenticate, Origin, Authorization, Content-Type, XMLHttpRequest, X-Requested-With, Access-Control-Request-Method, Access-control-Request-Headers")
+                //response.setHeader("Access-Control-Allow-Headers","*")
+                response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, PATCH, OPTIONS")
+                response.setHeader("Access-Control-Allow-Credentials","true")
+                response.setHeader("Access-Control-Max-Age", "3600")
+                response.setHeader("Access-Control-Expose-Headers","*")
+                request.getHeader('Access-Control-Request-Headers')
             }
         }
 
-        if( allowedOrigins && allowedOrigins.contains(origin)) { // request origin is on the white list
+
+        if(allowedOrigins && allowedOrigins.contains(origin)) { // request origin is on the white list
+            println("### ... allowed origins")
             // add CORS access control headers for the given origin
-            //response.addHeader("Access-Control-Allow-Origin", origin)
-            //response.addHeader("Access-Control-Allow-Credentials", "true")
-        }
-        else if( !allowedOrigins ) { // no origin white list
+            response.setHeader("Access-Control-Allow-Origin", origin)
+            response.setHeader("Access-Control-Allow-Credentials", "true")
+            response.writer.flush()
+            return false
+        } else if( !allowedOrigins ) { // no origin white list
             // add CORS access control headers for all origins
-            //response.addHeader("Access-Control-Allow-Origin", origin ?: "*")
-            //response.addHeader("Access-Control-Allow-Credentials", "true")
+            println("### ... allowing this origin")
+            response.setHeader("Access-Control-Allow-Origin", origin ?: "*")
+            response.setHeader("Access-Control-Allow-Credentials", "true")
+            response.writer.flush()
+            return false
         }
 
-        options
+        //options
     }
 }
