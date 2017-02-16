@@ -61,7 +61,6 @@ class TokenCacheValidationFilter extends GenericFilterBean {
 
     @Override
     void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        println("#### TokenCacheValidationFilter > dofilter ####")
         HttpServletRequest httpRequest = request as HttpServletRequest
         HttpServletResponse httpResponse = response as HttpServletResponse
         AccessToken accessToken
@@ -121,7 +120,6 @@ class TokenCacheValidationFilter extends GenericFilterBean {
 
     @CompileDynamic
     private void processFilterChain(ServletRequest request, ServletResponse response, FilterChain chain, AccessToken authenticationResult) {
-        println("#### TokenCacheValidationFilter > processFilterChain ####")
         HttpServletRequest httpRequest = request as HttpServletRequest
         HttpServletResponse httpResponse = response as HttpServletResponse
 
@@ -146,7 +144,6 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                     controller = params[2]
                     action = params[3]
                 }else{
-                    System.out.println(actualUri)
                     httpResponse.status = 401
                     httpResponse.setHeader('ERROR', 'BAD Access attempted')
                     return

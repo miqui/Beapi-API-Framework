@@ -44,12 +44,12 @@ import grails.core.GrailsApplication
 import grails.util.Holders
 
 import org.grails.core.DefaultGrailsDomainClass
-
+import org.springframework.beans.factory.annotation.Autowired
 
 //import groovy.transform.CompileStatic
 //import grails.compiler.GrailsCompileStatic
 import org.codehaus.groovy.grails.commons.DomainClassArtefactHandler
-
+import net.nosegrind.apiframework.ApiCacheService
 
 // extended by ApiCommLayer
 abstract class ApiCommProcess{
@@ -57,6 +57,7 @@ abstract class ApiCommProcess{
     @Resource
     GrailsApplication grailsApplication
 
+    @Autowired
     ApiCacheService apiCacheService
 
     List formats = ['text/html','text/json','application/json','text/xml','application/xml']

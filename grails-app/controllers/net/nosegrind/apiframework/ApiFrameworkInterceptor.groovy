@@ -69,7 +69,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 	}
 
 	boolean before(){
-		println('##### FILTER (BEFORE)')
+		//println('##### FILTER (BEFORE)')
 
 		// TESTING: SHOW ALL FILTERS IN CHAIN
 		//def filterChain = grailsApplication.mainContext.getBean('springSecurityFilterChain')
@@ -207,7 +207,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 	}
 
 	boolean after(){
-		println('##### FILTER (AFTER)')
+		//println('##### FILTER (AFTER)')
 		try{
 			LinkedHashMap newModel = [:]
 
@@ -225,8 +225,11 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 			//LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
 			ApiDescriptor cachedEndpoint = cache[params.apiObject][(String)params.action] as ApiDescriptor
 
+			// TEST FOR NESTED MAP; WE DON'T CACHE NESTED MAPS
 			boolean isNested = false
-			if(newModel[0].getClass().getName()=='java.util.LinkedHashMap'){ isNested = true }
+			Object key = newModel.keySet().iterator().next();
+			if(newModel[key].getClass().getName()=='java.util.LinkedHashMap'){ isNested = true }
+
 			String content = handleApiResponse(cachedEndpoint['returns'] as LinkedHashMap,cachedEndpoint['roles'] as List,mthd,format,response,newModel,params)
 
 			if(content){
