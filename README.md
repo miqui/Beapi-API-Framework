@@ -1,7 +1,7 @@
 
-![alt tag](https://cloud.githubusercontent.com/assets/274764/13968629/179cad2c-f03b-11e5-89e2-3f39a0b1df36.png)
-# Boomstick(tm) Api Framework 
-### Documentation located at http://orubel.github.io/Boomstick-API-Framework/
+
+# BeApi(tm) Api Framework 
+### Documentation located at https://github.com/orubel/grails-api-toolkit-docs/
 
 Fully reactive api framework providing automation and simplification of api's for scale. Some features include:
 
@@ -22,7 +22,7 @@ Fully reactive api framework providing automation and simplification of api's fo
 **FAQ**
 
 **Q: How hard is this to implement?**
-**A:** Boomstick is 'Plug-N-Play'. Merely install the plugin and it takes care of the 'REST'. The only thing you have to do is build an IO state file for each controller. This enables us to separate all IO data from functionality so it can be shared with other services in the architecture.
+**A:** BeApi is 'Plug-N-Play'. Merely install the plugin and it takes care of the 'REST'. The only thing you have to do is build an IO state file for each controller. This enables us to separate all IO data from functionality so it can be shared with other services in the architecture.
 
 **Q: How do I implement the listener for IO state webhook on my proxy/Message queue?**
 **A:** It merely requires an endpoint to send the data to. As a side project, I may actually supply a simple daemon in the future with ehCache to do this for people.
