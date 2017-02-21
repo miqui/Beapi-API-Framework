@@ -85,6 +85,7 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                 }else{
                     httpResponse.status = 401
                     httpResponse.setHeader('ERROR', 'Unauthorized Access attempted')
+                    httpResponse.writer.flush()
                     return
                 }
 
@@ -92,6 +93,7 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                 log.debug "Token not found"
                 httpResponse.status = 401
                 httpResponse.setHeader('ERROR', 'No Token Found. Unauthorized Access attempted')
+                httpResponse.writer.flush()
                 return
             }
         } catch (AuthenticationException ae) {
@@ -168,6 +170,7 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                 if(!checkAuth(roles,authenticationResult)) {
                     httpResponse.status = 401
                     httpResponse.setHeader('ERROR', 'Unauthorized Access attempted')
+                    httpResponse.writer.flush()
                     return
                 }else {
                     //System.out.println("####[TokenCacheValidationFilter :: processFilterChain] ${actualUri} / ${validationEndpointUrl}")
