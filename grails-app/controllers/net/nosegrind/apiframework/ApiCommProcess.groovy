@@ -255,19 +255,23 @@ abstract class ApiCommProcess{
             //try {
                 String msg = 'Error. Invalid variables being returned. Please see your administrator'
 
-                List paramsList
-                Integer msize = model.size()
+                //List paramsList
+                //Integer msize = model.size()
+                List paramsList = (model.size()==0)?[:]:model.keySet() as List
+            /*
                 switch (msize) {
                     case 0:
                         return [:]
                         break;
                     case 1:
-                        paramsList = (model.keySet() != ['id']) ? model.entrySet().iterator().next() as List : model.keySet() as List
+                        //paramsList = (model.keySet() != ['id']) ? model.entrySet().iterator().next() as List : model.keySet() as List
+                        paramsList = model.keySet() as List
                         break;
                     default:
                         paramsList = model.keySet() as List
                         break;
                 }
+                */
 
                 paramsList?.removeAll(optionalParams)
 
@@ -514,6 +518,21 @@ abstract class ApiCommProcess{
         }catch(Exception e){
             throw new Exception("[ApiCommProcess :: formatDomainObject] : Exception - full stack trace follows:",e)
         }
+    }
+
+    // PostProcessService
+    LinkedHashMap formatMap(LinkedHashMap map){
+        LinkedHashMap newMap = [:]
+        map.each(){ key,val ->
+            if(val){
+                if(DomainClassArtefactHandler.isDomainClass(val.getClass())){
+                    newMap[key]=formatDomainObject(val)
+                }else{
+                    newMap[key] = ((val in java.util.ArrayList || val in java.util.List) || val in java.util.Map)?val:val.toString()
+                }
+            }
+        }
+        return newMap
     }
 
     // PostProcessService

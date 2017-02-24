@@ -124,14 +124,13 @@ abstract class ApiCommLayer extends ApiCommProcess{
     * RESPONSES
      ***************************/
     def handleApiResponse(LinkedHashMap requestDefinitions, List roles, RequestMethod mthd, String format, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
-
         //try{
             String authority = getUserRole() as String
             response.setHeader('Authorization', roles.join(', '))
 
             ArrayList<HashMap> temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as ArrayList<HashMap>:requestDefinitions['permitAll'] as ArrayList<HashMap>
 
-            ArrayList responseList = (ArrayList)temp.collect(){ it.name }
+            ArrayList responseList = (ArrayList)temp?.collect(){ if(it!=null){it.name} }
 
             String content
             if(params.controller!='apidoc') {

@@ -193,7 +193,6 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 		//println('##### FILTER (AFTER)')
 		try{
 			LinkedHashMap newModel = [:]
-
 			if(params.controller!='apidoc') {
 				if (!model) {
 					render(status: HttpServletResponse.SC_NOT_FOUND, text: 'No resource returned / domain is empty')
@@ -210,7 +209,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 
 			// TEST FOR NESTED MAP; WE DON'T CACHE NESTED MAPS
 			boolean isNested = false
-			Object key = newModel.keySet().iterator().next();
+			Object key = newModel?.keySet()?.iterator()?.next()
 			if(newModel[key].getClass().getName()=='java.util.LinkedHashMap'){ isNested = true }
 
 			String content = handleApiResponse(cachedEndpoint['returns'] as LinkedHashMap,cachedEndpoint['roles'] as List,mthd,format,response,newModel,params)

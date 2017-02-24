@@ -158,6 +158,7 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                 }else{
                     httpResponse.status = 401
                     httpResponse.setHeader('ERROR', 'BAD Access attempted')
+                    httpResponse.writer.flush()
                     return
                 }
 
@@ -171,9 +172,10 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                 if(!cache[version]){
                     httpResponse.status = 401
                     httpResponse.setHeader('ERROR', 'IO State Not properly Formatted for this URI. Please contact the Administrator.')
+                    httpResponse.writer.flush()
                     return
                 }
-                List roles = cache[version][action]['roles'] as List
+                List roles = cache?."${version}"?."${action}"?.roles as List
                 if(!checkAuth(roles,authenticationResult)) {
                     httpResponse.status = 401
                     httpResponse.setHeader('ERROR', 'Unauthorized Access attempted')
