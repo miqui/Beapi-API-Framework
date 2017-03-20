@@ -73,10 +73,10 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
 
             /* restTokenValidationFilter */
             SpringSecurityUtils.registerFilter 'tokenCacheValidationFilter', SecurityFilterPosition.ANONYMOUS_FILTER.order + 2
-            SpringSecurityUtils.registerFilter 'springSecurityCORSFilter', SecurityFilterPosition.ANONYMOUS_FILTER.order + 3
+            SpringSecurityUtils.registerFilter 'corsSecurityFilter', SecurityFilterPosition.ANONYMOUS_FILTER.order + 3
 
 
-            springSecurityCORSFilter(SpringSecurityCORSFilter){}
+            corsSecurityFilter(CorsSecurityFilter){}
 
 
             tokenCacheValidationFilter(TokenCacheValidationFilter) {
@@ -162,7 +162,6 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
 
         println "### Installing API Framework ..."
 
-
         def iostateDir = "${basedir}/src/iostate/"
         def iofile = new File(iostateDir)
         if(!iofile.exists()) {
@@ -195,7 +194,9 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
 
         if(!grailsApplication.config.apitoolkit){
             println " ... updating config ..."
-            file('grails-app/conf/application.groovy').withWriterAppend { BufferedWriter writer ->
+            String groovyConf = "${basedir}/grails-app/conf/application.groovy"
+            def confFile = new File(groovyConf)
+            confFile.withWriterAppend { BufferedWriter writer ->
                 writer.newLine()
                 writer.newLine()
                 writer.writeLine '// Added by the Reactive API Framework plugin:'
@@ -219,8 +220,8 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
             }
         }
 
-        final String isBatchServer = grailsApplication.config.apitoolkit.batching.enabled
-        final String isChainServer = grailsApplication.config.apitoolkit.chaining.enabled
+        String isBatchServer = grailsApplication.config.apitoolkit.batching.enabled
+        String isChainServer = grailsApplication.config.apitoolkit.chaining.enabled
         //final String isLocalAuth = (String)grailsApplication.config.apitoolkit.localauth.enabled
 
         System.setProperty('isBatchServer', isBatchServer)

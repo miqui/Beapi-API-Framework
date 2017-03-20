@@ -19,9 +19,12 @@ import org.springframework.context.annotation.ComponentScan
 import javax.servlet.*;
 
 
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration
+import org.springframework.boot.autoconfigure.security.SecurityFilterAutoConfiguration
+
 
 @ComponentScan
-//@EnableAutoConfiguration(exclude = [SecurityFilterAutoConfiguration])
+@EnableAutoConfiguration(exclude = [SecurityFilterAutoConfiguration])
 class Application extends GrailsAutoConfiguration {
 	
     static void main(String[] args) {

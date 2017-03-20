@@ -191,39 +191,45 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 
 	boolean after(){
 		//println('##### FILTER (AFTER)')
-		try{
+		try {
 			LinkedHashMap newModel = [:]
-			if(params.controller!='apidoc') {
+			if (params.controller != 'apidoc') {
 				if (!model) {
 					render(status: HttpServletResponse.SC_NOT_FOUND, text: 'No resource returned / domain is empty')
 					return false
 				} else {
 					newModel = convertModel(model)
 				}
-			}else{
+			} else {
 				newModel = model as LinkedHashMap
 			}
 
 			//LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
-			ApiDescriptor cachedEndpoint = cache[params.apiObject][(String)params.action] as ApiDescriptor
+			ApiDescriptor cachedEndpoint = cache[params.apiObject][(String) params.action] as ApiDescriptor
 
 			// TEST FOR NESTED MAP; WE DON'T CACHE NESTED MAPS
 			boolean isNested = false
-			Object key = newModel?.keySet()?.iterator()?.next()
-			if(newModel[key].getClass().getName()=='java.util.LinkedHashMap'){ isNested = true }
-
-			String content = handleApiResponse(cachedEndpoint['returns'] as LinkedHashMap,cachedEndpoint['roles'] as List,mthd,format,response,newModel,params)
-
-			if(content){
-				// STORE CACHED RESULT
-				String format = request.format.toUpperCase()
-				String authority = getUserRole() as String
-
-				if(!newModel) {
-					apiCacheService.setApiCachedResult((String) params.controller, (String) params.apiObject, (String) params.action, authority, format, content)
+			if (newModel != [:]) {
+				Object key = newModel?.keySet()?.iterator()?.next()
+				if (newModel[key].getClass().getName() == 'java.util.LinkedHashMap') {
+					isNested = true
 				}
-				render(text:content, contentType:request.contentType)
-				return false
+
+				String content = handleApiResponse(cachedEndpoint['returns'] as LinkedHashMap, cachedEndpoint['roles'] as List, mthd, format, response, newModel, params)
+
+				if (content) {
+					// STORE CACHED RESULT
+					String format = request.format.toUpperCase()
+					String authority = getUserRole() as String
+
+					if (!newModel) {
+						apiCacheService.setApiCachedResult((String) params.controller, (String) params.apiObject, (String) params.action, authority, format, content)
+					}
+					render(text: content, contentType: request.contentType)
+					return false
+				}
+			}else{
+				render(text: newModel, contentType: request.contentType)
 			}
 
 			return false
