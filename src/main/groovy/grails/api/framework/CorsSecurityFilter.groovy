@@ -23,6 +23,9 @@ import javax.servlet.http.HttpServletRequest
 //import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.HttpServletResponse
 
+import com.google.common.io.CharStreams
+
+
 class CorsSecurityFilter extends GenericFilterBean {
 
     @Autowired
@@ -30,11 +33,10 @@ class CorsSecurityFilter extends GenericFilterBean {
 
     @Override
     void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-
         HttpServletRequest httpRequest = request as HttpServletRequest
         HttpServletResponse httpResponse = response as HttpServletResponse
 
-        if( !crsService.processPreflight(request, response) ) {
+        if( !crsService.processPreflight(httpRequest, httpResponse) ) {
             chain.doFilter(request, response)
         }
     }

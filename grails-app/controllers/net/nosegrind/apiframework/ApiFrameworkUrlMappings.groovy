@@ -21,7 +21,7 @@ class ApiFrameworkUrlMappings {
         String api = "v${apiVersion}"
         String batchEntryPoint = "b${apiVersion}"
         String chainEntryPoint = "c${apiVersion}"
-        String traceEntryPoint = "t${apiVersion}"
+        String profilerEntryPoint = "p${apiVersion}"
 
 
         "/login/$action" {
@@ -151,23 +151,23 @@ class ApiFrameworkUrlMappings {
             }
         }
 
-        // TRACE API ENDPOINTS
-        "/$traceEntryPoint/$controller/$action"{
+        // PROFILER API ENDPOINTS
+        "/$profilerEntryPoint/$controller/$action"{
             if(action?.toInteger()==action && action!=null){
                 id=action
                 action = null
             }
-            entryPoint = traceEntryPoint
+            entryPoint = profilerEntryPoint
             parseRequest = true
         }
 
-        "/$traceEntryPoint/$controller/$action/$id?**"{
-            entryPoint = traceEntryPoint
+        "/$profilerEntryPoint/$controller/$action/$id?**"{
+            entryPoint = profilerEntryPoint
             parseRequest = true
         }
 
-        "/${traceEntryPoint}-$apiObjectVersion/$controller/$action/$id**" {
-            entryPoint = traceEntryPoint
+        "/${profilerEntryPoint}-$apiObjectVersion/$controller/$action/$id**" {
+            entryPoint = profilerEntryPoint
             apiObjectVersion = apiObjectVersion
             parseRequest = true
             constraints {
@@ -175,12 +175,12 @@ class ApiFrameworkUrlMappings {
             }
         }
 
-        "/${traceEntryPoint}-$apiObjectVersion/$controller/$action" {
+        "/${profilerEntryPoint}-$apiObjectVersion/$controller/$action" {
             if(action?.toInteger()==action && action!=null){
                 id=action
                 action = null
             }
-            entryPoint = traceEntryPoint
+            entryPoint = profilerEntryPoint
             apiObjectVersion = apiObjectVersion
             parseRequest = true
             constraints {

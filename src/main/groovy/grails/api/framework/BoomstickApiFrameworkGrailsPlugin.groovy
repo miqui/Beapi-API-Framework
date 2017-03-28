@@ -495,7 +495,7 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
 
     public List getApiParams(LinkedHashMap definitions){
         try{
-            traceService.startTrace('TraceCommProcess','getApiParams')
+            traceService.startTrace('ProfilerCommProcess','getApiParams')
             List apiList = []
             definitions.each(){ key, val ->
                 if (request.isUserInRole(key) || key == 'permitAll') {
@@ -504,7 +504,7 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
                     }
                 }
             }
-            traceService.endTrace('TraceCommProcess','getApiParams')
+            traceService.endTrace('ProfilerCommProcess','getApiParams')
             return apiList
         }catch(Exception e){
             throw new Exception("[ParamsService :: getApiParams] : Exception - full stack trace follows:",e)

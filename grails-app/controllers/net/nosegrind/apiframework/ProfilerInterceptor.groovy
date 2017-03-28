@@ -25,7 +25,7 @@ import groovy.transform.CompileStatic
 
 
 @CompileStatic
-class TraceInterceptor extends TraceCommLayer{
+class ProfilerInterceptor extends ProfilerCommLayer{
 
 	int order = HIGHEST_PRECEDENCE + 997
 
@@ -39,9 +39,9 @@ class TraceInterceptor extends TraceCommLayer{
 	SpringSecurityService springSecurityService
 
 	// TODO: detect and assign apiObjectVersion from uri
-	String entryPoint = "t${Metadata.current.getProperty(Metadata.APPLICATION_VERSION, String.class)}"
+	String entryPoint = "p${Metadata.current.getProperty(Metadata.APPLICATION_VERSION, String.class)}"
 
-	TraceInterceptor(){
+	ProfilerInterceptor(){
 		// TODO: detect and assign apiObjectVersion from uri
 		match(uri:"/${entryPoint}/**")
 	}

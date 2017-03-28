@@ -19,12 +19,16 @@ import groovy.json.JsonSlurper
 import groovy.util.XmlSlurper
 
 import java.util.Enumeration
+import org.springframework.http.HttpStatus
+
+import com.google.common.io.CharStreams
 
 @Transactional
 class CorsService {
     def grailsApplication
 
     boolean processPreflight(HttpServletRequest request, HttpServletResponse response) {
+
         Map corsInterceptorConfig = (Map) grailsApplication.config.corsInterceptor
 
         String[] includeEnvironments = corsInterceptorConfig['includeEnvironments']?: null
@@ -33,10 +37,10 @@ class CorsService {
 
         if( excludeEnvironments && excludeEnvironments.contains(Environment.current.name) )  { // current env is excluded
             // skip
-            false
+            return false
         } else if( includeEnvironments && !includeEnvironments.contains(Environment.current.name) )  {  // current env is not included
             // skip
-            false
+            return false
         }
 
         String origin = request.getHeader("Origin");
@@ -52,8 +56,9 @@ class CorsService {
                 //response.setHeader("Access-Control-Expose-Headers","*")
                 request.getHeader('Access-Control-Request-Headers')
             }
-        }
 
+            response.status = HttpStatus.OK.value()
+        }
 
         if(allowedOrigins && allowedOrigins.contains(origin)) { // request origin is on the white list
             // add CORS access control headers for the given origin

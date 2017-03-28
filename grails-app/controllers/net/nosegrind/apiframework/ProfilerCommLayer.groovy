@@ -20,7 +20,7 @@ import groovy.transform.CompileStatic
 
 // extended by Intercepters
 @CompileStatic
-abstract class TraceCommLayer extends TraceCommProcess{
+abstract class ProfilerCommLayer extends ProfilerCommProcess{
 
 
     @Resource
@@ -30,7 +30,7 @@ abstract class TraceCommLayer extends TraceCommProcess{
      * REQUESTS
      ***************************/
     boolean handleApiRequest(ApiDescriptor cache, HttpServletRequest request, HttpServletResponse response, GrailsParameterMap params){
-        traceService.startTrace('TraceCommLayer','handleApiRequest')
+        traceService.startTrace('ProfilerCommLayer','handleApiRequest')
         try{
             // CHECK ACCESS TO METHOD
             /*
@@ -50,7 +50,7 @@ abstract class TraceCommLayer extends TraceCommProcess{
                     String depMsg = deprecated[1].toString()
                     response.status = 400
                     response.setHeader('ERROR',depMsg)
-                    traceService.endTrace('TraceCommLayer','handleApiRequest')
+                    traceService.endTrace('ProfilerCommLayer','handleApiRequest')
                     return false
                 }
             }
@@ -61,13 +61,13 @@ abstract class TraceCommLayer extends TraceCommProcess{
             if(!isRequestMatch(method,request.method.toString())){
                 response.status = 400
                 response.setHeader('ERROR',"Request method doesn't match expected method.")
-                traceService.endTrace('TraceCommLayer','handleApiRequest')
+                traceService.endTrace('ProfilerCommLayer','handleApiRequest')
                 return false
             }
-            traceService.endTrace('TraceCommLayer','handleApiRequest')
+            traceService.endTrace('ProfilerCommLayer','handleApiRequest')
             return true
         }catch(Exception e){
-            traceService.endTrace('TraceCommLayer','handleApiRequest')
+            traceService.endTrace('ProfilerCommLayer','handleApiRequest')
             throw new Exception("[ApiCommLayer : handleApiRequest] : Exception - full stack trace follows:",e)
         }
     }
@@ -76,7 +76,7 @@ abstract class TraceCommLayer extends TraceCommProcess{
     * RESPONSES
      ***************************/
     def handleApiResponse(LinkedHashMap requestDefinitions, List roles, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
-        traceService.startTrace('TraceCommLayer','handleApiResponse')
+        traceService.startTrace('ProfilerCommLayer','handleApiResponse')
         try{
             String authority = getUserRole() as String
             response.setHeader('Authorization', roles.join(', '))
@@ -93,11 +93,11 @@ abstract class TraceCommLayer extends TraceCommProcess{
             }else{
                 content = parseResponseMethod(request, params, model)
             }
-            traceService.endTrace('TraceCommLayer','handleApiResponse')
+            traceService.endTrace('ProfilerCommLayer','handleApiResponse')
             return content
 
         }catch(Exception e){
-            traceService.endTrace('TraceCommLayer','handleApiResponse')
+            traceService.endTrace('ProfilerCommLayer','handleApiResponse')
             throw new Exception("[ApiCommLayer : handleApiResponse] : Exception - full stack trace follows:",e)
         }
     }

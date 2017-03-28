@@ -71,6 +71,7 @@ class TokenCacheValidationFilter extends GenericFilterBean {
 
     @Override
     void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+
         HttpServletRequest httpRequest = request as HttpServletRequest
         HttpServletResponse httpResponse = response as HttpServletResponse
         AccessToken accessToken
@@ -95,18 +96,17 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                     httpResponse.status = 401
                     httpResponse.setHeader('ERROR', 'Unauthorized Access attempted')
                     httpResponse.writer.flush()
-                    return
+                    //return
                 }
-
             } else {
-                log.debug "Token not found"
-                httpResponse.status = 401
-                httpResponse.setHeader('ERROR', 'No Token Found. Unauthorized Access attempted')
-                httpResponse.writer.flush()
+                //log.debug "Token not found"
                 return
             }
         } catch (AuthenticationException ae) {
-            log.debug "Authentication failed: ${ae.message}"
+            //log.debug "Authentication failed: ${ae.message}"
+            httpResponse.status = 401
+            httpResponse.setHeader('ERROR', 'Authorization Attempt Failed')
+            httpResponse.writer.flush()
             //authenticationEventPublisher.publishAuthenticationFailure(ae, accessToken)
             //authenticationFailureHandler.onAuthenticationFailure(httpRequest, httpResponse, ae)
         }
@@ -187,6 +187,7 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                 }
             }
         } else {
+            println("Request does not contain any token. Letting it continue through the filter chain")
             //log.debug "Request does not contain any token. Letting it continue through the filter chain"
         }
 

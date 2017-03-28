@@ -35,8 +35,8 @@ import org.grails.core.DefaultGrailsDomainClass
 import org.codehaus.groovy.grails.commons.DomainClassArtefactHandler
 
 
-// extended by TraceCommLayer
-abstract class TraceCommProcess{
+// extended by ProfilerCommLayer
+abstract class ProfilerCommProcess {
 
     @Resource
     GrailsApplication grailsApplication
@@ -81,7 +81,7 @@ abstract class TraceCommProcess{
 
     public List getApiParams(LinkedHashMap definitions){
         try{
-            traceService.startTrace('TraceCommProcess','getApiParams')
+            traceService.startTrace('ProfilerCommProcess','getApiParams')
             List apiList = []
             definitions.each(){ key, val ->
                 if (request.isUserInRole(key) || key == 'permitAll') {
@@ -90,7 +90,7 @@ abstract class TraceCommProcess{
                     }
                 }
             }
-            traceService.endTrace('TraceCommProcess','getApiParams')
+            traceService.endTrace('ProfilerCommProcess','getApiParams')
             return apiList
         }catch(Exception e){
             throw new Exception("[ParamsService :: getApiParams] : Exception - full stack trace follows:",e)
@@ -100,15 +100,15 @@ abstract class TraceCommProcess{
 
     boolean checkDeprecationDate(String deprecationDate){
         try{
-            traceService.startTrace('TraceCommProcess','checkDeprecationDate')
+            traceService.startTrace('ProfilerCommProcess','checkDeprecationDate')
             def ddate = new SimpleDateFormat("MM/dd/yyyy").parse(deprecationDate)
             def deprecated = new Date(ddate.time)
             def today = new Date()
             if(deprecated < today ) {
-                traceService.endTrace('TraceCommProcess','checkDeprecationDate')
+                traceService.endTrace('ProfilerCommProcess','checkDeprecationDate')
                 return true
             }
-            traceService.endTrace('TraceCommProcess','checkDeprecationDate')
+            traceService.endTrace('ProfilerCommProcess','checkDeprecationDate')
             return false
         }catch(Exception e){
             throw new Exception("[ApiCommProcess :: checkDeprecationDate] : Exception - full stack trace follows:",e)
@@ -116,18 +116,18 @@ abstract class TraceCommProcess{
     }
 
     boolean checkRequestMethod(String method, boolean restAlt){
-        traceService.startTrace('TraceCommProcess','checkRequestMethod')
+        traceService.startTrace('ProfilerCommProcess','checkRequestMethod')
         if(!restAlt) {
-            traceService.endTrace('TraceCommProcess','checkRequestMethod')
+            traceService.endTrace('ProfilerCommProcess','checkRequestMethod')
             return (method == request.method.toUpperCase()) ? true : false
         }
-        traceService.endTrace('TraceCommProcess','checkRequestMethod')
+        traceService.endTrace('ProfilerCommProcess','checkRequestMethod')
         return true
     }
 
     // TODO: put in OPTIONAL toggle in application.yml to allow for this check
     boolean checkURIDefinitions(GrailsParameterMap params,LinkedHashMap requestDefinitions){
-        traceService.startTrace('TraceCommProcess','checkURIDefinitions')
+        traceService.startTrace('ProfilerCommProcess','checkURIDefinitions')
         List reservedNames = ['batchLength','batchInc']
         try{
             String authority = getUserRole() as String
@@ -142,10 +142,10 @@ abstract class TraceCommProcess{
             reservedNames.each(){ paramsList.remove(it) }
 
             if (paramsList.size() == requestList.intersect(paramsList).size()) {
-                traceService.endTrace('TraceCommProcess','checkURIDefinitions')
+                traceService.endTrace('ProfilerCommProcess','checkURIDefinitions')
                 return true
             }
-            traceService.endTrace('TraceCommProcess','checkURIDefinitions')
+            traceService.endTrace('ProfilerCommProcess','checkURIDefinitions')
             return false
         }catch(Exception e) {
            throw new Exception("[ApiCommProcess :: checkURIDefinitions] : Exception - full stack trace follows:",e)
@@ -154,7 +154,7 @@ abstract class TraceCommProcess{
     }
 
     LinkedHashMap parseResponseMethod(HttpServletRequest request, GrailsParameterMap params, LinkedHashMap result){
-        traceService.startTrace('TraceCommProcess','parseResponseMethod')
+        traceService.startTrace('ProfilerCommProcess','parseResponseMethod')
         LinkedHashMap data = [:]
         String defaultEncoding = Holders.grailsApplication.config.apitoolkit.encoding
         String encoding = request.getHeader('accept-encoding')?request.getHeader('accept-encoding'):defaultEncoding
@@ -186,12 +186,12 @@ abstract class TraceCommProcess{
                 }
                 break;
         }
-        traceService.endTrace('TraceCommProcess','parseResponseMethod')
+        traceService.endTrace('ProfilerCommProcess','parseResponseMethod')
         return ['apiToolkitContent':data.content,'apiToolkitType':request.getAttribute('contentType'),'apiToolkitEncoding':encoding]
     }
 
     LinkedHashMap parseRequestMethod(HttpServletRequest request, GrailsParameterMap params){
-        traceService.startTrace('TraceCommProcess','parseRequestMethod')
+        traceService.startTrace('ProfilerCommProcess','parseRequestMethod')
         LinkedHashMap data = [:]
         String defaultEncoding = grailsApplication.config.apitoolkit.encoding
         String encoding = request.getHeader('accept-encoding')?request.getHeader('accept-encoding'):defaultEncoding
@@ -211,13 +211,13 @@ abstract class TraceCommProcess{
                 break;
         }
 
-        traceService.endTrace('TraceCommProcess','parseRequestMethod')
+        traceService.endTrace('ProfilerCommProcess','parseRequestMethod')
         return ['apiToolkitContent':data.content,'apiToolkitType':request.getAttribute('contentType'),'apiToolkitEncoding':encoding]
     }
 
     LinkedHashMap parseURIDefinitions(LinkedHashMap model,List responseList){
         try{
-            traceService.startTrace('TraceCommProcess','parseURIDefinitions')
+            traceService.startTrace('ProfilerCommProcess','parseURIDefinitions')
             String msg = 'Error. Invalid variables being returned. Please see your administrator'
 
             List paramsList
@@ -244,14 +244,14 @@ abstract class TraceCommProcess{
                 }
 
                 if(!paramsList){
-                    traceService.endTrace('TraceCommProcess','parseURIDefinitions')
+                    traceService.endTrace('ProfilerCommProcess','parseURIDefinitions')
                     return [:]
                 }else{
-                    traceService.endTrace('TraceCommProcess','parseURIDefinitions')
+                    traceService.endTrace('ProfilerCommProcess','parseURIDefinitions')
                     return model
                 }
             }else{
-                traceService.endTrace('TraceCommProcess','parseURIDefinitions')
+                traceService.endTrace('ProfilerCommProcess','parseURIDefinitions')
                 return model
             }
 
@@ -261,16 +261,16 @@ abstract class TraceCommProcess{
     }
 
     boolean isRequestMatch(String protocol,String method){
-        traceService.startTrace('TraceCommProcess','isRequestMatch')
+        traceService.startTrace('ProfilerCommProcess','isRequestMatch')
         if(['TRACERT','OPTIONS','HEAD'].contains(method)){
-            traceService.endTrace('TraceCommProcess','isRequestMatch')
+            traceService.endTrace('ProfilerCommProcess','isRequestMatch')
             return true
         }else{
             if(protocol == method){
-                traceService.endTrace('TraceCommProcess','isRequestMatch')
+                traceService.endTrace('ProfilerCommProcess','isRequestMatch')
                 return true
             }else{
-                traceService.endTrace('TraceCommProcess','isRequestMatch')
+                traceService.endTrace('ProfilerCommProcess','isRequestMatch')
                 return false
             }
         }
@@ -286,11 +286,11 @@ abstract class TraceCommProcess{
 
     Map getMethodParams(GrailsParameterMap params){
         try{
-            traceService.startTrace('TraceCommProcess','getMethodParams')
+            traceService.startTrace('ProfilerCommProcess','getMethodParams')
             Map paramsRequest = [:]
             List myList = [1,2,3,4];
             paramsRequest = params.findAll { it2 -> !optionalParams.contains(it2.key) }
-            traceService.endTrace('TraceCommProcess','getMethodParams')
+            traceService.endTrace('ProfilerCommProcess','getMethodParams')
             return paramsRequest
         }catch(Exception e){
             throw new Exception("[ApiCommProcess :: getMethodParams] : Exception - full stack trace follows:",e)
@@ -307,11 +307,11 @@ abstract class TraceCommProcess{
     }
 
     Boolean apiRoles(List list) {
-        traceService.startTrace('TraceCommProcess','apiRoles')
+        traceService.startTrace('ProfilerCommProcess','apiRoles')
         if(springSecurityService.principal.authorities*.authority.any { list.contains(it) }){
             return true
         }
-        traceService.endTrace('TraceCommProcess','apiRoles')
+        traceService.endTrace('ProfilerCommProcess','apiRoles')
         return false
     }
 
@@ -407,7 +407,7 @@ abstract class TraceCommProcess{
 
         // TODO: Need to compare multiple authorities
         try{
-            traceService.startTrace('TraceCommProcess','processJson')
+            traceService.startTrace('ProfilerCommProcess','processJson')
             LinkedHashMap json = [:]
             returns.each{ p ->
                 p.value.each{ it ->
@@ -448,7 +448,7 @@ abstract class TraceCommProcess{
             if(json){
                 jsonReturn = json as JSON
             }
-            traceService.endTrace('TraceCommProcess','processJson')
+            traceService.endTrace('ProfilerCommProcess','processJson')
             return jsonReturn
         }catch(Exception e){
             throw new Exception("[ApiCommProcess :: processJson] : Exception - full stack trace follows:",e)
@@ -457,25 +457,25 @@ abstract class TraceCommProcess{
 
     LinkedHashMap convertModel(Map map){
         try{
-            traceService.startTrace('TraceCommProcess','convertModel')
+            traceService.startTrace('ProfilerCommProcess','convertModel')
             LinkedHashMap newMap = [:]
             String k = map.entrySet().toList().first().key
             if(map && (!map?.response && !map?.metaClass && !map?.params)){
                 if (DomainClassArtefactHandler.isDomainClass(map[k].getClass())) {
                     newMap = formatDomainObject(map[k])
-                    traceService.endTrace('TraceCommProcess','convertModel')
+                    traceService.endTrace('ProfilerCommProcess','convertModel')
                     return newMap
                 } else if (['class java.util.LinkedList', 'class java.util.ArrayList'].contains(map[k].getClass())) {
                     newMap = formatList(map[k])
-                    traceService.endTrace('TraceCommProcess','convertModel')
+                    traceService.endTrace('ProfilerCommProcess','convertModel')
                     return newMap
                 } else if (['class java.util.Map', 'class java.util.LinkedHashMap'].contains(map[k].getClass())) {
                     newMap = formatMap(map[k])
-                    traceService.endTrace('TraceCommProcess','convertModel')
+                    traceService.endTrace('ProfilerCommProcess','convertModel')
                     return newMap
                 }
             }
-            traceService.endTrace('TraceCommProcess','convertModel')
+            traceService.endTrace('ProfilerCommProcess','convertModel')
             return newMap
         }catch(Exception e){
             throw new Exception("[ApiCommProcess :: convertModel] : Exception - full stack trace follows:",e)
@@ -485,7 +485,7 @@ abstract class TraceCommProcess{
     // PostProcessService
     LinkedHashMap formatDomainObject(Object data){
         try{
-            traceService.startTrace('TraceCommProcess','formatDomainObject')
+            traceService.startTrace('ProfilerCommProcess','formatDomainObject')
             LinkedHashMap newMap = [:]
 
             newMap.put('id',data?.id)
@@ -495,7 +495,7 @@ abstract class TraceCommProcess{
             d.persistentProperties.each() { it ->
                 newMap[it.name] = (DomainClassArtefactHandler.isDomainClass(data[it.name].getClass())) ? data."${it.name}".id : data[it.name]
             }
-            traceService.endTrace('TraceCommProcess','formatDomainObject')
+            traceService.endTrace('ProfilerCommProcess','formatDomainObject')
             return newMap
         }catch(Exception e){
             throw new Exception("[ApiCommProcess :: formatDomainObject] : Exception - full stack trace follows:",e)
@@ -504,7 +504,7 @@ abstract class TraceCommProcess{
 
     // PostProcessService
     LinkedHashMap formatList(List list){
-        traceService.startTrace('TraceCommProcess','formatList')
+        traceService.startTrace('ProfilerCommProcess','formatList')
         LinkedHashMap newMap = [:]
         list.eachWithIndex(){ val, key ->
             if(val){
@@ -515,7 +515,7 @@ abstract class TraceCommProcess{
                 }
             }
         }
-        traceService.endTrace('TraceCommProcess','formatList')
+        traceService.endTrace('ProfilerCommProcess','formatList')
         return newMap
     }
 
