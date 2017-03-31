@@ -24,17 +24,6 @@ class ApiFrameworkUrlMappings {
         String profilerEntryPoint = "p${apiVersion}"
 
 
-        "/login/$action" {
-            controller = 'login'
-            action = action
-            parseRequest= true
-        }
-        "/logout?/$action" {
-            controller = 'logout'
-            action = action
-            parseRequest= true
-        }
-
         // REGULAR API ENDPOINTS
         "/$api/$controller/$action/$id?**"{
             entryPoint = api

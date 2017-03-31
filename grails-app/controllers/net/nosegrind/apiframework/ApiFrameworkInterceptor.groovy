@@ -184,6 +184,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 			return false
 
 		}catch(Exception e){
+			println("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:"+ e)
 			log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
 			return false
 		}
