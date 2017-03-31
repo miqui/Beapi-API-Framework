@@ -106,7 +106,6 @@ class ApiCacheService{
 				String path = "/${apiPrefix}-${apiversion}/${controllername}/${actionname}"
 				doc = ['path':path,'method':cache[apiversion][actionname]['method'],'description':cache[apiversion][actionname]['description']]
 				if(cache[apiversion][actionname]['receives']){
-					
 					doc['receives'] = [:]
 					for(receiveVal in cache[apiversion][actionname]['receives']){
 						if(receiveVal?.key) {
@@ -122,8 +121,10 @@ class ApiCacheService{
 							doc['returns']["$returnVal.key"] = returnVal.value
 						}
 					}
-					doc['json'] = [:]
-					doc['json'] = processJson(doc["returns"])
+					doc['InputJson'] = [:]
+					doc['Inputjson'] = processJson(doc["receives"])
+					doc['OutputJson'] = [:]
+					doc['Outputjson'] = processJson(doc["returns"])
 				}
 	
 			}
