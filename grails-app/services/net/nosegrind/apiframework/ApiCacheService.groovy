@@ -121,10 +121,9 @@ class ApiCacheService{
 							doc['returns']["$returnVal.key"] = returnVal.value
 						}
 					}
-					doc['InputJson'] = [:]
-					doc['Inputjson'] = processJson(doc["receives"])
-					doc['OutputJson'] = [:]
-					doc['Outputjson'] = processJson(doc["returns"])
+
+					doc['inputjson'] = processJson(doc["receives"])
+					doc['outputjson'] = processJson(doc["returns"])
 				}
 	
 			}
@@ -203,6 +202,7 @@ class ApiCacheService{
 			}
 			return jsonReturn
 		}catch(Exception e){
+			println("[ApiCacheService :: processJson] : Exception - full stack trace follows:"+e)
 			throw new Exception("[ApiCacheService :: processJson] : Exception - full stack trace follows:",e)
 		}
 	}
