@@ -48,7 +48,7 @@ class ProfilerInterceptor extends ProfilerCommLayer{
 
 	boolean before(){
 		//log.info('##### FILTER (BEFORE)')
-		traceService.startTrace('TraceInterceptor','before')
+		traceService.startTrace('ProfilerInterceptor','before')
 
 		String format = (request?.format)?request.format:'JSON';
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
@@ -92,7 +92,7 @@ class ProfilerInterceptor extends ProfilerCommLayer{
 				if(cache){
 					params.apiObject = (params.apiObjectVersion) ? params.apiObjectVersion : cache['currentStable']['value']
 					params.action = (params.action == null) ? cache[params.apiObject]['defaultAction'] : params.action
-					traceService.endTrace('TraceInterceptor','before')
+					traceService.endTrace('ProfilerInterceptor','before')
 					return true
 				}
 				// TODO : return false and render message/error code ???
@@ -104,7 +104,7 @@ class ProfilerInterceptor extends ProfilerCommLayer{
 					String expectedMethod = cache[params.apiObject][params.action.toString()]['method'] as String
 					if(!checkRequestMethod(expectedMethod,restAlt)) {
 						render(status: HttpServletResponse.SC_BAD_REQUEST, text: "Expected request method '${expectedMethod}' does not match sent method '${request.method}'")
-						traceService.endTrace('TraceInterceptor','before')
+						traceService.endTrace('ProfilerInterceptor','before')
 						return false
 					}
 
@@ -117,7 +117,7 @@ class ProfilerInterceptor extends ProfilerCommLayer{
 
 						if (!requestKeysMatch) {
 							render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Expected request variables do not match sent variables')
-							traceService.endTrace('TraceInterceptor','before')
+							traceService.endTrace('ProfilerInterceptor','before')
 							return false
 						}
 					}else{
@@ -125,7 +125,7 @@ class ProfilerInterceptor extends ProfilerCommLayer{
 						if(result){
 							render(text:result.apiToolkitContent, contentType:"${result.apiToolkitType}", encoding:result.apiToolkitEncoding)
 						}
-						traceService.endTrace('TraceInterceptor','before')
+						traceService.endTrace('ProfilerInterceptor','before')
 						return false
 					}
 
@@ -140,7 +140,7 @@ class ProfilerInterceptor extends ProfilerCommLayer{
 							String[] tempUri = request.getRequestURI().split("/")
 							if(tempUri[2].contains('dispatch') && "${params.controller}.dispatch" == tempUri[2] && !cache[params.apiObject]['domainPackage']){
 								forward(controller:params.controller,action:params.action)
-								traceService.endTrace('TraceInterceptor','before')
+								traceService.endTrace('ProfilerInterceptor','before')
 								return false
 							}
 						}
@@ -149,31 +149,31 @@ class ProfilerInterceptor extends ProfilerCommLayer{
 					// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
 					ApiDescriptor cachedEndpoint = cache[(String)params.apiObject][(String)params.action] as ApiDescriptor
 					boolean result = handleApiRequest(cachedEndpoint, request, response, params)
-					traceService.endTrace('TraceInterceptor','before')
+					traceService.endTrace('ProfilerInterceptor','before')
 					return result
 				}
 			}
 			// no cache found
-			traceService.endTrace('TraceInterceptor','before')
+			traceService.endTrace('ProfilerInterceptor','before')
 			return false
 
 		}catch(Exception e){
 			log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
-			traceService.endTrace('TraceInterceptor','before')
+			traceService.endTrace('ProfilerInterceptor','before')
 			return false
 		}
 	}
 
 	boolean after(){
 		//log.info('##### FILTER (AFTER)')
-		traceService.startTrace('TraceInterceptor','after')
+		traceService.startTrace('ProfilerInterceptor','after')
 		try{
 			LinkedHashMap newModel = [:]
 
 			if(params.controller!='apidoc') {
 				if (!model) {
 					render(status: HttpServletResponse.SC_NOT_FOUND, text: 'No resource returned / domain is empty')
-					traceService.endTrace('TraceInterceptor','after')
+					traceService.endTrace('ProfilerInterceptor','after')
 					return false
 				} else {
 					newModel = convertModel(model)
@@ -188,8 +188,8 @@ class ProfilerInterceptor extends ProfilerCommLayer{
 			String content = handleApiResponse(cachedEndpoint['returns'] as LinkedHashMap,cachedEndpoint['roles'] as List,request,response,newModel,params) as LinkedHashMap
 
 			if(content){
-				traceService.endTrace('TraceInterceptor','after')
-				LinkedHashMap traceContent = traceService.endAndReturnTrace('TraceInterceptor','after');
+				traceService.endTrace('ProfilerInterceptor','after')
+				LinkedHashMap traceContent = traceService.endAndReturnTrace('ProfilerInterceptor','after');
 				String tcontent = traceContent as JSON
 				render(text:tcontent, contentType:request.contentType)
 
@@ -199,7 +199,7 @@ class ProfilerInterceptor extends ProfilerCommLayer{
 			return false
 		}catch(Exception e){
 			log.error("[ApiToolkitFilters :: apitoolkit.after] : Exception - full stack trace follows:", e);
-			traceService.endTrace('TraceInterceptor','after')
+			traceService.endTrace('ProfilerInterceptor','after')
 			return false
 		}
 	}

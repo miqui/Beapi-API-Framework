@@ -28,7 +28,6 @@ class CorsService {
     def grailsApplication
 
     boolean processPreflight(HttpServletRequest request, HttpServletResponse response) {
-
         Map corsInterceptorConfig = (Map) grailsApplication.config.corsInterceptor
 
         String[] includeEnvironments = corsInterceptorConfig['includeEnvironments']?: null

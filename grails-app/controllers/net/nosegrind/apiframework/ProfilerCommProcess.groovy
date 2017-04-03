@@ -40,7 +40,7 @@ abstract class ProfilerCommProcess {
 
     @Resource
     GrailsApplication grailsApplication
-
+    @Resource
     ApiCacheService apiCacheService
     @Resource
     TraceService traceService
@@ -125,14 +125,15 @@ abstract class ProfilerCommProcess {
         return true
     }
 
+
     // TODO: put in OPTIONAL toggle in application.yml to allow for this check
     boolean checkURIDefinitions(GrailsParameterMap params,LinkedHashMap requestDefinitions){
         traceService.startTrace('ProfilerCommProcess','checkURIDefinitions')
-        List reservedNames = ['batchLength','batchInc']
+        List reservedNames = ['batchLength','batchInc','_']
         try{
             String authority = getUserRole() as String
-            List temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as List:requestDefinitions['permitAll'] as List
-            List requestList = temp.collect(){ it.name }
+            List temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as List:(requestDefinitions['permitAll'][0]!=null)? requestDefinitions['permitAll'] as List:[]
+            List requestList = (temp!=null)?temp.collect(){ it.name }:[]
 
             Map methodParams = getMethodParams(params)
 
@@ -148,8 +149,9 @@ abstract class ProfilerCommProcess {
             traceService.endTrace('ProfilerCommProcess','checkURIDefinitions')
             return false
         }catch(Exception e) {
-           throw new Exception("[ApiCommProcess :: checkURIDefinitions] : Exception - full stack trace follows:",e)
+            throw new Exception("[ApiCommProcess :: checkURIDefinitions] : Exception - full stack trace follows:",e)
         }
+        traceService.endTrace('ProfilerCommProcess','checkURIDefinitions')
         return false
     }
 
@@ -224,6 +226,7 @@ abstract class ProfilerCommProcess {
             Integer msize = model.size()
             switch(msize) {
                 case 0:
+                    traceService.endTrace('ProfilerCommProcess','parseURIDefinitions')
                     return [:]
                     break;
                 case 1:

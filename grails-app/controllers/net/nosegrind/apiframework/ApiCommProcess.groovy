@@ -168,8 +168,8 @@ abstract class ApiCommProcess{
         List reservedNames = ['batchLength','batchInc','_']
         try{
             String authority = getUserRole() as String
-            List temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as List:requestDefinitions['permitAll'] as List
-            List requestList = temp.collect(){ it.name }
+            List temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as List:(requestDefinitions['permitAll'][0]!=null)? requestDefinitions['permitAll'] as List:[]
+            List requestList = (temp!=null)?temp.collect(){ it.name }:[]
 
             Map methodParams = getMethodParams(params)
 
