@@ -80,8 +80,8 @@ abstract class ProfilerCommProcess {
 */
 
     public List getApiParams(LinkedHashMap definitions){
+        traceService.startTrace('ProfilerCommProcess','getApiParams')
         try{
-            traceService.startTrace('ProfilerCommProcess','getApiParams')
             List apiList = []
             definitions.each(){ key, val ->
                 if (request.isUserInRole(key) || key == 'permitAll') {
@@ -93,14 +93,15 @@ abstract class ProfilerCommProcess {
             traceService.endTrace('ProfilerCommProcess','getApiParams')
             return apiList
         }catch(Exception e){
+            traceService.endTrace('ProfilerCommProcess','getApiParams')
             throw new Exception("[ParamsService :: getApiParams] : Exception - full stack trace follows:",e)
         }
     }
 
 
     boolean checkDeprecationDate(String deprecationDate){
+        traceService.startTrace('ProfilerCommProcess','checkDeprecationDate')
         try{
-            traceService.startTrace('ProfilerCommProcess','checkDeprecationDate')
             def ddate = new SimpleDateFormat("MM/dd/yyyy").parse(deprecationDate)
             def deprecated = new Date(ddate.time)
             def today = new Date()
@@ -218,8 +219,8 @@ abstract class ProfilerCommProcess {
     }
 
     LinkedHashMap parseURIDefinitions(LinkedHashMap model,List responseList){
+        traceService.startTrace('ProfilerCommProcess','parseURIDefinitions')
         try{
-            traceService.startTrace('ProfilerCommProcess','parseURIDefinitions')
             String msg = 'Error. Invalid variables being returned. Please see your administrator'
 
             List paramsList
@@ -259,6 +260,7 @@ abstract class ProfilerCommProcess {
             }
 
         }catch(Exception e){
+            traceService.endTrace('ProfilerCommProcess','parseURIDefinitions')
             throw new Exception("[ApiCommProcess :: parseURIDefinitions] : Exception - full stack trace follows:",e)
         }
     }
@@ -277,6 +279,7 @@ abstract class ProfilerCommProcess {
                 return false
             }
         }
+        traceService.endTrace('ProfilerCommProcess','isRequestMatch')
         return false
     }
 
@@ -288,24 +291,28 @@ abstract class ProfilerCommProcess {
     */
 
     Map getMethodParams(GrailsParameterMap params){
+        traceService.startTrace('ProfilerCommProcess','getMethodParams')
         try{
-            traceService.startTrace('ProfilerCommProcess','getMethodParams')
             Map paramsRequest = [:]
             List myList = [1,2,3,4];
             paramsRequest = params.findAll { it2 -> !optionalParams.contains(it2.key) }
             traceService.endTrace('ProfilerCommProcess','getMethodParams')
             return paramsRequest
         }catch(Exception e){
+            traceService.endTrace('ProfilerCommProcess','getMethodParams')
             throw new Exception("[ApiCommProcess :: getMethodParams] : Exception - full stack trace follows:",e)
         }
+        traceService.endTrace('ProfilerCommProcess','getMethodParams')
         return [:]
     }
 
     String getUserRole() {
+        traceService.startTrace('ProfilerCommProcess','getUserRole')
         String authority = 'permitAll'
         if (springSecurityService.loggedIn){
             authority = springSecurityService.principal.authorities*.authority[0] as String
         }
+        traceService.endTrace('ProfilerCommProcess','getUserRole')
         return authority
     }
 
@@ -322,7 +329,7 @@ abstract class ProfilerCommProcess {
     String getApiDoc(GrailsParameterMap params){
         // TODO: Need to compare multiple authorities
         // TODO: check for ['doc'][role] in cache; if none, continue
-
+        traceService.startTrace('ProfilerCommProcess','getApiDoc')
         LinkedHashMap newDoc = [:]
         List paramDescProps = ['paramType','idReferences','name','description']
         try{
@@ -394,20 +401,21 @@ abstract class ProfilerCommProcess {
                         }
 
                         // store ['doc'][role] in cache
-
+                        traceService.endTrace('ProfilerCommProcess','getApiDoc')
                         return newDoc as JSON
                     }
                 }
             }
             return [:]
         }catch(Exception e){
+            traceService.endTrace('ProfilerCommProcess','getApiDoc')
             throw new Exception("[ApiCommProcess :: getApiDoc] : Exception - full stack trace follows:",e)
         }
     }
 
     // Used by getApiDoc
     private String processJson(LinkedHashMap returns){
-
+        traceService.startTrace('ProfilerCommProcess','processJson')
         // TODO: Need to compare multiple authorities
         try{
             traceService.startTrace('ProfilerCommProcess','processJson')
@@ -454,13 +462,14 @@ abstract class ProfilerCommProcess {
             traceService.endTrace('ProfilerCommProcess','processJson')
             return jsonReturn
         }catch(Exception e){
+            traceService.endTrace('ProfilerCommProcess','processJson')
             throw new Exception("[ApiCommProcess :: processJson] : Exception - full stack trace follows:",e)
         }
     }
 
     LinkedHashMap convertModel(Map map){
+        traceService.startTrace('ProfilerCommProcess','convertModel')
         try{
-            traceService.startTrace('ProfilerCommProcess','convertModel')
             LinkedHashMap newMap = [:]
             String k = map.entrySet().toList().first().key
             if(map && (!map?.response && !map?.metaClass && !map?.params)){
@@ -481,14 +490,16 @@ abstract class ProfilerCommProcess {
             traceService.endTrace('ProfilerCommProcess','convertModel')
             return newMap
         }catch(Exception e){
+            traceService.endTrace('ProfilerCommProcess','convertModel')
             throw new Exception("[ApiCommProcess :: convertModel] : Exception - full stack trace follows:",e)
         }
     }
 
     // PostProcessService
     LinkedHashMap formatDomainObject(Object data){
+        traceService.startTrace('ProfilerCommProcess','formatDomainObject')
         try{
-            traceService.startTrace('ProfilerCommProcess','formatDomainObject')
+
             LinkedHashMap newMap = [:]
 
             newMap.put('id',data?.id)
@@ -501,6 +512,7 @@ abstract class ProfilerCommProcess {
             traceService.endTrace('ProfilerCommProcess','formatDomainObject')
             return newMap
         }catch(Exception e){
+            traceService.endTrace('ProfilerCommProcess','formatDomainObject')
             throw new Exception("[ApiCommProcess :: formatDomainObject] : Exception - full stack trace follows:",e)
         }
     }

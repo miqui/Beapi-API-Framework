@@ -94,8 +94,10 @@ class TraceService {
 
 					if(startTime==0){ startTime=it2.value['start'] }
 					stopTime = it2.value['stop']
+
 					newTrace[it.key] = ['time': getElapsedTime(it2.value['start'], it2.value['stop']), 'loc': loc]
 			}
+
 			newTrace['elapsedTime'] = getElapsedTime(startTime,stopTime)
 		}
 		return newTrace
