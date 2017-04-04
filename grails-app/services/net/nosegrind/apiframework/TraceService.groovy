@@ -94,12 +94,8 @@ class TraceService {
 
 					if(startTime==0){ startTime=it2.value['start'] }
 					stopTime = it2.value['stop']
-
-					println(loc+"/"+startTime+"/"+stopTime)
-
 					newTrace[it.key] = ['time': getElapsedTime(it2.value['start'], it2.value['stop']), 'loc': loc]
 			}
-			println(startTime +"/"+stopTime)
 			newTrace['elapsedTime'] = getElapsedTime(startTime,stopTime)
 		}
 		return newTrace
@@ -107,7 +103,6 @@ class TraceService {
 
 	private Long getElapsedTime(Long startTime, Long stopTime){
 		Long elapsedTime = stopTime - startTime
-		println("elapsedTime : "+elapsedTime)
 		if(elapsedTime>=0) {
 			return elapsedTime
 		}else{
