@@ -120,6 +120,17 @@ class BatchInterceptor extends ApiCommLayer{
 					request.setAttribute('batchInc',newBI+1)
 				}
 
+
+				int batchInc = (int) request.getAttribute('batchInc')
+				if(params.max) {
+					List max = params.max as List
+					params.max = max[batchInc]
+				}
+				if(params.offset) {
+					List offset = params.offset as List
+					params.offset = offset[batchInc]
+				}
+
 				setBatchParams(params)
 
 				// CHECK REQUEST VARIABLES MATCH ENDPOINTS EXPECTED VARIABLES

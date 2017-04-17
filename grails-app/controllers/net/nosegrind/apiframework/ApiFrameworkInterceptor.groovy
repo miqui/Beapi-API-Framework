@@ -121,6 +121,10 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 						return false
 					}
 
+					params.max = (params.max)?params.max:0
+					params.offset = (params.offset)?params.offset:0
+
+
 					// CHECK FOR REST ALTERNATIVES
 					if (restAlt) {
 						// PARSE REST ALTS (TRACE, OPTIONS, ETC)

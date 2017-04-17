@@ -108,6 +108,9 @@ class ProfilerInterceptor extends ProfilerCommLayer{
 						return false
 					}
 
+					params.max = (params.max)?params.max:0
+					params.offset = (params.offset)?params.offset:0
+
 					// Check for REST alternatives
 					if (!restAlt) {
 
