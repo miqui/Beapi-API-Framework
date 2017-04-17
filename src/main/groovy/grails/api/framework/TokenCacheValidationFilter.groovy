@@ -151,7 +151,6 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                 String controller
                 String action
                 if(actualUri ==~ /\\/.{0}[a-z].{0}${entryPoint}(.*)/){
-                    println("uri passed...")
                     List params = actualUri.split('/')
                     controller = params[2]
                     action = params[3]

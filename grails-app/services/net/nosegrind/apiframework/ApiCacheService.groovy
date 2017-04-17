@@ -202,7 +202,6 @@ class ApiCacheService{
 			}
 			return jsonReturn
 		}catch(Exception e){
-			println("[ApiCacheService :: processJson] : Exception - full stack trace follows:"+e)
 			throw new Exception("[ApiCacheService :: processJson] : Exception - full stack trace follows:",e)
 		}
 	}

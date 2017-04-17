@@ -145,7 +145,6 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 
 					setChainParams(params)
 
-
 					// CHECK REQUEST VARIABLES MATCH ENDPOINTS EXPECTED VARIABLES
 					LinkedHashMap receives = cache[params.apiObject][params.action.toString()]['receives'] as LinkedHashMap
 					//boolean requestKeysMatch = checkURIDefinitions(params, receives)
@@ -154,19 +153,34 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 						return false
 					}
 
+					// RETRIEVE CACHED RESULT; DON'T CACHE LISTS
+					if (cache[params.apiObject][params.action.toString()]['cachedResult']) {
+						String authority = getUserRole() as String
+						String domain = ((String) params.controller).capitalize()
 
+						JSONObject json = (JSONObject) cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()]
+						if (!json) {
+							return false
+						} else {
+							if (isCachedResult((Integer) json.get('version'), domain)) {
+								def result = cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()]
+								render(text: result, contentType: request.contentType)
+								return false
+							}
+						}
+					} else {
 
-							// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
-							ApiDescriptor cachedEndpoint = cache[(String) params.apiObject][(String) params.action] as ApiDescriptor
-							boolean result = handleApiRequest(cachedEndpoint['deprecated'] as List, (cachedEndpoint['method'])?.toString(), mthd, response, params)
+						// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
+						ApiDescriptor cachedEndpoint = cache[(String) params.apiObject][(String) params.action] as ApiDescriptor
+						boolean result = handleApiRequest(cachedEndpoint['deprecated'] as List, (cachedEndpoint['method'])?.toString(), mthd, response, params)
 
 
 						return result
 					}
 				}
+			}
 
-
-		return false
+			return false
 
 		} catch (Exception e ) {
 			log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)

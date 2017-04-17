@@ -41,7 +41,6 @@ class ApiObjectService{
 				parseFiles(ioPath)
 			}
 
-
 			String apiObjectSrc = grailsApplication.config.iostate.preloadDir
 			parseFiles(apiObjectSrc.toString())
 
