@@ -11,16 +11,12 @@
 package net.nosegrind.apiframework
 
 import org.grails.web.json.JSONObject
-import java.util.Map.Entry
-import java.util.Iterator;
-import java.util.Map;
 import javax.annotation.Resource
 import grails.core.GrailsApplication
 import grails.plugin.springsecurity.SpringSecurityService
 import grails.util.Metadata
 import groovy.json.JsonSlurper
 import net.nosegrind.apiframework.RequestMethod
-import java.util.Set
 import org.grails.web.util.WebUtils
 
 import javax.servlet.http.HttpServletResponse
@@ -104,6 +100,7 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 		}
 		chainLength = inc
 
+
 		// TODO : test for where chain data was sent
 		if(!isChain(request)){
 			render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Expected request variables for endpoint do not match sent variables')
@@ -141,6 +138,16 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 					} else {
 						Integer newBI = (Integer) request?.getAttribute('chainInc')
 						request.setAttribute('chainInc', newBI + 1)
+					}
+
+					int chainInc = (int) request.getAttribute('chainInc')
+					if(params.max) {
+						List max = params.max as List
+						params.max = max[chainInc]
+					}
+					if(params.offset) {
+						List offset = params.offset as List
+						params.offset = offset[chainInc]
 					}
 
 					setChainParams(params)

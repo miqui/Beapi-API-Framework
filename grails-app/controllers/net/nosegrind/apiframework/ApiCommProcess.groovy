@@ -29,8 +29,6 @@ import grails.util.Holders
 import org.grails.core.DefaultGrailsDomainClass
 import org.springframework.beans.factory.annotation.Autowired
 
-//import groovy.transform.CompileStatic
-//import grails.compiler.GrailsCompileStatic
 import org.codehaus.groovy.grails.commons.DomainClassArtefactHandler
 import net.nosegrind.apiframework.ApiCacheService
 
@@ -69,7 +67,6 @@ abstract class ApiCommProcess{
             chainVars['chain'].each() { k,v ->
                 params.apiChain[k] = v
             }
-            //params.apiChain = params?.chain
         }
     }
 
@@ -93,7 +90,8 @@ abstract class ApiCommProcess{
         return [:]
     }
 
-
+    /*
+    * TODO : DEPRECATED
     public List getApiParams(LinkedHashMap definitions){
         try{
             List apiList = []
@@ -110,6 +108,7 @@ abstract class ApiCommProcess{
             throw new Exception("[ParamsService :: getApiParams] : Exception - full stack trace follows:",e)
         }
     }
+    */
 
     String getUserRole() {
         String authority = 'permitAll'
@@ -164,7 +163,7 @@ abstract class ApiCommProcess{
 
     // TODO: put in OPTIONAL toggle in application.yml to allow for this check
     boolean checkURIDefinitions(GrailsParameterMap params,LinkedHashMap requestDefinitions){
-        List reservedNames = ['batchLength','batchInc','chainInc','apiChain','_']
+        List reservedNames = ['batchLength','batchInc','chainInc','apiChain','_','max','offset']
         try{
             String authority = getUserRole() as String
             List temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as List:(requestDefinitions['permitAll'][0]!=null)? requestDefinitions['permitAll'] as List:[]
@@ -257,20 +256,6 @@ abstract class ApiCommProcess{
                 //List paramsList
                 //Integer msize = model.size()
                 List paramsList = (model.size()==0)?[:]:model.keySet() as List
-            /*
-                switch (msize) {
-                    case 0:
-                        return [:]
-                        break;
-                    case 1:
-                        //paramsList = (model.keySet() != ['id']) ? model.entrySet().iterator().next() as List : model.keySet() as List
-                        paramsList = model.keySet() as List
-                        break;
-                    default:
-                        paramsList = model.keySet() as List
-                        break;
-                }
-                */
 
                 paramsList?.removeAll(optionalParams)
 
@@ -310,6 +295,7 @@ abstract class ApiCommProcess{
     }
 
     /*
+    * TODO : USED FOR TEST
     List getRedirectParams(GrailsParameterMap params){
         def uri = grailsApplication.mainContext.servletContext.getControllerActionUri(request)
         return uri[1..(uri.size()-1)].split('/')
