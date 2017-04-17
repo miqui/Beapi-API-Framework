@@ -52,33 +52,6 @@ abstract class ProfilerCommProcess {
     boolean chainEnabled = Holders.grailsApplication.config.apitoolkit.chaining.enabled
 
 
-/*
-    void setChainParams(GrailsParameterMap params){
-        if (chainEnabled) {
-            params.apiChain = content?.chain
-        }
-    }
-
-    LinkedHashMap getApiObjectParams(LinkedHashMap definitions){
-        try{
-            LinkedHashMap apiList = [:]
-            definitions.each{ key,val ->
-                if(request.isUserInRole(key) || key=='permitAll'){
-                    val.each{ it ->
-                        if(it){
-                            apiList[it.name] = it.paramType
-                        }
-                    }
-                }
-            }
-            return apiList
-        }catch(Exception e){
-            throw new Exception("[ParamsService :: getApiObjectParams] : Exception - full stack trace follows:",e)
-        }
-        return [:]
-    }
-*/
-
     public List getApiParams(LinkedHashMap definitions){
         traceService.startTrace('ProfilerCommProcess','getApiParams')
         try{

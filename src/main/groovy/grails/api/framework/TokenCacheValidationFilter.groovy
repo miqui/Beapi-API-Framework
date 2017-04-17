@@ -71,7 +71,6 @@ class TokenCacheValidationFilter extends GenericFilterBean {
 
     @Override
     void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-
         HttpServletRequest httpRequest = request as HttpServletRequest
         HttpServletResponse httpResponse = response as HttpServletResponse
         AccessToken accessToken
@@ -152,13 +151,14 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                 String controller
                 String action
                 if(actualUri ==~ /\\/.{0}[a-z].{0}${entryPoint}(.*)/){
+                    println("uri passed...")
                     List params = actualUri.split('/')
                     controller = params[2]
                     action = params[3]
                 }else{
                     httpResponse.status = 401
                     httpResponse.setHeader('ERROR', 'BAD Access attempted')
-                    httpResponse.writer.flush()
+                    //httpResponse.writer.flush()
                     return
                 }
 
@@ -169,26 +169,28 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                 def apiCacheService = ctx.getBean("apiCacheService")
                 LinkedHashMap cache = (controller)?apiCacheService.getApiCache(controller.toString()):[:]
                 String version = cache['cacheversion']
-                if(!cache[version]){
+
+                if(!cache?."${version}"?."${action}"){
                     httpResponse.status = 401
                     httpResponse.setHeader('ERROR', 'IO State Not properly Formatted for this URI. Please contact the Administrator.')
-                    httpResponse.writer.flush()
+                    //httpResponse.writer.flush()
                     return
                 }
+
                 List roles = cache?."${version}"?."${action}"?.roles as List
+
                 if(!checkAuth(roles,authenticationResult)) {
                     httpResponse.status = 401
                     httpResponse.setHeader('ERROR', 'Unauthorized Access attempted')
-                    httpResponse.writer.flush()
+                    //httpResponse.writer.flush()
                     return
                 }else {
                     //System.out.println("####[TokenCacheValidationFilter :: processFilterChain] ${actualUri} / ${validationEndpointUrl}")
-                    //log.debug "Continuing the filter chain"
+                    log.debug "Continuing the filter chain"
                 }
             }
         } else {
-            println("Request does not contain any token. Letting it continue through the filter chain")
-            //log.debug "Request does not contain any token. Letting it continue through the filter chain"
+            log.debug "Request does not contain any token. Letting it continue through the filter chain"
         }
 
         chain.doFilter(request, response)

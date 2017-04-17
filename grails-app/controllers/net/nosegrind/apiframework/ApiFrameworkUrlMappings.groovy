@@ -64,16 +64,16 @@ class ApiFrameworkUrlMappings {
 
 
         // BATCH API ENDPOINTS
+        "/$batchEntryPoint/$controller/$action/$id?**"{
+            entryPoint = batchEntryPoint
+            parseRequest = true
+        }
+
         "/$batchEntryPoint/$controller/$action"{
             if(action?.toInteger()==action && action!=null){
                 id=action
                 action = null
             }
-            entryPoint = batchEntryPoint
-            parseRequest = true
-        }
-
-        "/$batchEntryPoint/$controller/$action/$id?**"{
             entryPoint = batchEntryPoint
             parseRequest = true
         }
@@ -103,16 +103,16 @@ class ApiFrameworkUrlMappings {
 
 
         // CHAIN API ENDPOINTS
+        "/$chainEntryPoint/$controller/$action/$id?**"{
+            entryPoint = chainEntryPoint
+            parseRequest = true
+        }
+
         "/$chainEntryPoint/$controller/$action"{
             if(action?.toInteger()==action && action!=null){
                 id=action
                 action = null
             }
-            entryPoint = chainEntryPoint
-            parseRequest = true
-        }
-
-        "/$chainEntryPoint/$controller/$action/$id?**"{
             entryPoint = chainEntryPoint
             parseRequest = true
         }
@@ -125,7 +125,6 @@ class ApiFrameworkUrlMappings {
                 apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
             }
         }
-
 
         "/${chainEntryPoint}-$apiObjectVersion/$controller/$action" {
             if(action?.toInteger()==action && action!=null){
@@ -141,16 +140,16 @@ class ApiFrameworkUrlMappings {
         }
 
         // PROFILER API ENDPOINTS
+        "/$profilerEntryPoint/$controller/$action/$id?**"{
+            entryPoint = profilerEntryPoint
+            parseRequest = true
+        }
+
         "/$profilerEntryPoint/$controller/$action"{
             if(action?.toInteger()==action && action!=null){
                 id=action
                 action = null
             }
-            entryPoint = profilerEntryPoint
-            parseRequest = true
-        }
-
-        "/$profilerEntryPoint/$controller/$action/$id?**"{
             entryPoint = profilerEntryPoint
             parseRequest = true
         }

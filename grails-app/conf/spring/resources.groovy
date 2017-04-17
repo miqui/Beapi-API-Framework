@@ -17,21 +17,6 @@ import org.springframework.boot.context.embedded.FilterRegistrationBean
 
 beans = {
 
-    // IMPORTANT! - add this to your Spring config
-    /*
-    corsFilterDeregistrationBean(FilterRegistrationBean) {
-        filter = ref('springSecurityCORSFilter')
-        enabled = false
-    }
+    requestForwarder(grails.api.framework.RequestForwarder)
 
-    tokenFilterDeregistrationBean(FilterRegistrationBean) {
-        filter = ref('tokenCacheValidationFilter')
-        enabled = false
-    }
-
-    authFilterDeregistrationBean(FilterRegistrationBean) {
-        filter = ref('restAuthenticationFilter')
-        enabled = false
-    }
-    */
 }

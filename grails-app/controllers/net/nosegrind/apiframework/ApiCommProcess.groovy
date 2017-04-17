@@ -65,12 +65,11 @@ abstract class ApiCommProcess{
         if (chainEnabled) {
             if(!params.apiChain){ params.apiChain = [:] }
             def chainVars = request.JSON
-            println(chainVars)
             if(!request.getAttribute('chainLength')){ request.setAttribute('chainLength',chainVars['chain'].size()) }
-            chainVars['chain'][request.getAttribute('chainInc').toInteger()].each() { k,v ->
+            chainVars['chain'].each() { k,v ->
                 params.apiChain[k] = v
             }
-            params.apiChain = params?.chain
+            //params.apiChain = params?.chain
         }
     }
 
@@ -165,7 +164,7 @@ abstract class ApiCommProcess{
 
     // TODO: put in OPTIONAL toggle in application.yml to allow for this check
     boolean checkURIDefinitions(GrailsParameterMap params,LinkedHashMap requestDefinitions){
-        List reservedNames = ['batchLength','batchInc','_']
+        List reservedNames = ['batchLength','batchInc','chainInc','apiChain','_']
         try{
             String authority = getUserRole() as String
             List temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as List:(requestDefinitions['permitAll'][0]!=null)? requestDefinitions['permitAll'] as List:[]
@@ -508,7 +507,7 @@ abstract class ApiCommProcess{
             DefaultGrailsDomainClass d = new DefaultGrailsDomainClass(data.class)
             d.persistentProperties.each() { it ->
                 if((DomainClassArtefactHandler.isDomainClass(data[it.name].getClass()))){
-                    newMap["${it.name}Id"] = data[it.name]
+                    newMap["${it.name}Id"] = data[it.name].id
                 }else{
                     newMap[it.name] = data[it.name]
                     
@@ -564,5 +563,29 @@ abstract class ApiCommProcess{
         }
 
         return (currentVersion > version)?false:true
+    }
+
+    boolean isChain(HttpServletRequest request){
+        String contentType = request.getAttribute('contentType')
+        try{
+            switch(contentType){
+                case 'text/xml':
+                case 'application/xml':
+                    if(request.XML?.chain){
+                        return true
+                    }
+                    break
+                case 'text/json':
+                case 'application/json':
+                default:
+                    if(request.JSON?.chain){
+                        return true
+                    }
+                    break
+            }
+            return false
+        }catch(Exception e){
+            throw new Exception("[ApiResponseService :: isChain] : Exception - full stack trace follows:",e)
+        }
     }
 }

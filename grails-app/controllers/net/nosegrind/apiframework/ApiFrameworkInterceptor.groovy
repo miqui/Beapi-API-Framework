@@ -52,7 +52,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 	}
 
 	boolean before(){
-		//println('##### FILTER (BEFORE)')
+		println('##### FILTER (BEFORE)')
 
 		// TESTING: SHOW ALL FILTERS IN CHAIN
 		//def filterChain = grailsApplication.mainContext.getBean('springSecurityFilterChain')
@@ -173,7 +173,8 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 
 						// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
 						ApiDescriptor cachedEndpoint = cache[(String) params.apiObject][(String) params.action] as ApiDescriptor
-						boolean result = handleApiRequest(cachedEndpoint['deprecated'] as List, cachedEndpoint['method']?.toString().trim(), mthd, response, params)
+						println(cachedEndpoint['method'])
+						boolean result = handleApiRequest(cachedEndpoint['deprecated'] as List, (cachedEndpoint['method'])?.toString(), mthd, response, params)
 
 						return result
 					}
@@ -184,14 +185,14 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 			return false
 
 		}catch(Exception e){
-			println("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:"+ e)
-			log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
+			//log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
 			return false
 		}
 	}
 
 	boolean after(){
-		//println('##### FILTER (AFTER)')
+		println('##### FILTER (AFTER)')
+
 		try {
 			LinkedHashMap newModel = [:]
 			if (params.controller != 'apidoc') {

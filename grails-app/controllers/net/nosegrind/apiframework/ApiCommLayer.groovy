@@ -18,9 +18,10 @@ import org.grails.groovy.grails.commons.*
 import javax.servlet.http.HttpServletResponse
 import groovy.transform.CompileStatic
 import net.nosegrind.apiframework.RequestMethod
+import grails.compiler.GrailsCompileStatic
 
 // extended by Intercepters
-@CompileStatic
+@GrailsCompileStatic
 abstract class ApiCommLayer extends ApiCommProcess{
 
     /***************************
@@ -80,6 +81,7 @@ abstract class ApiCommLayer extends ApiCommProcess{
             //def method = cache['method']?.toString().trim()
 
             // DOES api.methods.contains(request.method)
+
             if(!isRequestMatch(method,mthd)){
                 response.status = status
                 response.setHeader('ERROR',"Request method doesn't match expected method.")
@@ -91,16 +93,14 @@ abstract class ApiCommLayer extends ApiCommProcess{
         }
     }
 
-    boolean handleChainRequest(List deprecated, String method, RequestMethod mthd, HttpServletResponse response, GrailsParameterMap params){
-        int status = 400
-        try{
 
+    boolean handleChainRequest(List deprecated, String method, RequestMethod mthd,HttpServletResponse response, GrailsParameterMap params){
+        try{
             // CHECK VERSION DEPRECATION DATE
-            //List deprecated = cache['deprecated'] as List
             if(deprecated?.get(0)){
                 if(checkDeprecationDate(deprecated[0].toString())){
                     String depMsg = deprecated[1].toString()
-                    response.status = status
+                    response.status = 400
                     response.setHeader('ERROR',depMsg)
                     return false
                 }
@@ -109,11 +109,13 @@ abstract class ApiCommLayer extends ApiCommProcess{
             //def method = cache['method']?.toString().trim()
 
             // DOES api.methods.contains(request.method)
+
             if(!isRequestMatch(method,mthd)){
-                response.status = status
+                response.status = 400
                 response.setHeader('ERROR',"Request method doesn't match expected method.")
                 return false
             }
+
             return true
         }catch(Exception e){
             throw new Exception("[ApiCommLayer : handleBatchRequest] : Exception - full stack trace follows:",e)
@@ -173,8 +175,9 @@ abstract class ApiCommLayer extends ApiCommProcess{
         }
     }
 
+
     def handleChainResponse(LinkedHashMap requestDefinitions, List roles, RequestMethod mthd, String format, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
-        try{
+        //try{
             String authority = getUserRole() as String
             response.setHeader('Authorization', roles.join(', '))
 
@@ -182,11 +185,15 @@ abstract class ApiCommLayer extends ApiCommProcess{
             ArrayList responseList = (ArrayList)temp.collect(){ it.name }
 
             LinkedHashMap result = parseURIDefinitions(model,responseList)
+            LinkedHashMap chain = params.apiChain as LinkedHashMap
 
-            // TODO : add combine functionality for batching
-            //if(params?.apiBatch.combine=='true'){
-            //	params.apiCombine["${params.uri}"] = result
-            //}
+            if (chain?.combine == 'true') {
+                if (!params.apiCombine) {
+                    params.apiCombine = [:]
+                }
+                String currentPath = "${params.controller}/${params.action}"
+                params.apiCombine[currentPath] = result
+            }
 
             if(!result){
                 response.status = 400
@@ -194,8 +201,11 @@ abstract class ApiCommLayer extends ApiCommProcess{
                 //LinkedHashMap content = parseResponseMethod(request, params, result)
                 return parseResponseMethod(mthd, format, params, result)
             }
-        }catch(Exception e){
-            throw new Exception("[ApiCommLayer : handleBatchResponse] : Exception - full stack trace follows:",e)
-        }
+
+        //}catch(Exception e){
+        //    throw new Exception("[ApiResponseService :: handleApiResponse] : Exception - full stack trace follows:",e)
+        //}
     }
+
+
 }
