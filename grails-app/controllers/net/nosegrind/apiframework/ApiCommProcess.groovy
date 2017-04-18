@@ -13,6 +13,10 @@ package net.nosegrind.apiframework
 
 import javax.annotation.Resource
 import javax.servlet.http.HttpServletRequest
+import org.springframework.web.context.request.ServletRequestAttributes
+import javax.servlet.http.HttpSession
+
+import org.springframework.security.core.context.SecurityContextHolder as SCH
 import java.text.SimpleDateFormat
 
 import net.nosegrind.apiframework.RequestMethod
@@ -25,7 +29,7 @@ import javax.servlet.forward.*
 import org.grails.groovy.grails.commons.*
 import grails.core.GrailsApplication
 import grails.util.Holders
-
+import org.springframework.web.context.request.RequestContextHolder as RCH
 import org.grails.core.DefaultGrailsDomainClass
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -70,6 +74,43 @@ abstract class ApiCommProcess{
         }
     }
 
+    // TODO
+    boolean checkSession(){
+        println("### checkSession called...")
+        //HttpServletRequest request = ((ServletRequestAttributes) RCH.currentRequestAttributes()).getRequest()
+        //HttpSession session = request.getSession(true)
+        try{
+            if(session['SPRING_SECURITY_CONTEXT']['rateLimitTimestamp']==null){
+                println("... setting timestamp")
+                session['SPRING_SECURITY_CONTEXT'] = SCH.getContext()
+                session['SPRING_SECURITY_CONTEXT']['rateLimitTimestamp'] = System.currentTimeMillis()/1000
+                SCH.setContext(session['SPRING_SECURITY_CONTEXT'])
+            }
+            if(session['SPRING_SECURITY_CONTEXT']['rateLimitCurrent']==null){
+                println("... setting ratelimit")
+                session['SPRING_SECURITY_CONTEXT'] = SCH.getContext()
+                session['SPRING_SECURITY_CONTEXT']['rateLimitCurrent'] = 1
+                SCH.setContext(session['SPRING_SECURITY_CONTEXT'])
+            }else{
+                println("... updating ratelimit")
+                session['SPRING_SECURITY_CONTEXT'] = SCH.getContext()
+                int inc = session['SPRING_SECURITY_CONTEXT']['rateLimitCurrent']+1
+                session['SPRING_SECURITY_CONTEXT']['rateLimitCurrent'] = inc
+                SCH.setContext(session['SPRING_SECURITY_CONTEXT'])
+            }
+            session['SPRING_SECURITY_CONTEXT'] = SCH.getContext()
+            println("rateLimitCurrent : "+session['SPRING_SECURITY_CONTEXT']['rateLimitCurrent'])
+            return false
+        }catch(Exception e){
+            println(e)
+            //throw new Exception("[ParamsService :: getApiObjectParams] : Exception - full stack trace follows:",e)
+        }
+    }
+
+    // TODO
+    void setSession(){
+
+    }
 
     LinkedHashMap getApiObjectParams(LinkedHashMap definitions){
         try{

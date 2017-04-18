@@ -92,10 +92,13 @@ apitoolkit:
     batching:
         enabled: true
     encoding: 'UTF-8'
-    user:
-        roles: ['ROLE_USER']
-        rateLimit: {'ROLE_USER':1000}
-        limitTimeout: 86400
+    rateLimit:
+        # NON-ADMIN ROLES; ADMINS HAVE NO LIMIT
+        roles: ['ROLE_USER','ROLE_ADMIN']
+        # 15MIN/30MIN/60MIN
+        check: '60MIN'
+        limit: {'ROLE_USER':1000,'ROLE_ADMIN':100}
+        sessionMaxInc: 50
     admin:
         roles: ['ROLE_ROOT','ROLE_ADMIN','ROLE_ARCH']
     serverType: 'master'

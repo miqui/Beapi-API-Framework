@@ -101,6 +101,7 @@ class BatchInterceptor extends ApiCommLayer{
 			cache = (params.controller)? apiCacheService.getApiCache(params.controller.toString()) as LinkedHashMap:[:]
 
 			if(cache) {
+
 				params.apiObject = (params.apiObjectVersion) ? params.apiObjectVersion : cache['currentStable']['value']
 				params.action = (params.action == null) ? cache[params.apiObject]['defaultAction'] : params.action
 
@@ -122,13 +123,17 @@ class BatchInterceptor extends ApiCommLayer{
 
 
 				int batchInc = (int) request.getAttribute('batchInc')
-				if(params.max) {
+				if(params.max!=null) {
 					List max = params.max as List
 					params.max = max[batchInc]
+				}else{
+					params.max = 0
 				}
-				if(params.offset) {
+				if(params.offset!=null) {
 					List offset = params.offset as List
 					params.offset = offset[batchInc]
+				}else{
+					params.offset = 0
 				}
 
 				setBatchParams(params)

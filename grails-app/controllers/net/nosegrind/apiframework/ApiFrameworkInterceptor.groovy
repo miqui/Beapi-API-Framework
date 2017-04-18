@@ -103,6 +103,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 			// IS APIDOC??
 			if(params.controller=='apidoc'){
 				if(cache){
+					checkSession()
 					params.apiObject = (params.apiObjectVersion) ? params.apiObjectVersion : cache['currentStable']['value']
 					params.action = (params.action == null) ? cache[params.apiObject]['defaultAction'] : params.action
 					return true
@@ -121,8 +122,9 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 						return false
 					}
 
-					params.max = (params.max)?params.max:0
-					params.offset = (params.offset)?params.offset:0
+					params.max = (params.max!=null)?params.max:0
+					params.offset = (params.offset!=null)?params.offset:0
+
 
 
 					// CHECK FOR REST ALTERNATIVES
@@ -130,6 +132,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 						// PARSE REST ALTS (TRACE, OPTIONS, ETC)
 						String result = parseRequestMethod(mthd, params)
 						if (result) {
+							checkSession()
 							render(text: result, contentType: request.contentType)
 							return false
 						}
@@ -153,6 +156,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 							return false
 						}else{
 							if (isCachedResult((Integer) json.get('version'), domain)) {
+								checkSession()
 								def result = cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()]
 								render(text: result, contentType: request.contentType)
 								return false
@@ -169,6 +173,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 								// FORWARD FOR REST DEFAULTS WITH NO ACTION
 								String[] tempUri = request.getRequestURI().split("/")
 								if (tempUri[2].contains('dispatch') && "${params.controller}.dispatch" == tempUri[2] && !cache[params.apiObject]['domainPackage']) {
+									checkSession()
 									forward(controller: params.controller, action: params.action)
 									return false
 								}
@@ -177,9 +182,8 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 
 						// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
 						ApiDescriptor cachedEndpoint = cache[(String) params.apiObject][(String) params.action] as ApiDescriptor
-						println(cachedEndpoint['method'])
+						checkSession()
 						boolean result = handleApiRequest(cachedEndpoint['deprecated'] as List, (cachedEndpoint['method'])?.toString(), mthd, response, params)
-
 						return result
 					}
 				}

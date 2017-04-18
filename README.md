@@ -5,19 +5,19 @@
 
 Fully reactive api framework providing automation and simplification of api's for scale. Some features include:
 
-- **automated batching:** all endpoints are batchable by default with AUTH ROLES assignable to restrict access. Batching can also be TOGGLED to turn this feature ON/OFF per endpoint.
+- **Automated Batching:** all endpoints are batchable by default with AUTH ROLES assignable to restrict access. Batching can also be TOGGLED to turn this feature ON/OFF per endpoint.
 
 - **api abstraction of communication logic:** communication logic is abstraction from business logic (or 'resource manager') to allow for easier automation, better communication, CPU bound processing and sharing of IO flow with processes/application in a distributed architecture
 
 - **abstraction of security data and logic:** all security data and logic are properly abstracted from the business logic for better sharing with the architectural services. This avoids redundancy and duplication in your architecture and better synchronization
 
-- **reloadable IO state:** the data associated with functionality for REQUEST/RESPONSE (usually through annotations) has been removed and abstracted out to a single file per endpoint grouping. This allows for ON-THE-FLY reloading of the state and endpoint security. This also allows for easy update and synchronization will all services/processes that may share in the IO flow and need to synchronize this data (rather than duplicate).
+- **Shared I/O state:** the data associated with functionality for REQUEST/RESPONSE (usually through annotations) has been removed and abstracted out to a single file per endpoint grouping. This allows for ON-THE-FLY reloading of the state and endpoint security. This also allows for easy update and synchronization will all services/processes that may share in the IO flow and need to synchronize this data (rather than duplicate).
 
-- **api chaining:** rather than using HATEOASto make a request, get a link, make a request, get a link, make a request, etc... api chaining allows for creation of an 'api monad' wherein the output from a related set of apis can be chained allowing the output from one api to be accepted as the input to the next and so on and be passed with ONE REQUEST AND ONE RESPONSE.
+- **API Chaining(tm):** rather than using HATEOASto make a request, get a link, make a request, get a link, make a request, etc... api chaining allows for creation of an 'api monad' wherein the output from a related set of apis can be chained allowing the output from one api to be accepted as the input to the next and so on and be passed with ONE REQUEST AND ONE RESPONSE.
 
-- **(2.0) Localized API Cache:** returned resources are cached,stored and updated with requesting ROLE/AUTH. Domains extend a base class that auto update this cache upon create/update/delete. This speeds up your api REQUEST/RESPONSE x10
+- **Localized API Cache:** returned resources are cached,stored and updated with requesting ROLE/AUTH. Domains extend a base class that auto update this cache upon create/update/delete. This speeds up your api REQUEST/RESPONSE x10
 
-- **API Metrics Reporting:** Call your API's normally but have them deliver a metrics report of time it takes for every class/method to deliver so you can optimize queries, methods services
+- **Built-In Profiler:** Profile your API's and have them deliver a metrics report of time it takes for every class/method to deliver so you can optimize queries, methods services
 
 **FAQ**
 

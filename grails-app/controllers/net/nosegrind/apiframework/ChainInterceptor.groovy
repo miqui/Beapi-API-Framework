@@ -88,6 +88,10 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 		}
 
 		// INIT local Chain Variables
+		if(chain?.chain==null){
+			render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Expected chain variables not sent')
+			return false
+		}
 		int inc = 0
 		chainKeys[0] = chain['chain']['key']
 		chainUris[0] = request.forwardURI
@@ -140,14 +144,20 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 						request.setAttribute('chainInc', newBI + 1)
 					}
 
+
+
 					int chainInc = (int) request.getAttribute('chainInc')
-					if(params.max) {
+					if(params.max!=null) {
 						List max = params.max as List
 						params.max = max[chainInc]
+					}else{
+						params.max = 0
 					}
-					if(params.offset) {
+					if(params.offset!=null) {
 						List offset = params.offset as List
 						params.offset = offset[chainInc]
+					}else{
+						params.offset = 0
 					}
 
 					setChainParams(params)
