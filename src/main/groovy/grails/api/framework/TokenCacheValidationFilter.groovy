@@ -23,6 +23,7 @@ import org.springframework.security.web.authentication.AuthenticationFailureHand
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler
 import org.springframework.web.filter.GenericFilterBean
 
+import org.springframework.web.context.request.RequestContextHolder as RCH
 
 import javax.annotation.Resource
 import javax.servlet.FilterChain
@@ -144,9 +145,9 @@ class TokenCacheValidationFilter extends GenericFilterBean {
         if (authenticationResult?.accessToken) {
             if (actualUri == validationEndpointUrl) {
                 //log.debug "Validation endpoint called. Generating response."
+
                 authenticationSuccessHandler.onAuthenticationSuccess(httpRequest, httpResponse, authenticationResult)
             } else {
-                // TODO: Check actualUri against cache HERE
                 String entryPoint = Metadata.current.getProperty(Metadata.APPLICATION_VERSION, String.class)
                 String controller
                 String action

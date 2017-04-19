@@ -46,7 +46,7 @@ class TraceCacheService{
 		try{
 			return cache
 		}catch(Exception e){
-			throw new Exception("[ApiCacheService :: putTraceCache] : Exception - full stack trace follows:",e)
+			throw new Exception("[TraceCacheService :: putTraceCache] : Exception - full stack trace follows:",e)
 		}
 	}
 
@@ -55,7 +55,7 @@ class TraceCacheService{
 		try{
 			return cache
 		}catch(Exception e){
-			throw new Exception("[ApiCacheService :: setTraceCache] : Exception - full stack trace follows:",e)
+			throw new Exception("[TraceCacheService :: setTraceCache] : Exception - full stack trace follows:",e)
 		}
 	}
 

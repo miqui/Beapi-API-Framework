@@ -18,11 +18,11 @@ import grails.plugin.springsecurity.SpringSecurityService
 import groovy.json.JsonSlurper
 import groovy.util.XmlSlurper;
 import grails.util.Metadata
+import grails.util.Holders
 
 //import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import groovy.transform.CompileStatic
-
 
 @CompileStatic
 class ProfilerInterceptor extends ProfilerCommLayer{
@@ -48,7 +48,18 @@ class ProfilerInterceptor extends ProfilerCommLayer{
 
 	boolean before(){
 		//log.info('##### FILTER (BEFORE)')
+
+		// Check Profiler Roles
+		String authority = getUserRole() as String
+		LinkedHashMap apitoolkit = Holders.grailsApplication.config.apitoolkit as LinkedHashMap
+		List profilerRoles = apitoolkit['profilerRoles'] as List
+		if(!profilerRoles.contains(authority)){
+			render(status: HttpServletResponse.SC_UNAUTHORIZED , text: "Unauthorized Request. User does not have privileges for Profiling Services.'")
+			return false
+		}
+
 		traceService.startTrace('ProfilerInterceptor','before')
+
 
 		String format = (request?.format)?request.format:'JSON';
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']

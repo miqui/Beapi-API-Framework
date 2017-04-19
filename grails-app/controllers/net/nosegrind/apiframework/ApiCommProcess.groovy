@@ -75,21 +75,15 @@ abstract class ApiCommProcess{
     }
 
     // TODO
-    boolean checkSession(){
-        println("### checkSession called...")
-        //HttpServletRequest request = ((ServletRequestAttributes) RCH.currentRequestAttributes()).getRequest()
-        //HttpSession session = request.getSession(true)
+    boolean checkRateLimit(){
         try{
-            if(session['SPRING_SECURITY_CONTEXT']['rateLimitTimestamp']==null){
+            if(session['rateLimitTimestamp']==null){
                 println("... setting timestamp")
-                session['SPRING_SECURITY_CONTEXT'] = SCH.getContext()
-                session['SPRING_SECURITY_CONTEXT']['rateLimitTimestamp'] = System.currentTimeMillis()/1000
-                SCH.setContext(session['SPRING_SECURITY_CONTEXT'])
+                session['rateLimitTimestamp'] = System.currentTimeMillis()/1000
             }
-            if(session['SPRING_SECURITY_CONTEXT']['rateLimitCurrent']==null){
+            if(session['rateLimitCurrent']==null){
                 println("... setting ratelimit")
-                session['SPRING_SECURITY_CONTEXT'] = SCH.getContext()
-                session['SPRING_SECURITY_CONTEXT']['rateLimitCurrent'] = 1
+                session['rateLimitCurrent'] = 1
                 SCH.setContext(session['SPRING_SECURITY_CONTEXT'])
             }else{
                 println("... updating ratelimit")
