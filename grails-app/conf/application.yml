@@ -40,9 +40,6 @@ grails:
             multipartForm: multipart/form-data
             rss: application/rss+xml
             text: text/plain
-            hal: 
-              - application/hal+json
-              - application/hal+xml
             xml:
               - text/xml
               - application/xml
@@ -53,17 +50,6 @@ grails:
         defaultScope: singleton
     converters:
         encoding: UTF-8
-    views:
-        default:
-            codec: html
-        gsp:
-            encoding: UTF-8
-            htmlcodec: xml
-            codecs:
-                expression: html
-                scriptlets: html
-                taglib: none
-                staticparts: none
 config:
     cache:
         name: 'ApiCache'
@@ -78,7 +64,7 @@ config:
         maxElementsInMemory: 1000
         maxElementsOnDisk: 10000
     cache:
-        name: 'Limit'
+        name: 'Throttle'
         eternal: false
         overflowToDisk: true
         maxElementsInMemory: 1000
@@ -99,13 +85,11 @@ apitoolkit:
     batching:
         enabled: true
     encoding: 'UTF-8'
-    rateLimit:
-        # NON-ADMIN ROLES; ADMINS HAVE NO LIMIT
-        roles: ['ROLE_USER']
-        # 15MIN/30MIN/60MIN
-        check: '60MIN'
-        limit: {'ROLE_USER':1000,'ROLE_ADMIN':100}
-        sessionMaxInc: 50
+    throttle:
+        rateLimit: {'ROLE_USER':1000,'ROLE_ADMIN':10000}
+        dataLimit: {'ROLE_USER':1000000,'ROLE_ADMIN':1000000}
+        # in seconds : 3600 = 60 minutes
+        expires: 3600
     admin:
         roles: ['ROLE_ROOT','ROLE_ADMIN','ROLE_ARCH']
     serverType: 'master'

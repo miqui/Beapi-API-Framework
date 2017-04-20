@@ -36,7 +36,6 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 
 	@Resource
 	GrailsApplication grailsApplication
-
 	ApiCacheService apiCacheService
 	SpringSecurityService springSecurityService
 
@@ -53,7 +52,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 	}
 
 	boolean before(){
-		println('##### FILTER (BEFORE)')
+		//println('##### FILTER (BEFORE)')
 
 		// TESTING: SHOW ALL FILTERS IN CHAIN
 		//def filterChain = grailsApplication.mainContext.getBean('springSecurityFilterChain')
@@ -126,14 +125,19 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 					params.offset = (params.offset!=null)?params.offset:0
 
 
-
 					// CHECK FOR REST ALTERNATIVES
 					if (restAlt) {
 						// PARSE REST ALTS (TRACE, OPTIONS, ETC)
 						String result = parseRequestMethod(mthd, params)
 						if (result) {
-							render(text: result, contentType: request.contentType)
-							return false
+							byte[] contentLength = result.getBytes( "ISO-8859-1" )
+							if(checkLimit(contentLength.length)) {
+								render(text: result, contentType: request.contentType)
+								return false
+							}else{
+								render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Rate Limit exceeded. Please wait'+getThrottleExpiration()+'seconds til next request.')
+								return false
+							}
 						}
 					}
 
@@ -155,9 +159,15 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 							return false
 						}else{
 							if (isCachedResult((Integer) json.get('version'), domain)) {
-								def result = cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()]
-								render(text: result, contentType: request.contentType)
-								return false
+								String result = cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()] as String
+								byte[] contentLength = result.getBytes( "ISO-8859-1" )
+								if(checkLimit(contentLength.length)) {
+									render(text: result, contentType: request.contentType)
+									return false
+								}else{
+									render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Rate Limit exceeded. Please wait'+getThrottleExpiration()+'seconds til next request.')
+									return false
+								}
 							}
 						}
 					} else {
@@ -195,7 +205,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 	}
 
 	boolean after(){
-		println('##### FILTER (AFTER)')
+		//println('##### FILTER (AFTER)')
 
 		try {
 			LinkedHashMap newModel = [:]
@@ -222,7 +232,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 				}
 
 				String content = handleApiResponse(cachedEndpoint['returns'] as LinkedHashMap, cachedEndpoint['roles'] as List, mthd, format, response, newModel, params)
-
+				byte[] contentLength = content.getBytes( "ISO-8859-1" )
 				if (content) {
 					// STORE CACHED RESULT
 					String format = request.format.toUpperCase()
@@ -231,8 +241,13 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 					if (!newModel) {
 						apiCacheService.setApiCachedResult((String) params.controller, (String) params.apiObject, (String) params.action, authority, format, content)
 					}
-					render(text: content, contentType: request.contentType)
-					return false
+					if(checkLimit(contentLength.length)) {
+						render(text: content, contentType: request.contentType)
+						return false
+					}else{
+						render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Rate Limit exceeded. Please wait'+getThrottleExpiration()+'seconds til next request.')
+						return false
+					}
 				}
 			}else{
 				render(text: newModel, contentType: request.contentType)

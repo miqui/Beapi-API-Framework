@@ -19,7 +19,7 @@ import grails.core.GrailsApplication
 import grails.plugin.springsecurity.SpringSecurityService
 
 
-class LimitCacheService{
+class ThrottleCacheService{
 
 	static transactional = false
 	
@@ -29,66 +29,58 @@ class LimitCacheService{
 
 	// called through generateJSON()
 
-	public void resetLimitCache(String userId){
-		try{
-			grailsCacheManager?.getCache('Limit').remove(userId)
-			LinkedHashMap cache = ['rateLimitTimestamp':System.currentTimeMillis()/1000, 'rateLimitCurrent': 1,'locked':false]
-			setLimitCache(userId, cache)
-		}catch(Exception e){
-			throw new Exception("[LimitCacheService :: getTraceCache] : Exception - full stack trace follows:",e)
-		}
-	}
 
-	@CachePut(value="Limit",key="#userId")
-	LinkedHashMap setLimitCache(String userId, LinkedHashMap cache){
+	@CachePut(value="Throttle",key="#userId")
+	LinkedHashMap setThrottleCache(String userId, LinkedHashMap cache){
 		try{
 			return cache
 		}catch(Exception e){
-			throw new Exception("[LimitCacheService :: putTraceCache] : Exception - full stack trace follows:",e)
+			throw new Exception("[ThrottleCacheService :: setThrottleCache] : Exception - full stack trace follows:",e)
 		}
 	}
 
-	@CachePut(value="Limit",key="#userId")
-	LinkedHashMap incrementLimitCache(String userId){
+	@CachePut(value="Throttle",key="#userId")
+	LinkedHashMap incrementThrottleCache(String userId){
 		try{
 			def cache = getLimitCache(userId)
 			cache['rateLimitCurrent']++
 			return cache
 		}catch(Exception e){
-			throw new Exception("[LimitCacheService :: putTraceCache] : Exception - full stack trace follows:",e)
+			throw new Exception("[ThrottleCacheService :: incrementThrottleCache] : Exception - full stack trace follows:",e)
 		}
 	}
 
-	@CachePut(value="Limit",key="#userId")
+	@CachePut(value="Throttle",key="#userId")
 	LinkedHashMap lockLimitCache(String uri){
 		def cache = getLimitCache(userId)
 		cache['locked']=true
 		return cache
 	}
 
-	@CachePut(value="Limit",key="#userId")
+	@CachePut(value="Throttle",key="#userId")
 	LinkedHashMap checkLimitCache(String userId,String role){
 		// check role against config role limit
 	}
 
-	LinkedHashMap getLimitCache(String userId){
+	LinkedHashMap getThrottleCache(String userId){
 		try{
-			def temp = grailsCacheManager?.getCache('Trace')
-			def cache = temp?.get(uri)
+			def temp = grailsCacheManager?.getCache('Throttle')
+			def cache = temp?.get(userId)
 			if(cache?.get()){
-				return cache.get() as LinkedHashMap
+				LinkedHashMap lcache = cache.get() as LinkedHashMap
+				return lcache
 			}else{ 
 				return [:] 
 			}
 
 		}catch(Exception e){
-			throw new Exception("[LimitCacheService :: getTraceCache] : Exception - full stack trace follows:",e)
+			throw new Exception("[ThrottleCacheService :: getThrottleCache] : Exception - full stack trace follows:",e)
 		}
 	}
 	
 	List getCacheNames(){
 		List cacheNames = []
-		cacheNames = grailsCacheManager?.getCache('Limit')?.getAllKeys() as List
+		cacheNames = grailsCacheManager?.getCache('Throttle')?.getAllKeys() as List
 		return cacheNames
 	}
 }

@@ -35,6 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 import org.codehaus.groovy.grails.commons.DomainClassArtefactHandler
 import net.nosegrind.apiframework.ApiCacheService
+import net.nosegrind.apiframework.ThrottleCacheService
 
 // extended by ApiCommLayer
 abstract class ApiCommProcess{
@@ -43,8 +44,10 @@ abstract class ApiCommProcess{
     GrailsApplication grailsApplication
 
     @Autowired
-    ApiCacheService apiCacheService
+    ThrottleCacheService throttleCacheService
 
+    @Autowired
+    ApiCacheService apiCacheService
     List formats = ['text/html','text/json','application/json','text/xml','application/xml']
     List optionalParams = ['method','format','contentType','encoding','action','controller','v','apiCombine', 'apiObject','entryPoint','uri']
 
@@ -74,38 +77,8 @@ abstract class ApiCommProcess{
         }
     }
 
-    // TODO
-    boolean checkRateLimit(){
-        try{
-            if(session['rateLimitTimestamp']==null){
-                println("... setting timestamp")
-                session['rateLimitTimestamp'] = System.currentTimeMillis()/1000
-            }
-            if(session['rateLimitCurrent']==null){
-                println("... setting ratelimit")
-                session['rateLimitCurrent'] = 1
-                SCH.setContext(session['SPRING_SECURITY_CONTEXT'])
-            }else{
-                println("... updating ratelimit")
-                session['SPRING_SECURITY_CONTEXT'] = SCH.getContext()
-                int inc = session['SPRING_SECURITY_CONTEXT']['rateLimitCurrent']+1
-                session['SPRING_SECURITY_CONTEXT']['rateLimitCurrent'] = inc
-                SCH.setContext(session['SPRING_SECURITY_CONTEXT'])
-            }
-            session['SPRING_SECURITY_CONTEXT'] = SCH.getContext()
-            println("rateLimitCurrent : "+session['SPRING_SECURITY_CONTEXT']['rateLimitCurrent'])
-            return false
-        }catch(Exception e){
-            println(e)
-            //throw new Exception("[ParamsService :: getApiObjectParams] : Exception - full stack trace follows:",e)
-        }
-    }
 
-    // TODO
-    void setSession(){
-
-    }
-
+    /* TODO : DEPRECATED
     LinkedHashMap getApiObjectParams(LinkedHashMap definitions){
         try{
             LinkedHashMap apiList = [:]
@@ -124,6 +97,7 @@ abstract class ApiCommProcess{
         }
         return [:]
     }
+    */
 
     /*
     * TODO : DEPRECATED
@@ -151,6 +125,13 @@ abstract class ApiCommProcess{
             authority = springSecurityService.principal.authorities*.authority[0]
         }
         return authority
+    }
+
+    String getUserId() {
+        if (springSecurityService.loggedIn){
+            return springSecurityService.principal.id
+        }
+        return null
     }
 
     boolean checkAuth(HttpServletRequest request, List roles){
@@ -224,8 +205,6 @@ abstract class ApiCommProcess{
 
     String parseResponseMethod(RequestMethod mthd, String format, GrailsParameterMap params, LinkedHashMap result){
         String content
-        //String defaultEncoding = Holders.grailsApplication.config.apitoolkit.encoding
-        //String encoding = request.getHeader('accept-encoding')?request.getHeader('accept-encoding'):defaultEncoding
         switch(mthd.getKey()) {
             case 'PURGE':
                 // cleans cache; disabled for now
@@ -258,8 +237,6 @@ abstract class ApiCommProcess{
 
     String parseRequestMethod(RequestMethod mthd, GrailsParameterMap params){
         String content
-        //String defaultEncoding = grailsApplication.config.apitoolkit.encoding
-        //String encoding = request.getHeader('accept-encoding')?request.getHeader('accept-encoding'):defaultEncoding
         switch(mthd.getKey()) {
             case 'PURGE':
                 // cleans cache; disabled for now
@@ -285,7 +262,7 @@ abstract class ApiCommProcess{
             }
             return model
         }else {
-            //try {
+            try {
                 String msg = 'Error. Invalid variables being returned. Please see your administrator'
 
                 //List paramsList
@@ -310,9 +287,9 @@ abstract class ApiCommProcess{
                     return model
                 }
 
-            //} catch (Exception e) {
-             //   throw new Exception("[ApiCommProcess :: parseURIDefinitions] : Exception - full stack trace follows:", e)
-            //}
+            } catch (Exception e) {
+                throw new Exception("[ApiCommProcess :: parseURIDefinitions] : Exception - full stack trace follows:", e)
+            }
         }
     }
 
@@ -608,7 +585,66 @@ abstract class ApiCommProcess{
         }catch(Exception e){
             throw new Exception("[ApiResponseService :: isChain] : Exception - full stack trace follows:",e)
         }
-
-
     }
+
+    String getThrottleExpiration(){
+        return Holders.grailsApplication.config.apitoolkit.throttle.expires as String
+    }
+
+    boolean checkLimit(int contentLength){
+        LinkedHashMap throttle = Holders.grailsApplication.config.apitoolkit.throttle as LinkedHashMap
+        LinkedHashMap rateLimit = throttle.rateLimit as LinkedHashMap
+        LinkedHashMap dataLimit = throttle.dataLimit as LinkedHashMap
+        List roles = rateLimit.keySet() as List
+        String auth = getUserRole()
+
+        if(roles.contains(auth)){
+            String userId = getUserId()
+            def lcache = throttleCacheService.getThrottleCache(userId)
+
+            if(lcache['timestamp']==null) {
+                Integer currentTime= System.currentTimeMillis() / 1000
+                Integer expires = currentTime+((Integer)Holders.grailsApplication.config.apitoolkit.throttle.expires)
+                LinkedHashMap cache = ['timestamp': currentTime, 'currentRate': 1, 'currentData':contentLength,'locked': false, 'expires': expires]
+                response.setHeader("Content-Length", "${contentLength}")
+                throttleCacheService.setThrottleCache(userId, cache)
+                return true
+            }else{
+                if(lcache['locked']==false) {
+
+                    Integer userLimit = rateLimit["${auth}"] as Integer
+                    Integer userDataLimit = dataLimit["${auth}"] as Integer
+                    if(lcache['currentRate']>=userLimit || lcache['currentData']>=userDataLimit){
+                        // TODO : check locked (and lock if not locked) and expires
+                        Integer now = System.currentTimeMillis() / 1000
+                        if(lcache['expires']<=now){
+                            currentTime= System.currentTimeMillis() / 1000
+                            expires = currentTime+((Integer)Holders.grailsApplication.config.apitoolkit.throttle.expires)
+                            cache = ['timestamp': currentTime, 'currentRate': 1, 'currentData':contentLength,'locked': false, 'expires': expires]
+                            response.setHeader("Content-Length", "${contentLength}")
+                            throttleCacheService.setThrottleCache(userId, cache)
+                            return true
+                        }else{
+                            lcache['locked'] = true
+                            throttleCacheService.setThrottleCache(userId, lcache)
+                            return false
+                        }
+                        return false
+                    }else{
+                        lcache['currentRate']++
+                        lcache['currentData']+=contentLength
+                        response.setHeader("Content-Length", "${contentLength}")
+                        throttleCacheService.setThrottleCache(userId, lcache)
+                        return true
+                    }
+                    return false
+                }else{
+                    return false
+                }
+            }
+        }
+
+        return true
+    }
+
 }
