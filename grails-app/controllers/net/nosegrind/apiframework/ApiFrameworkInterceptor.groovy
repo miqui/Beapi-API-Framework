@@ -1,28 +1,11 @@
 /*
- * The MIT License (MIT)
- * Copyright 2014 Owen Rubel
+ * Academic Free License ("AFL") v. 3.0
+ * Copyright 2014-2017 Owen Rubel
  *
  * IO State (tm) Owen Rubel 2014
  * API Chaining (tm) Owen Rubel 2013
  *
- *   https://opensource.org/licenses/MIT
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the Software
- * is furnished to do so, subject to the following conditions:
- *
- * The above copyright/trademark notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
- * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
- * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
- * THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *   https://opensource.org/licenses/AFL-3.0
  */
 
 package net.nosegrind.apiframework
@@ -40,6 +23,7 @@ import grails.util.Metadata
 //import grails.converters.XML
 import org.grails.web.json.JSONObject
 
+import grails.util.Holders
 //import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import groovy.transform.CompileStatic
@@ -52,7 +36,6 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 
 	@Resource
 	GrailsApplication grailsApplication
-
 	ApiCacheService apiCacheService
 	SpringSecurityService springSecurityService
 
@@ -138,13 +121,23 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 						return false
 					}
 
+					params.max = (params.max!=null)?params.max:0
+					params.offset = (params.offset!=null)?params.offset:0
+
+
 					// CHECK FOR REST ALTERNATIVES
 					if (restAlt) {
 						// PARSE REST ALTS (TRACE, OPTIONS, ETC)
 						String result = parseRequestMethod(mthd, params)
 						if (result) {
-							render(text: result, contentType: request.contentType)
-							return false
+							byte[] contentLength = result.getBytes( "ISO-8859-1" )
+							if(checkLimit(contentLength.length)) {
+								render(text: result, contentType: request.contentType)
+								return false
+							}else{
+								render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Rate Limit exceeded. Please wait'+getThrottleExpiration()+'seconds til next request.')
+								return false
+							}
 						}
 					}
 
@@ -166,9 +159,15 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 							return false
 						}else{
 							if (isCachedResult((Integer) json.get('version'), domain)) {
-								def result = cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()]
-								render(text: result, contentType: request.contentType)
-								return false
+								String result = cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()] as String
+								byte[] contentLength = result.getBytes( "ISO-8859-1" )
+								if(checkLimit(contentLength.length)) {
+									render(text: result, contentType: request.contentType)
+									return false
+								}else{
+									render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Rate Limit exceeded. Please wait'+getThrottleExpiration()+'seconds til next request.')
+									return false
+								}
 							}
 						}
 					} else {
@@ -190,8 +189,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 
 						// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
 						ApiDescriptor cachedEndpoint = cache[(String) params.apiObject][(String) params.action] as ApiDescriptor
-						boolean result = handleApiRequest(cachedEndpoint['deprecated'] as List, cachedEndpoint['method']?.toString().trim(), mthd, response, params)
-
+						boolean result = handleApiRequest(cachedEndpoint['deprecated'] as List, (cachedEndpoint['method'])?.toString(), mthd, response, params)
 						return result
 					}
 				}
@@ -201,47 +199,58 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 			return false
 
 		}catch(Exception e){
-			log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
+			//log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
 			return false
 		}
 	}
 
 	boolean after(){
 		//println('##### FILTER (AFTER)')
-		try{
-			LinkedHashMap newModel = [:]
 
-			if(params.controller!='apidoc') {
+		try {
+			LinkedHashMap newModel = [:]
+			if (params.controller != 'apidoc') {
 				if (!model) {
 					render(status: HttpServletResponse.SC_NOT_FOUND, text: 'No resource returned / domain is empty')
 					return false
 				} else {
 					newModel = convertModel(model)
 				}
-			}else{
+			} else {
 				newModel = model as LinkedHashMap
 			}
 
 			//LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
-			ApiDescriptor cachedEndpoint = cache[params.apiObject][(String)params.action] as ApiDescriptor
+			ApiDescriptor cachedEndpoint = cache[params.apiObject][(String) params.action] as ApiDescriptor
 
 			// TEST FOR NESTED MAP; WE DON'T CACHE NESTED MAPS
 			boolean isNested = false
-			Object key = newModel.keySet().iterator().next();
-			if(newModel[key].getClass().getName()=='java.util.LinkedHashMap'){ isNested = true }
-
-			String content = handleApiResponse(cachedEndpoint['returns'] as LinkedHashMap,cachedEndpoint['roles'] as List,mthd,format,response,newModel,params)
-
-			if(content){
-				// STORE CACHED RESULT
-				String format = request.format.toUpperCase()
-				String authority = getUserRole() as String
-
-				if(!newModel) {
-					apiCacheService.setApiCachedResult((String) params.controller, (String) params.apiObject, (String) params.action, authority, format, content)
+			if (newModel != [:]) {
+				Object key = newModel?.keySet()?.iterator()?.next()
+				if (newModel[key].getClass().getName() == 'java.util.LinkedHashMap') {
+					isNested = true
 				}
-				render(text:content, contentType:request.contentType)
-				return false
+
+				String content = handleApiResponse(cachedEndpoint['returns'] as LinkedHashMap, cachedEndpoint['roles'] as List, mthd, format, response, newModel, params)
+				byte[] contentLength = content.getBytes( "ISO-8859-1" )
+				if (content) {
+					// STORE CACHED RESULT
+					String format = request.format.toUpperCase()
+					String authority = getUserRole() as String
+
+					if (!newModel) {
+						apiCacheService.setApiCachedResult((String) params.controller, (String) params.apiObject, (String) params.action, authority, format, content)
+					}
+					if(checkLimit(contentLength.length)) {
+						render(text: content, contentType: request.contentType)
+						return false
+					}else{
+						render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Rate Limit exceeded. Please wait'+getThrottleExpiration()+'seconds til next request.')
+						return false
+					}
+				}
+			}else{
+				render(text: newModel, contentType: request.contentType)
 			}
 
 			return false

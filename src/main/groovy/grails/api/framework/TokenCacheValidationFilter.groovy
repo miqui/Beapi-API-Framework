@@ -1,3 +1,13 @@
+/*
+ * Academic Free License ("AFL") v. 3.0
+ * Copyright 2014-2017 Owen Rubel
+ *
+ * IO State (tm) Owen Rubel 2014
+ * API Chaining (tm) Owen Rubel 2013
+ *
+ *   https://opensource.org/licenses/AFL-3.0
+ */
+
 package grails.api.framework;
 
 import grails.plugin.springsecurity.rest.RestAuthenticationProvider
@@ -13,6 +23,7 @@ import org.springframework.security.web.authentication.AuthenticationFailureHand
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler
 import org.springframework.web.filter.GenericFilterBean
 
+import org.springframework.web.context.request.RequestContextHolder as RCH
 
 import javax.annotation.Resource
 import javax.servlet.FilterChain
@@ -84,17 +95,18 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                 }else{
                     httpResponse.status = 401
                     httpResponse.setHeader('ERROR', 'Unauthorized Access attempted')
-                    return
+                    httpResponse.writer.flush()
+                    //return
                 }
-
             } else {
-                log.debug "Token not found"
-                httpResponse.status = 401
-                httpResponse.setHeader('ERROR', 'No Token Found. Unauthorized Access attempted')
+                //log.debug "Token not found"
                 return
             }
         } catch (AuthenticationException ae) {
-            log.debug "Authentication failed: ${ae.message}"
+            //log.debug "Authentication failed: ${ae.message}"
+            httpResponse.status = 401
+            httpResponse.setHeader('ERROR', 'Authorization Attempt Failed')
+            httpResponse.writer.flush()
             //authenticationEventPublisher.publishAuthenticationFailure(ae, accessToken)
             //authenticationFailureHandler.onAuthenticationFailure(httpRequest, httpResponse, ae)
         }
@@ -133,9 +145,9 @@ class TokenCacheValidationFilter extends GenericFilterBean {
         if (authenticationResult?.accessToken) {
             if (actualUri == validationEndpointUrl) {
                 //log.debug "Validation endpoint called. Generating response."
+
                 authenticationSuccessHandler.onAuthenticationSuccess(httpRequest, httpResponse, authenticationResult)
             } else {
-                // TODO: Check actualUri against cache HERE
                 String entryPoint = Metadata.current.getProperty(Metadata.APPLICATION_VERSION, String.class)
                 String controller
                 String action
@@ -146,6 +158,7 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                 }else{
                     httpResponse.status = 401
                     httpResponse.setHeader('ERROR', 'BAD Access attempted')
+                    //httpResponse.writer.flush()
                     return
                 }
 
@@ -156,23 +169,28 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                 def apiCacheService = ctx.getBean("apiCacheService")
                 LinkedHashMap cache = (controller)?apiCacheService.getApiCache(controller.toString()):[:]
                 String version = cache['cacheversion']
-                if(!cache[version]){
+
+                if(!cache?."${version}"?."${action}"){
                     httpResponse.status = 401
                     httpResponse.setHeader('ERROR', 'IO State Not properly Formatted for this URI. Please contact the Administrator.')
+                    //httpResponse.writer.flush()
                     return
                 }
-                List roles = cache[version][action]['roles'] as List
+
+                List roles = cache?."${version}"?."${action}"?.roles as List
+
                 if(!checkAuth(roles,authenticationResult)) {
                     httpResponse.status = 401
                     httpResponse.setHeader('ERROR', 'Unauthorized Access attempted')
+                    //httpResponse.writer.flush()
                     return
                 }else {
                     //System.out.println("####[TokenCacheValidationFilter :: processFilterChain] ${actualUri} / ${validationEndpointUrl}")
-                    //log.debug "Continuing the filter chain"
+                    log.debug "Continuing the filter chain"
                 }
             }
         } else {
-            //log.debug "Request does not contain any token. Letting it continue through the filter chain"
+            log.debug "Request does not contain any token. Letting it continue through the filter chain"
         }
 
         chain.doFilter(request, response)

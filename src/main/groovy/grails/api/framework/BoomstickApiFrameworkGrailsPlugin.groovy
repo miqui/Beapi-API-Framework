@@ -1,28 +1,11 @@
 /*
- * The MIT License (MIT)
- * Copyright 2014 Owen Rubel
+ * Academic Free License ("AFL") v. 3.0
+ * Copyright 2014-2017 Owen Rubel
  *
  * IO State (tm) Owen Rubel 2014
  * API Chaining (tm) Owen Rubel 2013
  *
- *   https://opensource.org/licenses/MIT
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the Software
- * is furnished to do so, subject to the following conditions:
- *
- * The above copyright/trademark notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
- * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
- * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
- * THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *   https://opensource.org/licenses/AFL-3.0
  */
 
 package grails.api.framework
@@ -90,10 +73,10 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
 
             /* restTokenValidationFilter */
             SpringSecurityUtils.registerFilter 'tokenCacheValidationFilter', SecurityFilterPosition.ANONYMOUS_FILTER.order + 2
-            SpringSecurityUtils.registerFilter 'springSecurityCORSFilter', SecurityFilterPosition.ANONYMOUS_FILTER.order + 3
+            SpringSecurityUtils.registerFilter 'corsSecurityFilter', SecurityFilterPosition.ANONYMOUS_FILTER.order + 3
 
 
-            springSecurityCORSFilter(SpringSecurityCORSFilter){}
+            corsSecurityFilter(CorsSecurityFilter){}
 
 
             tokenCacheValidationFilter(TokenCacheValidationFilter) {
@@ -179,7 +162,6 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
 
         println "### Installing API Framework ..."
 
-
         def iostateDir = "${basedir}/src/iostate/"
         def iofile = new File(iostateDir)
         if(!iofile.exists()) {
@@ -212,7 +194,9 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
 
         if(!grailsApplication.config.apitoolkit){
             println " ... updating config ..."
-            file('grails-app/conf/application.groovy').withWriterAppend { BufferedWriter writer ->
+            String groovyConf = "${basedir}/grails-app/conf/application.groovy"
+            def confFile = new File(groovyConf)
+            confFile.withWriterAppend { BufferedWriter writer ->
                 writer.newLine()
                 writer.newLine()
                 writer.writeLine '// Added by the Reactive API Framework plugin:'
@@ -236,8 +220,8 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
             }
         }
 
-        final String isBatchServer = grailsApplication.config.apitoolkit.batching.enabled
-        final String isChainServer = grailsApplication.config.apitoolkit.chaining.enabled
+        String isBatchServer = grailsApplication.config.apitoolkit.batching.enabled
+        String isChainServer = grailsApplication.config.apitoolkit.chaining.enabled
         //final String isLocalAuth = (String)grailsApplication.config.apitoolkit.localauth.enabled
 
         System.setProperty('isBatchServer', isBatchServer)
@@ -511,7 +495,7 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
 
     public List getApiParams(LinkedHashMap definitions){
         try{
-            traceService.startTrace('TraceCommProcess','getApiParams')
+            traceService.startTrace('ProfilerCommProcess','getApiParams')
             List apiList = []
             definitions.each(){ key, val ->
                 if (request.isUserInRole(key) || key == 'permitAll') {
@@ -520,7 +504,7 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
                     }
                 }
             }
-            traceService.endTrace('TraceCommProcess','getApiParams')
+            traceService.endTrace('ProfilerCommProcess','getApiParams')
             return apiList
         }catch(Exception e){
             throw new Exception("[ParamsService :: getApiParams] : Exception - full stack trace follows:",e)

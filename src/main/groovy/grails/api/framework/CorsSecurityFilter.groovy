@@ -23,7 +23,10 @@ import javax.servlet.http.HttpServletRequest
 //import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.HttpServletResponse
 
-class SpringSecurityCORSFilter extends GenericFilterBean {
+import com.google.common.io.CharStreams
+
+
+class CorsSecurityFilter extends GenericFilterBean {
 
     @Autowired
     CorsService crsService
@@ -34,7 +37,7 @@ class SpringSecurityCORSFilter extends GenericFilterBean {
         HttpServletRequest httpRequest = request as HttpServletRequest
         HttpServletResponse httpResponse = response as HttpServletResponse
 
-        if( !crsService.processPreflight(request, response) ) {
+        if( !crsService.processPreflight(httpRequest, httpResponse) ) {
             chain.doFilter(request, response)
         }
     }

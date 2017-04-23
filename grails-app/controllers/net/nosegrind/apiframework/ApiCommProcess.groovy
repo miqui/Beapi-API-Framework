@@ -1,28 +1,11 @@
 /*
- * The MIT License (MIT)
- * Copyright 2014 Owen Rubel
+ * Academic Free License ("AFL") v. 3.0
+ * Copyright 2014-2017 Owen Rubel
  *
  * IO State (tm) Owen Rubel 2014
  * API Chaining (tm) Owen Rubel 2013
  *
- *   https://opensource.org/licenses/MIT
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the Software
- * is furnished to do so, subject to the following conditions:
- *
- * The above copyright/trademark notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
- * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
- * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
- * THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *   https://opensource.org/licenses/AFL-3.0
  */
 
 package net.nosegrind.apiframework
@@ -30,6 +13,10 @@ package net.nosegrind.apiframework
 
 import javax.annotation.Resource
 import javax.servlet.http.HttpServletRequest
+import org.springframework.web.context.request.ServletRequestAttributes
+import javax.servlet.http.HttpSession
+
+import org.springframework.security.core.context.SecurityContextHolder as SCH
 import java.text.SimpleDateFormat
 
 import net.nosegrind.apiframework.RequestMethod
@@ -42,14 +29,13 @@ import javax.servlet.forward.*
 import org.grails.groovy.grails.commons.*
 import grails.core.GrailsApplication
 import grails.util.Holders
-
+import org.springframework.web.context.request.RequestContextHolder as RCH
 import org.grails.core.DefaultGrailsDomainClass
 import org.springframework.beans.factory.annotation.Autowired
 
-//import groovy.transform.CompileStatic
-//import grails.compiler.GrailsCompileStatic
 import org.codehaus.groovy.grails.commons.DomainClassArtefactHandler
 import net.nosegrind.apiframework.ApiCacheService
+import net.nosegrind.apiframework.ThrottleCacheService
 
 // extended by ApiCommLayer
 abstract class ApiCommProcess{
@@ -58,8 +44,10 @@ abstract class ApiCommProcess{
     GrailsApplication grailsApplication
 
     @Autowired
-    ApiCacheService apiCacheService
+    ThrottleCacheService throttleCacheService
 
+    @Autowired
+    ApiCacheService apiCacheService
     List formats = ['text/html','text/json','application/json','text/xml','application/xml']
     List optionalParams = ['method','format','contentType','encoding','action','controller','v','apiCombine', 'apiObject','entryPoint','uri']
 
@@ -82,16 +70,15 @@ abstract class ApiCommProcess{
         if (chainEnabled) {
             if(!params.apiChain){ params.apiChain = [:] }
             def chainVars = request.JSON
-            println(chainVars)
             if(!request.getAttribute('chainLength')){ request.setAttribute('chainLength',chainVars['chain'].size()) }
-            chainVars['chain'][request.getAttribute('chainInc').toInteger()].each() { k,v ->
+            chainVars['chain'].each() { k,v ->
                 params.apiChain[k] = v
             }
-            params.apiChain = params?.chain
         }
     }
 
 
+    /* TODO : DEPRECATED
     LinkedHashMap getApiObjectParams(LinkedHashMap definitions){
         try{
             LinkedHashMap apiList = [:]
@@ -110,8 +97,10 @@ abstract class ApiCommProcess{
         }
         return [:]
     }
+    */
 
-
+    /*
+    * TODO : DEPRECATED
     public List getApiParams(LinkedHashMap definitions){
         try{
             List apiList = []
@@ -128,6 +117,7 @@ abstract class ApiCommProcess{
             throw new Exception("[ParamsService :: getApiParams] : Exception - full stack trace follows:",e)
         }
     }
+    */
 
     String getUserRole() {
         String authority = 'permitAll'
@@ -135,6 +125,13 @@ abstract class ApiCommProcess{
             authority = springSecurityService.principal.authorities*.authority[0]
         }
         return authority
+    }
+
+    String getUserId() {
+        if (springSecurityService.loggedIn){
+            return springSecurityService.principal.id
+        }
+        return null
     }
 
     boolean checkAuth(HttpServletRequest request, List roles){
@@ -182,11 +179,11 @@ abstract class ApiCommProcess{
 
     // TODO: put in OPTIONAL toggle in application.yml to allow for this check
     boolean checkURIDefinitions(GrailsParameterMap params,LinkedHashMap requestDefinitions){
-        List reservedNames = ['batchLength','batchInc','_']
+        List reservedNames = ['batchLength','batchInc','chainInc','apiChain','_','max','offset']
         try{
             String authority = getUserRole() as String
-            List temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as List:requestDefinitions['permitAll'] as List
-            List requestList = temp.collect(){ it.name }
+            List temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as List:(requestDefinitions['permitAll'][0]!=null)? requestDefinitions['permitAll'] as List:[]
+            List requestList = (temp!=null)?temp.collect(){ it.name }:[]
 
             Map methodParams = getMethodParams(params)
 
@@ -208,8 +205,6 @@ abstract class ApiCommProcess{
 
     String parseResponseMethod(RequestMethod mthd, String format, GrailsParameterMap params, LinkedHashMap result){
         String content
-        //String defaultEncoding = Holders.grailsApplication.config.apitoolkit.encoding
-        //String encoding = request.getHeader('accept-encoding')?request.getHeader('accept-encoding'):defaultEncoding
         switch(mthd.getKey()) {
             case 'PURGE':
                 // cleans cache; disabled for now
@@ -242,8 +237,6 @@ abstract class ApiCommProcess{
 
     String parseRequestMethod(RequestMethod mthd, GrailsParameterMap params){
         String content
-        //String defaultEncoding = grailsApplication.config.apitoolkit.encoding
-        //String encoding = request.getHeader('accept-encoding')?request.getHeader('accept-encoding'):defaultEncoding
         switch(mthd.getKey()) {
             case 'PURGE':
                 // cleans cache; disabled for now
@@ -269,22 +262,12 @@ abstract class ApiCommProcess{
             }
             return model
         }else {
-            //try {
+            try {
                 String msg = 'Error. Invalid variables being returned. Please see your administrator'
 
-                List paramsList
-                Integer msize = model.size()
-                switch (msize) {
-                    case 0:
-                        return [:]
-                        break;
-                    case 1:
-                        paramsList = (model.keySet() != ['id']) ? model.entrySet().iterator().next() as List : model.keySet() as List
-                        break;
-                    default:
-                        paramsList = model.keySet() as List
-                        break;
-                }
+                //List paramsList
+                //Integer msize = model.size()
+                List paramsList = (model.size()==0)?[:]:model.keySet() as List
 
                 paramsList?.removeAll(optionalParams)
 
@@ -304,9 +287,9 @@ abstract class ApiCommProcess{
                     return model
                 }
 
-            //} catch (Exception e) {
-             //   throw new Exception("[ApiCommProcess :: parseURIDefinitions] : Exception - full stack trace follows:", e)
-            //}
+            } catch (Exception e) {
+                throw new Exception("[ApiCommProcess :: parseURIDefinitions] : Exception - full stack trace follows:", e)
+            }
         }
     }
 
@@ -324,6 +307,7 @@ abstract class ApiCommProcess{
     }
 
     /*
+    * TODO : USED FOR TEST
     List getRedirectParams(GrailsParameterMap params){
         def uri = grailsApplication.mainContext.servletContext.getControllerActionUri(request)
         return uri[1..(uri.size()-1)].split('/')
@@ -521,7 +505,7 @@ abstract class ApiCommProcess{
             DefaultGrailsDomainClass d = new DefaultGrailsDomainClass(data.class)
             d.persistentProperties.each() { it ->
                 if((DomainClassArtefactHandler.isDomainClass(data[it.name].getClass()))){
-                    newMap["${it.name}Id"] = data[it.name]
+                    newMap["${it.name}Id"] = data[it.name].id
                 }else{
                     newMap[it.name] = data[it.name]
                     
@@ -531,6 +515,21 @@ abstract class ApiCommProcess{
         }catch(Exception e){
             throw new Exception("[ApiCommProcess :: formatDomainObject] : Exception - full stack trace follows:",e)
         }
+    }
+
+    // PostProcessService
+    LinkedHashMap formatMap(LinkedHashMap map){
+        LinkedHashMap newMap = [:]
+        map.each(){ key,val ->
+            if(val){
+                if(DomainClassArtefactHandler.isDomainClass(val.getClass())){
+                    newMap[key]=formatDomainObject(val)
+                }else{
+                    newMap[key] = ((val in java.util.ArrayList || val in java.util.List) || val in java.util.Map)?val:val.toString()
+                }
+            }
+        }
+        return newMap
     }
 
     // PostProcessService
@@ -563,4 +562,89 @@ abstract class ApiCommProcess{
 
         return (currentVersion > version)?false:true
     }
+
+    boolean isChain(HttpServletRequest request){
+        String contentType = request.getAttribute('contentType')
+        try{
+            switch(contentType){
+                case 'text/xml':
+                case 'application/xml':
+                    if(request.XML?.chain){
+                        return true
+                    }
+                    break
+                case 'text/json':
+                case 'application/json':
+                default:
+                    if(request.JSON?.chain){
+                        return true
+                    }
+                    break
+            }
+            return false
+        }catch(Exception e){
+            throw new Exception("[ApiResponseService :: isChain] : Exception - full stack trace follows:",e)
+        }
+    }
+
+    String getThrottleExpiration(){
+        return Holders.grailsApplication.config.apitoolkit.throttle.expires as String
+    }
+
+    boolean checkLimit(int contentLength){
+        LinkedHashMap throttle = Holders.grailsApplication.config.apitoolkit.throttle as LinkedHashMap
+        LinkedHashMap rateLimit = throttle.rateLimit as LinkedHashMap
+        LinkedHashMap dataLimit = throttle.dataLimit as LinkedHashMap
+        List roles = rateLimit.keySet() as List
+        String auth = getUserRole()
+
+        if(roles.contains(auth)){
+            String userId = getUserId()
+            def lcache = throttleCacheService.getThrottleCache(userId)
+
+            if(lcache['timestamp']==null) {
+                Integer currentTime= System.currentTimeMillis() / 1000
+                Integer expires = currentTime+((Integer)Holders.grailsApplication.config.apitoolkit.throttle.expires)
+                LinkedHashMap cache = ['timestamp': currentTime, 'currentRate': 1, 'currentData':contentLength,'locked': false, 'expires': expires]
+                response.setHeader("Content-Length", "${contentLength}")
+                throttleCacheService.setThrottleCache(userId, cache)
+                return true
+            }else{
+                if(lcache['locked']==false) {
+
+                    Integer userLimit = rateLimit["${auth}"] as Integer
+                    Integer userDataLimit = dataLimit["${auth}"] as Integer
+                    if(lcache['currentRate']>=userLimit || lcache['currentData']>=userDataLimit){
+                        // TODO : check locked (and lock if not locked) and expires
+                        Integer now = System.currentTimeMillis() / 1000
+                        if(lcache['expires']<=now){
+                            currentTime= System.currentTimeMillis() / 1000
+                            expires = currentTime+((Integer)Holders.grailsApplication.config.apitoolkit.throttle.expires)
+                            cache = ['timestamp': currentTime, 'currentRate': 1, 'currentData':contentLength,'locked': false, 'expires': expires]
+                            response.setHeader("Content-Length", "${contentLength}")
+                            throttleCacheService.setThrottleCache(userId, cache)
+                            return true
+                        }else{
+                            lcache['locked'] = true
+                            throttleCacheService.setThrottleCache(userId, lcache)
+                            return false
+                        }
+                        return false
+                    }else{
+                        lcache['currentRate']++
+                        lcache['currentData']+=contentLength
+                        response.setHeader("Content-Length", "${contentLength}")
+                        throttleCacheService.setThrottleCache(userId, lcache)
+                        return true
+                    }
+                    return false
+                }else{
+                    return false
+                }
+            }
+        }
+
+        return true
+    }
+
 }

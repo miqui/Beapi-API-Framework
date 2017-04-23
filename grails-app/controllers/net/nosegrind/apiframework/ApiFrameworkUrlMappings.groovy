@@ -1,28 +1,11 @@
 /*
- * The MIT License (MIT)
- * Copyright 2013 Owen Rubel
+ * Academic Free License ("AFL") v. 3.0
+ * Copyright 2014-2017 Owen Rubel
  *
  * IO State (tm) Owen Rubel 2014
  * API Chaining (tm) Owen Rubel 2013
  *
- *   https://opensource.org/licenses/MIT
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the Software
- * is furnished to do so, subject to the following conditions:
- *
- * The above copyright/trademark notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
- * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
- * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
- * THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *   https://opensource.org/licenses/AFL-3.0
  */
 
 package net.nosegrind.apiframework
@@ -38,19 +21,8 @@ class ApiFrameworkUrlMappings {
         String api = "v${apiVersion}"
         String batchEntryPoint = "b${apiVersion}"
         String chainEntryPoint = "c${apiVersion}"
-        String traceEntryPoint = "t${apiVersion}"
+        String profilerEntryPoint = "p${apiVersion}"
 
-
-        "/login/$action" {
-            controller = 'login'
-            action = action
-            parseRequest= true
-        }
-        "/logout?/$action" {
-            controller = 'logout'
-            action = action
-            parseRequest= true
-        }
 
         // REGULAR API ENDPOINTS
         "/$api/$controller/$action/$id?**"{
@@ -92,16 +64,16 @@ class ApiFrameworkUrlMappings {
 
 
         // BATCH API ENDPOINTS
+        "/$batchEntryPoint/$controller/$action/$id?**"{
+            entryPoint = batchEntryPoint
+            parseRequest = true
+        }
+
         "/$batchEntryPoint/$controller/$action"{
             if(action?.toInteger()==action && action!=null){
                 id=action
                 action = null
             }
-            entryPoint = batchEntryPoint
-            parseRequest = true
-        }
-
-        "/$batchEntryPoint/$controller/$action/$id?**"{
             entryPoint = batchEntryPoint
             parseRequest = true
         }
@@ -131,16 +103,16 @@ class ApiFrameworkUrlMappings {
 
 
         // CHAIN API ENDPOINTS
+        "/$chainEntryPoint/$controller/$action/$id?**"{
+            entryPoint = chainEntryPoint
+            parseRequest = true
+        }
+
         "/$chainEntryPoint/$controller/$action"{
             if(action?.toInteger()==action && action!=null){
                 id=action
                 action = null
             }
-            entryPoint = chainEntryPoint
-            parseRequest = true
-        }
-
-        "/$chainEntryPoint/$controller/$action/$id?**"{
             entryPoint = chainEntryPoint
             parseRequest = true
         }
@@ -153,7 +125,6 @@ class ApiFrameworkUrlMappings {
                 apiObjectVersion(matches:/^[0-9]?[0-9]?(\\.[0-9][0-9]?)?/)
             }
         }
-
 
         "/${chainEntryPoint}-$apiObjectVersion/$controller/$action" {
             if(action?.toInteger()==action && action!=null){
@@ -168,23 +139,23 @@ class ApiFrameworkUrlMappings {
             }
         }
 
-        // TRACE API ENDPOINTS
-        "/$traceEntryPoint/$controller/$action"{
+        // PROFILER API ENDPOINTS
+        "/$profilerEntryPoint/$controller/$action/$id?**"{
+            entryPoint = profilerEntryPoint
+            parseRequest = true
+        }
+
+        "/$profilerEntryPoint/$controller/$action"{
             if(action?.toInteger()==action && action!=null){
                 id=action
                 action = null
             }
-            entryPoint = traceEntryPoint
+            entryPoint = profilerEntryPoint
             parseRequest = true
         }
 
-        "/$traceEntryPoint/$controller/$action/$id?**"{
-            entryPoint = traceEntryPoint
-            parseRequest = true
-        }
-
-        "/${traceEntryPoint}-$apiObjectVersion/$controller/$action/$id**" {
-            entryPoint = traceEntryPoint
+        "/${profilerEntryPoint}-$apiObjectVersion/$controller/$action/$id**" {
+            entryPoint = profilerEntryPoint
             apiObjectVersion = apiObjectVersion
             parseRequest = true
             constraints {
@@ -192,12 +163,12 @@ class ApiFrameworkUrlMappings {
             }
         }
 
-        "/${traceEntryPoint}-$apiObjectVersion/$controller/$action" {
+        "/${profilerEntryPoint}-$apiObjectVersion/$controller/$action" {
             if(action?.toInteger()==action && action!=null){
                 id=action
                 action = null
             }
-            entryPoint = traceEntryPoint
+            entryPoint = profilerEntryPoint
             apiObjectVersion = apiObjectVersion
             parseRequest = true
             constraints {

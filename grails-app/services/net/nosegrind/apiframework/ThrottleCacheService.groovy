@@ -1,0 +1,86 @@
+/*
+ * Academic Free License ("AFL") v. 3.0
+ * Copyright 2014-2017 Owen Rubel
+ *
+ * IO State (tm) Owen Rubel 2014
+ * API Chaining (tm) Owen Rubel 2013
+ *
+ *   https://opensource.org/licenses/AFL-3.0
+ */
+
+package net.nosegrind.apiframework
+
+import grails.converters.JSON
+//import grails.converters.XML
+import grails.plugin.cache.CachePut
+import grails.plugin.cache.GrailsCacheManager
+import org.grails.groovy.grails.commons.*
+import grails.core.GrailsApplication
+import grails.plugin.springsecurity.SpringSecurityService
+
+
+class ThrottleCacheService{
+
+	static transactional = false
+	
+	GrailsApplication grailsApplication
+	GrailsCacheManager grailsCacheManager
+	SpringSecurityService springSecurityService
+
+	// called through generateJSON()
+
+
+	@CachePut(value="Throttle",key="#userId")
+	LinkedHashMap setThrottleCache(String userId, LinkedHashMap cache){
+		try{
+			return cache
+		}catch(Exception e){
+			throw new Exception("[ThrottleCacheService :: setThrottleCache] : Exception - full stack trace follows:",e)
+		}
+	}
+
+	@CachePut(value="Throttle",key="#userId")
+	LinkedHashMap incrementThrottleCache(String userId){
+		try{
+			def cache = getLimitCache(userId)
+			cache['rateLimitCurrent']++
+			return cache
+		}catch(Exception e){
+			throw new Exception("[ThrottleCacheService :: incrementThrottleCache] : Exception - full stack trace follows:",e)
+		}
+	}
+
+	@CachePut(value="Throttle",key="#userId")
+	LinkedHashMap lockLimitCache(String uri){
+		def cache = getLimitCache(userId)
+		cache['locked']=true
+		return cache
+	}
+
+	@CachePut(value="Throttle",key="#userId")
+	LinkedHashMap checkLimitCache(String userId,String role){
+		// check role against config role limit
+	}
+
+	LinkedHashMap getThrottleCache(String userId){
+		try{
+			def temp = grailsCacheManager?.getCache('Throttle')
+			def cache = temp?.get(userId)
+			if(cache?.get()){
+				LinkedHashMap lcache = cache.get() as LinkedHashMap
+				return lcache
+			}else{ 
+				return [:] 
+			}
+
+		}catch(Exception e){
+			throw new Exception("[ThrottleCacheService :: getThrottleCache] : Exception - full stack trace follows:",e)
+		}
+	}
+	
+	List getCacheNames(){
+		List cacheNames = []
+		cacheNames = grailsCacheManager?.getCache('Throttle')?.getAllKeys() as List
+		return cacheNames
+	}
+}

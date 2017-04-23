@@ -1,28 +1,11 @@
 /*
- * The MIT License (MIT)
- * Copyright 2014 Owen Rubel
+ * Academic Free License ("AFL") v. 3.0
+ * Copyright 2014-2017 Owen Rubel
  *
  * IO State (tm) Owen Rubel 2014
  * API Chaining (tm) Owen Rubel 2013
  *
- *   https://opensource.org/licenses/MIT
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the Software
- * is furnished to do so, subject to the following conditions:
- *
- * The above copyright/trademark notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
- * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
- * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
- * THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *   https://opensource.org/licenses/AFL-3.0
  */
 
 package net.nosegrind.apiframework
@@ -35,9 +18,10 @@ import org.grails.groovy.grails.commons.*
 import javax.servlet.http.HttpServletResponse
 import groovy.transform.CompileStatic
 import net.nosegrind.apiframework.RequestMethod
+import grails.compiler.GrailsCompileStatic
 
 // extended by Intercepters
-@CompileStatic
+@GrailsCompileStatic
 abstract class ApiCommLayer extends ApiCommProcess{
 
     /***************************
@@ -97,6 +81,7 @@ abstract class ApiCommLayer extends ApiCommProcess{
             //def method = cache['method']?.toString().trim()
 
             // DOES api.methods.contains(request.method)
+
             if(!isRequestMatch(method,mthd)){
                 response.status = status
                 response.setHeader('ERROR',"Request method doesn't match expected method.")
@@ -108,16 +93,14 @@ abstract class ApiCommLayer extends ApiCommProcess{
         }
     }
 
-    boolean handleChainRequest(List deprecated, String method, RequestMethod mthd, HttpServletResponse response, GrailsParameterMap params){
-        int status = 400
-        try{
 
+    boolean handleChainRequest(List deprecated, String method, RequestMethod mthd,HttpServletResponse response, GrailsParameterMap params){
+        try{
             // CHECK VERSION DEPRECATION DATE
-            //List deprecated = cache['deprecated'] as List
             if(deprecated?.get(0)){
                 if(checkDeprecationDate(deprecated[0].toString())){
                     String depMsg = deprecated[1].toString()
-                    response.status = status
+                    response.status = 400
                     response.setHeader('ERROR',depMsg)
                     return false
                 }
@@ -126,11 +109,13 @@ abstract class ApiCommLayer extends ApiCommProcess{
             //def method = cache['method']?.toString().trim()
 
             // DOES api.methods.contains(request.method)
+
             if(!isRequestMatch(method,mthd)){
-                response.status = status
+                response.status = 400
                 response.setHeader('ERROR',"Request method doesn't match expected method.")
                 return false
             }
+
             return true
         }catch(Exception e){
             throw new Exception("[ApiCommLayer : handleBatchRequest] : Exception - full stack trace follows:",e)
@@ -141,14 +126,13 @@ abstract class ApiCommLayer extends ApiCommProcess{
     * RESPONSES
      ***************************/
     def handleApiResponse(LinkedHashMap requestDefinitions, List roles, RequestMethod mthd, String format, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
-
         //try{
             String authority = getUserRole() as String
             response.setHeader('Authorization', roles.join(', '))
 
             ArrayList<HashMap> temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as ArrayList<HashMap>:requestDefinitions['permitAll'] as ArrayList<HashMap>
 
-            ArrayList responseList = (ArrayList)temp.collect(){ it.name }
+            ArrayList responseList = (ArrayList)temp?.collect(){ if(it!=null){it.name} }
 
             String content
             if(params.controller!='apidoc') {
@@ -191,8 +175,9 @@ abstract class ApiCommLayer extends ApiCommProcess{
         }
     }
 
+
     def handleChainResponse(LinkedHashMap requestDefinitions, List roles, RequestMethod mthd, String format, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
-        try{
+        //try{
             String authority = getUserRole() as String
             response.setHeader('Authorization', roles.join(', '))
 
@@ -200,11 +185,15 @@ abstract class ApiCommLayer extends ApiCommProcess{
             ArrayList responseList = (ArrayList)temp.collect(){ it.name }
 
             LinkedHashMap result = parseURIDefinitions(model,responseList)
+            LinkedHashMap chain = params.apiChain as LinkedHashMap
 
-            // TODO : add combine functionality for batching
-            //if(params?.apiBatch.combine=='true'){
-            //	params.apiCombine["${params.uri}"] = result
-            //}
+            if (chain?.combine == 'true') {
+                if (!params.apiCombine) {
+                    params.apiCombine = [:]
+                }
+                String currentPath = "${params.controller}/${params.action}"
+                params.apiCombine[currentPath] = result
+            }
 
             if(!result){
                 response.status = 400
@@ -212,8 +201,11 @@ abstract class ApiCommLayer extends ApiCommProcess{
                 //LinkedHashMap content = parseResponseMethod(request, params, result)
                 return parseResponseMethod(mthd, format, params, result)
             }
-        }catch(Exception e){
-            throw new Exception("[ApiCommLayer : handleBatchResponse] : Exception - full stack trace follows:",e)
-        }
+
+        //}catch(Exception e){
+        //    throw new Exception("[ApiResponseService :: handleApiResponse] : Exception - full stack trace follows:",e)
+        //}
     }
+
+
 }

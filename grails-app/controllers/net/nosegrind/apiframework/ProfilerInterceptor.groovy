@@ -1,28 +1,11 @@
 /*
- * The MIT License (MIT)
- * Copyright 2014 Owen Rubel
+ * Academic Free License ("AFL") v. 3.0
+ * Copyright 2014-2017 Owen Rubel
  *
  * IO State (tm) Owen Rubel 2014
  * API Chaining (tm) Owen Rubel 2013
  *
- *   https://opensource.org/licenses/MIT
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the Software
- * is furnished to do so, subject to the following conditions:
- *
- * The above copyright/trademark notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
- * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
- * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
- * THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *   https://opensource.org/licenses/AFL-3.0
  */
 
 package net.nosegrind.apiframework
@@ -35,14 +18,14 @@ import grails.plugin.springsecurity.SpringSecurityService
 import groovy.json.JsonSlurper
 import groovy.util.XmlSlurper;
 import grails.util.Metadata
+import grails.util.Holders
 
 //import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import groovy.transform.CompileStatic
 
-
 @CompileStatic
-class TraceInterceptor extends TraceCommLayer{
+class ProfilerInterceptor extends ProfilerCommLayer{
 
 	int order = HIGHEST_PRECEDENCE + 997
 
@@ -56,16 +39,27 @@ class TraceInterceptor extends TraceCommLayer{
 	SpringSecurityService springSecurityService
 
 	// TODO: detect and assign apiObjectVersion from uri
-	String entryPoint = "t${Metadata.current.getProperty(Metadata.APPLICATION_VERSION, String.class)}"
+	String entryPoint = "p${Metadata.current.getProperty(Metadata.APPLICATION_VERSION, String.class)}"
 
-	TraceInterceptor(){
+	ProfilerInterceptor(){
 		// TODO: detect and assign apiObjectVersion from uri
 		match(uri:"/${entryPoint}/**")
 	}
 
 	boolean before(){
 		//log.info('##### FILTER (BEFORE)')
-		traceService.startTrace('TraceInterceptor','before')
+
+		// Check Profiler Roles
+		String authority = getUserRole() as String
+		LinkedHashMap apitoolkit = Holders.grailsApplication.config.apitoolkit as LinkedHashMap
+		List profilerRoles = apitoolkit['profilerRoles'] as List
+		if(!profilerRoles.contains(authority)){
+			render(status: HttpServletResponse.SC_UNAUTHORIZED , text: "Unauthorized Request. User does not have privileges for Profiling Services.'")
+			return false
+		}
+
+		traceService.startTrace('ProfilerInterceptor','before')
+
 
 		String format = (request?.format)?request.format:'JSON';
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
@@ -109,7 +103,7 @@ class TraceInterceptor extends TraceCommLayer{
 				if(cache){
 					params.apiObject = (params.apiObjectVersion) ? params.apiObjectVersion : cache['currentStable']['value']
 					params.action = (params.action == null) ? cache[params.apiObject]['defaultAction'] : params.action
-					traceService.endTrace('TraceInterceptor','before')
+					traceService.endTrace('ProfilerInterceptor','before')
 					return true
 				}
 				// TODO : return false and render message/error code ???
@@ -121,9 +115,12 @@ class TraceInterceptor extends TraceCommLayer{
 					String expectedMethod = cache[params.apiObject][params.action.toString()]['method'] as String
 					if(!checkRequestMethod(expectedMethod,restAlt)) {
 						render(status: HttpServletResponse.SC_BAD_REQUEST, text: "Expected request method '${expectedMethod}' does not match sent method '${request.method}'")
-						traceService.endTrace('TraceInterceptor','before')
+						traceService.endTrace('ProfilerInterceptor','before')
 						return false
 					}
+
+					params.max = (params.max)?params.max:0
+					params.offset = (params.offset)?params.offset:0
 
 					// Check for REST alternatives
 					if (!restAlt) {
@@ -134,7 +131,7 @@ class TraceInterceptor extends TraceCommLayer{
 
 						if (!requestKeysMatch) {
 							render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Expected request variables do not match sent variables')
-							traceService.endTrace('TraceInterceptor','before')
+							traceService.endTrace('ProfilerInterceptor','before')
 							return false
 						}
 					}else{
@@ -142,7 +139,7 @@ class TraceInterceptor extends TraceCommLayer{
 						if(result){
 							render(text:result.apiToolkitContent, contentType:"${result.apiToolkitType}", encoding:result.apiToolkitEncoding)
 						}
-						traceService.endTrace('TraceInterceptor','before')
+						traceService.endTrace('ProfilerInterceptor','before')
 						return false
 					}
 
@@ -157,7 +154,7 @@ class TraceInterceptor extends TraceCommLayer{
 							String[] tempUri = request.getRequestURI().split("/")
 							if(tempUri[2].contains('dispatch') && "${params.controller}.dispatch" == tempUri[2] && !cache[params.apiObject]['domainPackage']){
 								forward(controller:params.controller,action:params.action)
-								traceService.endTrace('TraceInterceptor','before')
+								traceService.endTrace('ProfilerInterceptor','before')
 								return false
 							}
 						}
@@ -166,31 +163,31 @@ class TraceInterceptor extends TraceCommLayer{
 					// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
 					ApiDescriptor cachedEndpoint = cache[(String)params.apiObject][(String)params.action] as ApiDescriptor
 					boolean result = handleApiRequest(cachedEndpoint, request, response, params)
-					traceService.endTrace('TraceInterceptor','before')
+					traceService.endTrace('ProfilerInterceptor','before')
 					return result
 				}
 			}
 			// no cache found
-			traceService.endTrace('TraceInterceptor','before')
+			traceService.endTrace('ProfilerInterceptor','before')
 			return false
 
 		}catch(Exception e){
 			log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
-			traceService.endTrace('TraceInterceptor','before')
+			traceService.endTrace('ProfilerInterceptor','before')
 			return false
 		}
 	}
 
 	boolean after(){
 		//log.info('##### FILTER (AFTER)')
-		traceService.startTrace('TraceInterceptor','after')
+		traceService.startTrace('ProfilerInterceptor','after')
 		try{
 			LinkedHashMap newModel = [:]
 
 			if(params.controller!='apidoc') {
 				if (!model) {
 					render(status: HttpServletResponse.SC_NOT_FOUND, text: 'No resource returned / domain is empty')
-					traceService.endTrace('TraceInterceptor','after')
+					traceService.endTrace('ProfilerInterceptor','after')
 					return false
 				} else {
 					newModel = convertModel(model)
@@ -205,8 +202,8 @@ class TraceInterceptor extends TraceCommLayer{
 			String content = handleApiResponse(cachedEndpoint['returns'] as LinkedHashMap,cachedEndpoint['roles'] as List,request,response,newModel,params) as LinkedHashMap
 
 			if(content){
-				traceService.endTrace('TraceInterceptor','after')
-				LinkedHashMap traceContent = traceService.endAndReturnTrace('TraceInterceptor','after');
+				traceService.endTrace('ProfilerInterceptor','after')
+				LinkedHashMap traceContent = traceService.endAndReturnTrace('ProfilerInterceptor','after');
 				String tcontent = traceContent as JSON
 				render(text:tcontent, contentType:request.contentType)
 
@@ -216,7 +213,7 @@ class TraceInterceptor extends TraceCommLayer{
 			return false
 		}catch(Exception e){
 			log.error("[ApiToolkitFilters :: apitoolkit.after] : Exception - full stack trace follows:", e);
-			traceService.endTrace('TraceInterceptor','after')
+			traceService.endTrace('ProfilerInterceptor','after')
 			return false
 		}
 	}

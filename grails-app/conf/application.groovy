@@ -117,4 +117,9 @@ grails.plugin.springsecurity.logout.postOnly = false
 
 grails.plugin.springsecurity.useSecurityEventListener = false
 
+// rest token
+grails.plugin.springsecurity.rest.token.storage.jwt.useSignedJwt = true
+grails.plugin.springsecurity.rest.token.storage.jwt.secret = 'szdxgerklaslcxhiouweas'
+grails.plugin.springsecurity.rest.token.storage.jwt.expiration = -1
+
 

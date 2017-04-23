@@ -1,0 +1,278 @@
+/*
+ * Academic Free License ("AFL") v. 3.0
+ * Copyright 2014-2017 Owen Rubel
+ *
+ * IO State (tm) Owen Rubel 2014
+ * API Chaining (tm) Owen Rubel 2013
+ *
+ *   https://opensource.org/licenses/AFL-3.0
+ */
+
+package net.nosegrind.apiframework
+
+import org.grails.web.json.JSONObject
+import javax.annotation.Resource
+import grails.core.GrailsApplication
+import grails.plugin.springsecurity.SpringSecurityService
+import grails.util.Metadata
+import groovy.json.JsonSlurper
+import net.nosegrind.apiframework.RequestMethod
+import org.grails.web.util.WebUtils
+
+import javax.servlet.http.HttpServletResponse
+import groovy.transform.CompileStatic
+
+
+@CompileStatic
+class ChainInterceptor extends ApiCommLayer implements grails.api.framework.RequestForwarder{
+
+	int order = HIGHEST_PRECEDENCE + 996
+
+	@Resource
+	GrailsApplication grailsApplication
+
+	ApiCacheService apiCacheService
+	SpringSecurityService springSecurityService
+
+	// TODO: detect and assign apiObjectVersion from uri
+	String entryPoint = "c${Metadata.current.getProperty(Metadata.APPLICATION_VERSION, String.class)}"
+	String format
+	List formats = ['XML', 'JSON']
+	String mthdKey
+	RequestMethod mthd
+	LinkedHashMap cache = [:]
+	List chainKeys = []
+	List chainUris = []
+	int chainLength
+	LinkedHashMap chainOrder = [:]
+	LinkedHashMap<String,LinkedHashMap<String,String>> chain
+
+	ChainInterceptor(){
+		match(uri:"/${entryPoint}/**")
+	}
+
+	boolean before() {
+		//println('##### CHAININTERCEPTOR (BEFORE)')
+
+		// TESTING: SHOW ALL FILTERS IN CHAIN
+		//def filterChain = grailsApplication.mainContext.getBean('springSecurityFilterChain')
+		//println(filterChain)
+
+		format = (request?.format) ? (request.format).toUpperCase() : 'JSON'
+		mthdKey = request.method.toUpperCase()
+		mthd = (RequestMethod) RequestMethod[mthdKey]
+
+
+
+
+
+		//Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
+		boolean restAlt = RequestMethod.isRestAlt(mthd.getKey())
+
+		// TODO: Check if user in USER roles and if this request puts user over 'rateLimit'
+
+		// Init params
+		if (formats.contains(format)) {
+			switch (format) {
+				case 'XML':
+					chain = request.JSON as LinkedHashMap
+					break
+				case 'JSON':
+				case 'JSON':
+					chain = request.JSON as LinkedHashMap
+					break
+				default:
+					render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Expecting JSON Formatted chain data')
+					return false
+			}
+		}
+
+		// INIT local Chain Variables
+		if(chain?.chain==null){
+			render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Expected chain variables not sent')
+			return false
+		}
+		int inc = 0
+		chainKeys[0] = chain['chain']['key']
+		chainUris[0] = request.forwardURI
+		LinkedHashMap order = chain.chain.order as LinkedHashMap
+		order.each(){ key, val ->
+			chainOrder[key] = val
+			inc++
+			chainKeys[inc] = val
+			chainUris[inc] = key
+		}
+		chainLength = inc
+
+
+		// TODO : test for where chain data was sent
+		if(!isChain(request)){
+			render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Expected request variables for endpoint do not match sent variables')
+			return false
+		}
+
+		try {
+			// INITIALIZE CACHE
+			cache = (params.controller) ? apiCacheService.getApiCache(params.controller.toString()) as LinkedHashMap : [:]
+
+			if (params.controller == 'apidoc') {
+				if (cache) {
+					params.apiObject = (params.apiObjectVersion) ? params.apiObjectVersion : cache['currentStable']['value']
+					params.action = (params.action == null) ? cache[params.apiObject]['defaultAction'] : params.action
+					return true
+				}
+				return false
+			} else {
+
+				if (cache) {
+					params.apiObject = (params.apiObjectVersion) ? params.apiObjectVersion : cache['currentStable']['value']
+					params.action = (params.action == null) ? cache[params.apiObject]['defaultAction'] : params.action
+
+					// CHECK REQUEST METHOD FOR ENDPOINT
+					// NOTE: expectedMethod must be capitolized in IO State file
+					String expectedMethod = cache[params.apiObject][params.action.toString()]['method'] as String
+					if (!checkRequestMethod(mthd, expectedMethod, restAlt)) {
+						render(status: HttpServletResponse.SC_BAD_REQUEST, text: "Expected request method '${expectedMethod}' does not match sent method '${mthd.getKey()}'")
+						return false
+					}
+
+
+					if (request?.getAttribute('chainInc') == null) {
+						request.setAttribute('chainInc', 0)
+					} else {
+						Integer newBI = (Integer) request?.getAttribute('chainInc')
+						request.setAttribute('chainInc', newBI + 1)
+					}
+
+
+
+					int chainInc = (int) request.getAttribute('chainInc')
+					if(params.max!=null) {
+						List max = params.max as List
+						params.max = max[chainInc]
+					}else{
+						params.max = 0
+					}
+					if(params.offset!=null) {
+						List offset = params.offset as List
+						params.offset = offset[chainInc]
+					}else{
+						params.offset = 0
+					}
+
+					setChainParams(params)
+
+					// CHECK REQUEST VARIABLES MATCH ENDPOINTS EXPECTED VARIABLES
+					LinkedHashMap receives = cache[params.apiObject][params.action.toString()]['receives'] as LinkedHashMap
+					//boolean requestKeysMatch = checkURIDefinitions(params, receives)
+					if (!checkURIDefinitions(params, receives)) {
+						render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Expected request variables for endpoint do not match sent variables')
+						return false
+					}
+
+					// RETRIEVE CACHED RESULT; DON'T CACHE LISTS
+					if (cache[params.apiObject][params.action.toString()]['cachedResult']) {
+						String authority = getUserRole() as String
+						String domain = ((String) params.controller).capitalize()
+
+						JSONObject json = (JSONObject) cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()]
+						if (!json) {
+							return false
+						} else {
+							if (isCachedResult((Integer) json.get('version'), domain)) {
+								def result = cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()]
+								render(text: result, contentType: request.contentType)
+								return false
+							}
+						}
+					} else {
+
+						// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
+						ApiDescriptor cachedEndpoint = cache[(String) params.apiObject][(String) params.action] as ApiDescriptor
+						boolean result = handleApiRequest(cachedEndpoint['deprecated'] as List, (cachedEndpoint['method'])?.toString(), mthd, response, params)
+
+
+						return result
+					}
+				}
+			}
+
+			return false
+
+		} catch (Exception e ) {
+			log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
+			return false
+		}
+
+	}
+
+	boolean after(){
+		//println('##### CHAININTERCEPTOR (AFTER)')
+
+		// getChainVars and reset Chain
+		LinkedHashMap<String,LinkedHashMap<String,String>> chain = params.apiChain as LinkedHashMap
+
+		int chainInc = (int) request.getAttribute('chainInc')
+
+		try{
+			LinkedHashMap newModel = [:]
+
+			if (!model) {
+				render(status:HttpServletResponse.SC_NOT_FOUND , text: 'No resource returned')
+				return false
+			} else {
+				newModel = convertModel(model)
+			}
+
+			LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
+			//LinkedHashMap content
+
+			ApiDescriptor cachedEndpoint = cache[params.apiObject][(String)params.action] as ApiDescriptor
+
+			// TEST FOR NESTED MAP; WE DON'T CACHE NESTED MAPS
+			boolean isNested = false
+			if (newModel != [:]) {
+				Object key = newModel?.keySet()?.iterator()?.next()
+				if (newModel[key].getClass().getName() == 'java.util.LinkedHashMap') {
+					isNested = true
+				}
+
+
+				//if(chainEnabled && params?.apiChain?.order){
+
+				params.id = ((chainInc + 1) == 1) ? chainKeys[0] : chainKeys[(chainInc)]
+				if (chainEnabled && (chainLength >= (chainInc + 1)) && params.id!='return') {
+
+					WebUtils.exposeRequestAttributes(request, params);
+					// this will work fine when we upgrade to newer version that has fix in it
+					String forwardUri = "/${entryPoint}/${chainUris[chainInc + 1]}/${newModel.get(params.id)}"
+					forward(URI: forwardUri, params: [apiObject: params.apiObject, apiChain: params.apiChain])
+					return false
+				} else {
+					String content = handleChainResponse(cachedEndpoint['returns'] as LinkedHashMap, cachedEndpoint['roles'] as List, mthd, format, response, newModel, params)
+
+					if (content) {
+						// STORE CACHED RESULT
+						String format = request.format.toUpperCase()
+						String authority = getUserRole() as String
+
+						if (!newModel) {
+							apiCacheService.setApiCachedResult((String) params.controller, (String) params.apiObject, (String) params.action, authority, format, content)
+						}
+						render(text: content, contentType: request.contentType)
+						return false
+					}
+				}
+
+				return false
+			}
+
+			return false
+		}catch(Exception e){
+			log.error("[ApiToolkitFilters :: apitoolkit.after] : Exception - full stack trace follows:", e);
+			return false
+		}
+
+	}
+
+}

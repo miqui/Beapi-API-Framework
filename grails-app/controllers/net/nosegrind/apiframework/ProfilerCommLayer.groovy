@@ -1,28 +1,11 @@
 /*
- * The MIT License (MIT)
- * Copyright 2014 Owen Rubel
+ * Academic Free License ("AFL") v. 3.0
+ * Copyright 2014-2017 Owen Rubel
  *
  * IO State (tm) Owen Rubel 2014
  * API Chaining (tm) Owen Rubel 2013
  *
- *   https://opensource.org/licenses/MIT
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the Software
- * is furnished to do so, subject to the following conditions:
- *
- * The above copyright/trademark notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
- * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
- * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
- * THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *   https://opensource.org/licenses/AFL-3.0
  */
 
 package net.nosegrind.apiframework
@@ -37,7 +20,7 @@ import groovy.transform.CompileStatic
 
 // extended by Intercepters
 @CompileStatic
-abstract class TraceCommLayer extends TraceCommProcess{
+abstract class ProfilerCommLayer extends ProfilerCommProcess{
 
 
     @Resource
@@ -47,7 +30,7 @@ abstract class TraceCommLayer extends TraceCommProcess{
      * REQUESTS
      ***************************/
     boolean handleApiRequest(ApiDescriptor cache, HttpServletRequest request, HttpServletResponse response, GrailsParameterMap params){
-        traceService.startTrace('TraceCommLayer','handleApiRequest')
+        traceService.startTrace('ProfilerCommLayer','handleApiRequest')
         try{
             // CHECK ACCESS TO METHOD
             /*
@@ -67,7 +50,7 @@ abstract class TraceCommLayer extends TraceCommProcess{
                     String depMsg = deprecated[1].toString()
                     response.status = 400
                     response.setHeader('ERROR',depMsg)
-                    traceService.endTrace('TraceCommLayer','handleApiRequest')
+                    traceService.endTrace('ProfilerCommLayer','handleApiRequest')
                     return false
                 }
             }
@@ -78,13 +61,13 @@ abstract class TraceCommLayer extends TraceCommProcess{
             if(!isRequestMatch(method,request.method.toString())){
                 response.status = 400
                 response.setHeader('ERROR',"Request method doesn't match expected method.")
-                traceService.endTrace('TraceCommLayer','handleApiRequest')
+                traceService.endTrace('ProfilerCommLayer','handleApiRequest')
                 return false
             }
-            traceService.endTrace('TraceCommLayer','handleApiRequest')
+            traceService.endTrace('ProfilerCommLayer','handleApiRequest')
             return true
         }catch(Exception e){
-            traceService.endTrace('TraceCommLayer','handleApiRequest')
+            traceService.endTrace('ProfilerCommLayer','handleApiRequest')
             throw new Exception("[ApiCommLayer : handleApiRequest] : Exception - full stack trace follows:",e)
         }
     }
@@ -93,7 +76,7 @@ abstract class TraceCommLayer extends TraceCommProcess{
     * RESPONSES
      ***************************/
     def handleApiResponse(LinkedHashMap requestDefinitions, List roles, HttpServletRequest request, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
-        traceService.startTrace('TraceCommLayer','handleApiResponse')
+        traceService.startTrace('ProfilerCommLayer','handleApiResponse')
         try{
             String authority = getUserRole() as String
             response.setHeader('Authorization', roles.join(', '))
@@ -110,11 +93,11 @@ abstract class TraceCommLayer extends TraceCommProcess{
             }else{
                 content = parseResponseMethod(request, params, model)
             }
-            traceService.endTrace('TraceCommLayer','handleApiResponse')
+            traceService.endTrace('ProfilerCommLayer','handleApiResponse')
             return content
 
         }catch(Exception e){
-            traceService.endTrace('TraceCommLayer','handleApiResponse')
+            traceService.endTrace('ProfilerCommLayer','handleApiResponse')
             throw new Exception("[ApiCommLayer : handleApiResponse] : Exception - full stack trace follows:",e)
         }
     }
