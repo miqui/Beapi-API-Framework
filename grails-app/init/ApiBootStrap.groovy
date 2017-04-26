@@ -13,7 +13,6 @@ import grails.plugin.springsecurity.SpringSecurityUtils
 
 class ApiBootStrap {
 
-
 	def init = { servletContext ->
 		//SpringSecurityUtils.registerFilter 'tokenCacheValidationFilter', SecurityFilterPosition.ANONYMOUS_FILTER.order + 2
 		//SpringSecurityUtils.registerFilter 'corsSecurityFilter', SecurityFilterPosition.ANONYMOUS_FILTER.order + 3

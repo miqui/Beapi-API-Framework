@@ -76,13 +76,14 @@ class ApiObjectService{
 	}
 	
 	private LinkedHashMap getIOSet(JSONObject io,LinkedHashMap apiObject){
-		LinkedHashMap<String,ParamsDescriptor> ioSet = [:]
+		LinkedHashMap<String,net.nosegrind.apiframework.ParamsDescriptor> ioSet = [:]
 
 		io.each{ k, v ->
 			// init
 			if(!ioSet[k]){ ioSet[k] = [] }
-			
+
 			def roleVars=v.toList()
+			println("roleVars:"+roleVars)
 			roleVars.each{ val ->
 				if(v.contains(val)){
 					if(!ioSet[k].contains(apiObject[val])){
@@ -91,16 +92,16 @@ class ApiObjectService{
 				}
 			}
 		}
-		
+
 		// add permitAll vars to other roles after processing
+		def permitAll = ioSet['permitAll']
 		ioSet.each(){ key, val ->
 			if(key!='permitAll'){
-				ioSet['permitAll'].each(){ it ->
-						ioSet[key].add(it)
+				permitAll.each(){ it ->
+					ioSet[key].add(it)
 				}
 			}
 		}
-		
 		return ioSet
 	}
 
@@ -165,7 +166,7 @@ class ApiObjectService{
 		
 		LinkedHashMap receives = getIOSet(json.URI[uri]?.REQUEST,apiObject)
 		LinkedHashMap returns = getIOSet(json.URI[uri]?.RESPONSE,apiObject)
-
+	println("returns : "+returns)
 		ApiDescriptor service = new ApiDescriptor(
 				'empty':false,
 			'method':"$apiMethod",
@@ -192,28 +193,44 @@ class ApiObjectService{
 			List deprecated = (vers.value.DEPRECATED)?vers.value.DEPRECATED:[]
 			String domainPackage = (vers.value.DOMAINPACKAGE!=null || vers.value.DOMAINPACKAGE?.size()>0)?vers.value.DOMAINPACKAGE:null
 
+			/*
+            URL url = this.getClass().getClassLoader().getResource("ehcache.xml")
+            System.out.println(this.getClass().getResource("ehcache.xml"));
+            System.out.println(this.getClass().getClassLoader().getResource("ehcache.xml"));
+            CacheManager manager = new CacheManager(url);
+            */
+
+			//CacheManager ehcacheManager = new CacheManager(new ClassPathResource("ehcache.xml").getInputStream());
+			//EhCacheCacheManager manager = new EhCacheCacheManager();
+			//manager.setCacheManager(ehcacheManager);
+			//Cache cache = manager.getCache("ApiCache");
+
+			String actionname
 			vers.value.URI.each() { it ->
-				def cache = (apiCacheService?.getApiCache(apiName))?apiCacheService.getApiCache(apiName):[:]
-				methods['cacheversion'] = (!cache?.cacheversion)? 1 : cache['cacheversion']+1
-				
+
+				def cache = apiCacheService.getApiCache(apiName.toString())
+				//def cache = (temp?.get(apiName))?temp?.get(apiName):[:]
+
+				methods['cacheversion'] = 1
+
 				JSONObject apiVersion = json.VERSION[vers.key]
 
-				String actionname = it.key
+				actionname = it.key
 
-				ApiDescriptor apiDescriptor
-				Map apiParams
-				
+				net.nosegrind.apiframework.ApiDescriptor apiDescriptor
+				//Map apiParams
+
 				String apiMethod = it.value.METHOD
 				String apiDescription = it.value.DESCRIPTION
 				List apiRoles = it.value.ROLES
 				List batchRoles = it.value.BATCH
-				
+
 				String uri = it.key
 				apiDescriptor = createApiDescriptor(apiName, apiMethod, apiDescription, apiRoles, batchRoles, uri, json.get('VALUES'), apiVersion)
 				if(!methods[vers.key]){
 					methods[vers.key] = [:]
 				}
-				
+
 				if(!methods['currentStable']){
 					methods['currentStable'] = [:]
 					methods['currentStable']['value'] = json.CURRENTSTABLE
@@ -222,29 +239,27 @@ class ApiObjectService{
 					methods[vers.key]['deprecated'] = []
 					methods[vers.key]['deprecated'] = deprecated
 				}
-				
+
 				if(!methods[vers.key]['defaultAction']){
 					methods[vers.key]['defaultAction'] = defaultAction
 				}
 
-
 				methods[vers.key][actionname] = apiDescriptor
-
 			}
 
 			if(methods){
 				def cache = apiCacheService.setApiCache(apiName,methods)
-
+				//println("apiName : ${apiName} /"+methods[vers.key][actionname]['returns'])
 				cache[vers.key].each(){ key1,val1 ->
+
 					if(!['deprecated','defaultAction'].contains(key1)){
 						apiCacheService.setApiCache(apiName,key1, val1, vers.key)
 					}
 				}
 
 			}
-			
-		}
 
+		}
 	}
 
 }

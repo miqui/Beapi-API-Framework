@@ -220,6 +220,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 				newModel = model as LinkedHashMap
 			}
 
+
 			//LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
 			ApiDescriptor cachedEndpoint = cache[params.apiObject][(String) params.action] as ApiDescriptor
 
@@ -232,6 +233,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 				}
 
 				String content = handleApiResponse(cachedEndpoint['returns'] as LinkedHashMap, cachedEndpoint['roles'] as List, mthd, format, response, newModel, params)
+
 				byte[] contentLength = content.getBytes( "ISO-8859-1" )
 				if (content) {
 					// STORE CACHED RESULT

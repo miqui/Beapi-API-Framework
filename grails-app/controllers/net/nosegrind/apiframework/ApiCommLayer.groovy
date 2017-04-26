@@ -130,15 +130,25 @@ abstract class ApiCommLayer extends ApiCommProcess{
             String authority = getUserRole() as String
             response.setHeader('Authorization', roles.join(', '))
 
-            ArrayList<HashMap> temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as ArrayList<HashMap>:requestDefinitions['permitAll'] as ArrayList<HashMap>
+            ArrayList responseList = []
+            ArrayList<HashMap> temp = new ArrayList()
+            if(requestDefinitions["${authority}"]) {
+                ArrayList<HashMap> temp1 = requestDefinitions["${authority}"] as ArrayList<HashMap>
+                temp.addAll(temp1)
+            }
+            if(requestDefinitions['permitAll']) {
+                ArrayList<HashMap> temp2 = requestDefinitions['permitAll'] as ArrayList<HashMap>
+                temp.addAll(temp2)
+            }
 
-            ArrayList responseList = (ArrayList)temp?.collect(){ if(it!=null){it.name} }
 
+            responseList = (ArrayList)temp?.collect(){ if(it!=null){it.name} }
             String content
             if(params.controller!='apidoc') {
                 LinkedHashMap result = parseURIDefinitions(model, responseList)
                 // will parse empty map the same as map with content
                 content = parseResponseMethod(mthd, format, params, result)
+
             }else{
                 content = parseResponseMethod(mthd, format, params, model)
             }

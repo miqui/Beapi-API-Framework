@@ -131,7 +131,6 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
         //def ctx = applicationContext.getServletContext()
         //ctx.setInitParameter("dispatchOptionsRequest", "true");
 
-
 		doInitApiFrameworkInstall(applicationContext)
         String apiObjectSrc = grails.util.Holders.grailsApplication.config.iostate.preloadDir
         parseFiles(apiObjectSrc.toString(), applicationContext)
@@ -141,9 +140,11 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
         LinkedHashMap methods = [:]
 
         new File(path).eachFile() { file ->
-            def tmp = file.name.toString().split('\\.')
+            String fileName = file.name.toString()
+            def tmp = fileName.split('\\.')
+            String fileChar = fileName.charAt(fileName.length() - 1)
 
-            if(tmp[1]=='json'){
+            if(tmp[1]=='json' && fileChar=="n"){
                 //try{
                 JSONObject json = JSON.parse(file.text)
                 methods[json.NAME.toString()] = parseJson(json.NAME.toString(),json,applicationContext)
@@ -292,7 +293,7 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
             //manager.setCacheManager(ehcacheManager);
             //Cache cache = manager.getCache("ApiCache");
 
-
+            String actionname
             vers.value.URI.each() { it ->
 
                 def cache = apiCacheService.getApiCache(apiName.toString())
@@ -302,7 +303,7 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
 
                 JSONObject apiVersion = json.VERSION[vers.key]
 
-                String actionname = it.key
+                actionname = it.key
 
                 ApiDescriptor apiDescriptor
                 //Map apiParams
@@ -340,6 +341,7 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
                 def cache = apiCacheService.setApiCache(apiName,methods)
 
                 cache[vers.key].each(){ key1,val1 ->
+
                     if(!['deprecated','defaultAction'].contains(key1)){
                         apiCacheService.setApiCache(apiName,key1, val1, vers.key)
                     }
@@ -386,6 +388,7 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
                             doc['returns']["$returnVal.key"] = returnVal.value
                         }
                     }
+
                     doc['json'] = [:]
                     doc['json'] = processJson(doc["returns"])
                 }
@@ -489,7 +492,6 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
                 }
             }
         }
-
         return ioSet
     }
 

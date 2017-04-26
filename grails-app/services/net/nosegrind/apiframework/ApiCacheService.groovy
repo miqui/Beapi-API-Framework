@@ -65,6 +65,7 @@ class ApiCacheService{
 				cache[apiversion][methodname] = [:]
 			}
 			if(cache[apiversion][methodname]){
+
 				cache[apiversion][methodname]['name'] = apidoc.name
 				cache[apiversion][methodname]['description'] = apidoc.description
 				cache[apiversion][methodname]['receives'] = apidoc.receives

@@ -271,7 +271,6 @@ abstract class ApiCommProcess{
 
                 paramsList?.removeAll(optionalParams)
 
-
                 if (!responseList.containsAll(paramsList)) {
                     paramsList.removeAll(responseList)
                     paramsList.each() { it2 ->
