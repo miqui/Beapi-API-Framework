@@ -63,13 +63,13 @@ class CorsService {
             // add CORS access control headers for the given origin
             response.setHeader("Access-Control-Allow-Origin", origin)
             response.setHeader("Access-Control-Allow-Credentials", "true")
-            //response.writer.flush()
+            response.writer.flush()
             return false
         } else if( !allowedOrigins ) { // no origin; white list
             // add CORS access control headers for all origins
             response.setHeader("Access-Control-Allow-Origin", origin ?: "*")
             response.setHeader("Access-Control-Allow-Credentials", "true")
-            //response.writer.flush()
+            response.writer.flush()
             return false
         }
 

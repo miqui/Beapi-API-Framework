@@ -9,12 +9,6 @@
  */
 
 // Place your Spring DSL code here
-
-import grails.plugin.springsecurity.rest.RestAuthenticationFilter
-import grails.api.framework.SpringSecurityCORSFilter
-import grails.api.framework.TokenCacheValidationFilter
-import org.springframework.boot.context.embedded.FilterRegistrationBean
-
 beans = {
 
     requestForwarder(grails.api.framework.RequestForwarder)
