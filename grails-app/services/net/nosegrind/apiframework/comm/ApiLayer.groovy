@@ -65,7 +65,6 @@ abstract class ApiLayer{
 
 	// BOTH
 	LinkedHashMap parseURIDefinitions(LinkedHashMap model,List responseList){
-		println(model[0].getClass().getName())
 		if(model[0].getClass()=='java.util.LinkedHashMap'){
 			println("##### recursive check #####")
 			model.each(){ key,val ->

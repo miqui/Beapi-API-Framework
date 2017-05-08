@@ -83,7 +83,6 @@ class ApiObjectService{
 			if(!ioSet[k]){ ioSet[k] = [] }
 
 			def roleVars=v.toList()
-			println("roleVars:"+roleVars)
 			roleVars.each{ val ->
 				if(v.contains(val)){
 					if(!ioSet[k].contains(apiObject[val])){
@@ -119,7 +118,7 @@ class ApiObjectService{
 		return newDesc
 	}
 
-	private ApiDescriptor createApiDescriptor(String apiname,String apiMethod, String apiDescription, List apiRoles, List batchRoles, String uri, JSONObject values, JSONObject json){
+	private ApiDescriptor createApiDescriptor(String apiname,String apiMethod, String apiDescription, List apiRoles, List batchRoles, List hookRoles, String uri, JSONObject values, JSONObject json){
 		LinkedHashMap<String,ParamsDescriptor> apiObject = [:]
 		ApiParams param = new ApiParams()
 		LinkedHashMap mocks = [
@@ -166,7 +165,7 @@ class ApiObjectService{
 		
 		LinkedHashMap receives = getIOSet(json.URI[uri]?.REQUEST,apiObject)
 		LinkedHashMap returns = getIOSet(json.URI[uri]?.RESPONSE,apiObject)
-	println("returns : "+returns)
+
 		ApiDescriptor service = new ApiDescriptor(
 				'empty':false,
 			'method':"$apiMethod",
@@ -174,6 +173,7 @@ class ApiObjectService{
 			'description':"$apiDescription",
 			'roles':[],
 			'batchRoles':[],
+			'hookRoles':[],
 			'doc':[:],
 			'receives':receives,
 			'returns':returns
@@ -181,6 +181,7 @@ class ApiObjectService{
 		
 		service['roles'] = apiRoles
 		service['batchRoles'] = batchRoles
+		service['hookRoles'] = hookRoles
 
 		return service
 	}
@@ -222,11 +223,12 @@ class ApiObjectService{
 
 				String apiMethod = it.value.METHOD
 				String apiDescription = it.value.DESCRIPTION
-				List apiRoles = it.value.ROLES
-				List batchRoles = it.value.BATCH
+				List apiRoles = it.value.ROLES.DEFAULT
+				List batchRoles = it.value.ROLES.BATCH
+				List hookRoles = it.value.ROLES.HOOK
 
 				String uri = it.key
-				apiDescriptor = createApiDescriptor(apiName, apiMethod, apiDescription, apiRoles, batchRoles, uri, json.get('VALUES'), apiVersion)
+				apiDescriptor = createApiDescriptor(apiName, apiMethod, apiDescription, apiRoles, batchRoles, hookRoles, uri, json.get('VALUES'), apiVersion)
 				if(!methods[vers.key]){
 					methods[vers.key] = [:]
 				}

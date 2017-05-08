@@ -49,7 +49,7 @@ class BatchInterceptor extends ApiCommLayer{
 	}
 
 	boolean before(){
-		println('##### BATCHINTERCEPTOR (BEFORE)')
+		//println('##### BATCHINTERCEPTOR (BEFORE)')
 
 		// TESTING: SHOW ALL FILTERS IN CHAIN
 		//def filterChain = grailsApplication.mainContext.getBean('springSecurityFilterChain')
