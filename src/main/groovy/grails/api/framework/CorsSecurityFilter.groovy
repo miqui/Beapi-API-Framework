@@ -33,7 +33,7 @@ class CorsSecurityFilter extends GenericFilterBean {
 
     @Override
     void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-
+        println("### CorsSecurityFilter ")
         HttpServletRequest httpRequest = request as HttpServletRequest
         HttpServletResponse httpResponse = response as HttpServletResponse
 

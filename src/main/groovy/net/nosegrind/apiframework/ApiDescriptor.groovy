@@ -26,6 +26,7 @@ class ApiDescriptor implements Validateable {
 	List fkeys
 	List roles
 	List batchRoles
+	List hookRoles
 	String name
     String description
 	Map doc
@@ -44,6 +45,15 @@ class ApiDescriptor implements Validateable {
 				  return true
 				}else {
 				  return false
+				}
+			}
+		})
+		hookRoles(nullable:true, validator: { val, obj ->
+			if (hookRoles){
+				if(obj?.roles.containsAll(hookRoles)) {
+					return true
+				}else {
+					return false
 				}
 			}
 		})

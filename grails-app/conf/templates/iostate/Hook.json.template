@@ -55,8 +55,11 @@ net.nosegrind.Hook
 	        	"list":{
 	             	"METHOD":"GET",
 	            	"DESCRIPTION":"List Hook",
-	            	"ROLES":["ROLE_ADMIN","ROLE_ARCH"],
-	            	"BATCH":["ROLE_ADMIN","ROLE_ARCH"],
+	            	"ROLES":{
+			    "DEFAULT":["ROLE_ADMIN"],
+			    "BATCH":["ROLE_ADMIN"],
+			    "HOOK":["ROLE_ADMIN"]
+			},
 	                "REQUEST": {
 	                    "permitAll":[]
 	                },
@@ -67,8 +70,11 @@ net.nosegrind.Hook
 	            "show": {
 	             	"METHOD":"GET",
 	            	"DESCRIPTION":"Show Hooks",
-	            	"ROLES":["ROLE_ADMIN","ROLE_ARCH"],
-	            	"BATCH":["ROLE_ADMIN","ROLE_ARCH"],
+	            	"ROLES":{
+			    "DEFAULT":["ROLE_ADMIN"],
+			    "BATCH":["ROLE_ADMIN"],
+			    "HOOK":["ROLE_ADMIN"]
+			},
 	                "REQUEST": {
 	                    "permitAll":["id"]
 	                },
@@ -79,8 +85,11 @@ net.nosegrind.Hook
 	            "create":{
 	             	"METHOD":"PUT",
 	            	"DESCRIPTION":"Create Hook",
-	            	"ROLES":["ROLE_ADMIN","ROLE_ARCH"],
-	            	"BATCH":["ROLE_ADMIN","ROLE_ARCH"],
+	            	"ROLES":{
+			    "DEFAULT":["ROLE_ADMIN"],
+			    "BATCH":["ROLE_ADMIN"],
+			    "HOOK":["ROLE_ADMIN"]
+			},
 	                "REQUEST": {
 	                    "permitAll":["name","url","format","service"]
 	                },
@@ -91,8 +100,11 @@ net.nosegrind.Hook
 	            "update": {
 	            	"METHOD":"POST",
 	            	"DESCRIPTION":"Update Hook",
-	            	"ROLES":["ROLE_ADMIN","ROLE_ARCH"],
-	            	"BATCH":["ROLE_ADMIN","ROLE_ARCH"],
+	            	"ROLES":{
+			    "DEFAULT":["ROLE_ADMIN"],
+			    "BATCH":["ROLE_ADMIN"],
+			    "HOOK":["ROLE_ADMIN"]
+			},
 	                "REQUEST": {
 	                    "permitAll":["id","version","name","url","format","service"]
 	                },
@@ -103,8 +115,11 @@ net.nosegrind.Hook
 	            "delete":{
 	            	"METHOD":"DELETE",
 	            	"DESCRIPTION":"Delete Hook",
-	            	"ROLES":["ROLE_ADMIN","ROLE_ARCH"],
-	            	"BATCH":["ROLE_ADMIN","ROLE_ARCH"],
+	            	"ROLES":{
+			    "DEFAULT":["ROLE_ADMIN"],
+			    "BATCH":["ROLE_ADMIN"],
+			    "HOOK":["ROLE_ADMIN"]
+			},
 	                "REQUEST": {
 	                    "permitAll":["id"]
 	                },
@@ -115,8 +130,11 @@ net.nosegrind.Hook
 	            "reset":{
 	            	"METHOD":"GET",
 	            	"DESCRIPTION":"Reset Hook attempts",
-	            	"ROLES":["ROLE_ADMIN"],
-	            	"BATCH":["ROLE_ADMIN"],
+	            	"ROLES":{
+			    "DEFAULT":["ROLE_ADMIN"],
+			    "BATCH":["ROLE_ADMIN"],
+			    "HOOK":["ROLE_ADMIN"]
+			},
 	                "REQUEST": {
 	                    "permitAll":["id"]
 	                },

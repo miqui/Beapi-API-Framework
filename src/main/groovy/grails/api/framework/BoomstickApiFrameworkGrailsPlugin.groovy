@@ -139,8 +139,10 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
     private parseFiles(String path, ApplicationContext applicationContext){
         LinkedHashMap methods = [:]
 
+        println "### Loading IO State Files ..."
         new File(path).eachFile() { file ->
             String fileName = file.name.toString()
+            println(fileName+" ...")
             def tmp = fileName.split('\\.')
             String fileChar = fileName.charAt(fileName.length() - 1)
 
@@ -310,11 +312,15 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
 
                 String apiMethod = it.value.METHOD
                 String apiDescription = it.value.DESCRIPTION
-                List apiRoles = it.value.ROLES
-                List batchRoles = it.value.BATCH
+                //List apiRoles = it.value.ROLES
+                //List batchRoles = it.value.BATCH
+
+                List apiRoles = it.value.ROLES.DEFAULT
+                List batchRoles = it.value.ROLES.BATCH
+                List hookRoles = it.value.ROLES.HOOK
 
                 String uri = it.key
-                apiDescriptor = createApiDescriptor(apiName, apiMethod, apiDescription, apiRoles, batchRoles, uri, json.get('VALUES'), apiVersion)
+                apiDescriptor = createApiDescriptor(apiName, apiMethod, apiDescription, apiRoles, batchRoles, hookRoles, uri, json.get('VALUES'), apiVersion)
                 if(!methods[vers.key]){
                     methods[vers.key] = [:]
                 }
@@ -400,7 +406,7 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
         }
     }
 
-    private ApiDescriptor createApiDescriptor(String apiname,String apiMethod, String apiDescription, List apiRoles, List batchRoles, String uri, JSONObject values, JSONObject json){
+    private ApiDescriptor createApiDescriptor(String apiname,String apiMethod, String apiDescription, List apiRoles, List batchRoles, List hookRoles, String uri, JSONObject values, JSONObject json){
         LinkedHashMap<String,ParamsDescriptor> apiObject = [:]
         ApiParams param = new ApiParams()
         LinkedHashMap mocks = [
@@ -455,6 +461,7 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
                 'description':"$apiDescription",
                 'roles':[],
                 'batchRoles':[],
+                'hookRoles':[],
                 'doc':[:],
                 'receives':receives,
                 'returns':returns
@@ -462,6 +469,7 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
 
         service['roles'] = apiRoles
         service['batchRoles'] = batchRoles
+        service['hookRoles'] = hookRoles
 
         return service
     }

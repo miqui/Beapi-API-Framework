@@ -35,7 +35,11 @@ net.nosegrind.Apidoc
 	        	"show":{
 	             	"METHOD":"GET",
 	            	"DESCRIPTION":"List ApiDocs",
-	            	"ROLES":["permitAll"],
+	            	"ROLES":{
+			    "DEFAULT":["permitAll"],
+			    "BATCH":["ROLE_ADMIN"],
+			    "HOOK":["ROLE_ADMIN"]
+			},
 	            	"BATCH":[],
 	                "REQUEST": {
 	                    "permitAll":[]
