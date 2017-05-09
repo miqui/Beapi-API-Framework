@@ -41,8 +41,32 @@
         </ul>
       </header>
       <section>
-        <h3><a id="what_is" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Coming Soon</h3>
+        <h3>Explanation Of API Chaining(tm)</h3>
 
+<p>Quick Definition : API Chaining(tm) is a functional I/O Monad allowing one api call to return data into another api call which returns data into another api call , etc etc, all within ONE REQUEST/RESPONSE. This is allowed through the abstraction of communication logic from business logic through the New API Pattern. This is limited in the fact that you can only use GET as the connectors in the chain and one other 'non-safe' method (ie PUT/POST/DELETE) at either the beginning or the end of the chain (as determined by the REQUEST method).</p>
+        
+<p>We have all used encoded GET data when sending form data via a POST request. This is considered common practice. Why? Because GET is idempotent and SAFE. Because it is SAFE (meaning it doesn't change data), it is commonly used with other types of requests as a mixed request. This may not be RESTful but it is considered normal and not unsafe. This is what I like to refer to as a single link chain since it has only one link which is the same as it's destination request.</p>
+
+<p>API chaining extends upon this principle in the fact that you can encode GET data in the URL but pass a POST/PUT/DELETE request (much like post GET with a POST form) to chain the request TO or FROM the request method destination link. This can be used to imply GET requests chained TO a final request link (known as a post- chain) or FROM a request link to other implied GET links (known as a pre-chain).</p>
+
+<p>The reason why this is better than practives like HATEOAS/HAL is that it doesn't rely on the link for the relationship... it relies on a common API Object. By relying on a common API Object to handle and validate the request/response and apply rules, links only become a reference point for data.</p>
+
+        <p>For example, when we make our PUT/POST/DELETE requests we can do :</p>
+        <ul>
+        <li><b>a post-chain request </b>: a GET request that return the data, then specifies the key we wish to pass to the next 'link' in the chain which will make a GET request returning data, etc until the final request method is matched. This can be illustrated as follows:
+
+GET > GET > PUT
+        </li>
+        <li><b>a pre-chain request </b>: same as a post chain request except the request method is matched in the beginning and then sends and id to the GET methods after it is called. This can be illustrated as follows:
+
+POST > GET > GET
+          </li>
+          <li><b>a blank chain (aka get chain) </b>: a blank chain has no additional method; it is merely a series of chained GET requests. Basically this takes the returned data from one GET and you give the KEY to get the data for the next GET request in the chain (just like in other chains).
+
+GET > GET > GET
+          </li>
+        </ul>
+        <p><b>NOTE:</b> Pre and Post chain example can happen with any method including DELETE; A Delete method can delete data or just render it 'inactive' so passing the ID to a GET method afterward can be useful to get related data or to confirm the state.</p>
 </section>
       <footer>
         <p class="view"><a href="https://github.com/orubel/Beapi-API-Framework">View the Project on GitHub <small>orubel/Beapi-API-Framework</small></a></p>
