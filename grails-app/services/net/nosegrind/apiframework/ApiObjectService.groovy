@@ -189,7 +189,6 @@ class ApiObjectService{
 	Boolean parseJson(String apiName,JSONObject json){
 		LinkedHashMap methods = [:]
 		json.VERSION.each() { vers ->
-			def versKey = vers.key
 			String defaultAction = (vers.value['DEFAULTACTION'])?vers.value.DEFAULTACTION:'index'
 			List deprecated = (vers.value.DEPRECATED)?vers.value.DEPRECATED:[]
 			String domainPackage = (vers.value.DOMAINPACKAGE!=null || vers.value.DOMAINPACKAGE?.size()>0)?vers.value.DOMAINPACKAGE:null
@@ -258,7 +257,6 @@ class ApiObjectService{
 						apiCacheService.setApiCache(apiName,key1, val1, vers.key)
 					}
 				}
-
 			}
 
 		}

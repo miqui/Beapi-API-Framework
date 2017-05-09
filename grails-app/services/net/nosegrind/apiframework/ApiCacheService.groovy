@@ -71,6 +71,9 @@ class ApiCacheService{
 				cache[apiversion][methodname]['receives'] = apidoc.receives
 				cache[apiversion][methodname]['returns'] = apidoc.returns
 				cache[apiversion][methodname]['doc'] = generateApiDoc(controllername, methodname,apiversion)
+				cache[apiversion][methodname]['doc']['hookRoles'] = cache[apiversion][methodname]['hookRoles']
+				cache[apiversion][methodname]['doc']['batchRoles'] = cache[apiversion][methodname]['batchRoles']
+
 			}else{
 				throw new Exception("[ApiCacheService :: setApiCache] : sts for controller/action pair of ${controllername}/${methodname}")
 			}

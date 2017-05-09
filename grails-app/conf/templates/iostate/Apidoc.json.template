@@ -40,7 +40,6 @@ net.nosegrind.Apidoc
 			    "BATCH":["ROLE_ADMIN"],
 			    "HOOK":["ROLE_ADMIN"]
 			},
-	            	"BATCH":[],
 	                "REQUEST": {
 	                    "permitAll":[]
 	                },
