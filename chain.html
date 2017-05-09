@@ -67,7 +67,45 @@
           </li>
         </ul>
         <p><b>NOTE:</b> Pre and Post chain example can happen with any method including DELETE; A Delete method can delete data or just render it 'inactive' so passing the ID to a GET method afterward can be useful to get related data or to confirm the state.</p>
-</section>
+        </br>
+        <h3>API Chain Examples</h3>
+
+  <p><b>POST Post-Chain Example (minus the data)</b></p>
+
+  <p>The POST post-chain would be encoded as follows:</p>
+
+<pre><code>{
+    ...[your_data_being_sent]...
+    chain:{
+        key:dept_id,
+        combine:'false',
+        type:'postchain',
+        order:{dept/show:company_id,company/update:return}
+    }
+}
+</code></pre>
+<p>And then call via Curl(or via javascript) as follows:</p>
+
+<pre><code>curl -v -H "Content-Type: application/json" -H "Authorization: Bearer [access token]" -X POST -d 
+"{'chain':
+    {'key':'dept_id','combine':'false','type':'postchain','order':
+        {'dept/show':'company_id','company/update':'return'}
+    }
+}" 
+
+"http://localhost:8080/v0.1/person/show/1"
+</code></pre>
+<p>If you need to send Max/Offset variables, do so as follows:</p>
+<pre><code>curl -v -H "Content-Type: application/json" -H "Authorization: Bearer [access token]" -X POST -d 
+"{'chain':
+    {'key':'dept_id','combine':'false','type':'postchain','order':
+        {'dept/show':'company_id','company/update':'return'}
+    }
+}" 
+"http://localhost:8080/v0.1/person/show/1?max=1,1,1&offset=0,0,0"
+</code></pre>
+
+  </section>
       <footer>
         <p class="view"><a href="https://github.com/orubel/Beapi-API-Framework">View the Project on GitHub <small>orubel/Beapi-API-Framework</small></a></p>
       </footer>
