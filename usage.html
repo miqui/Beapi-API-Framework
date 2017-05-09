@@ -61,13 +61,13 @@
         <p>Once you have authorized, you can now call the API endpoints using the token that was returned:</p>
 
         <p><b>GET Example</b></p>
-        <pre><code>curl -v -H "Content-Type: application/json" -H "Authorization: Bearer <access token>" --request GET "http://localhost:8080/v0.1/post/show/1"</code></pre>
+        <pre><code>curl -v -H "Content-Type: application/json" -H "Authorization: Bearer [access token]" --request GET "http://localhost:8080/v0.1/post/show/1"</code></pre>
 
         <p><b>POST Example</b></p>
-        <pre><code>curl -v -H "Content-Type: application/json" -H "Authorization: Bearer <access token>" --request POST -d "{'title': 'test post','teaser': 'This is just a test post to see if this works. Testing the api post system.','content':'Lorem ipsum dolor sit amet, consectetur adipiscing elit. In vel consequat nisl, quis commodo neque. Integer ultrices vitae nulla lacinia rutrum. Duis ut porta arcu, sed gravida tortor. Donec pulvinar elit turpis, ultricies tristique mi auctor ac. Ut elementum ullamcorper risus ac sollicitudin. Morbi semper ultrices enim vel euismod. Proin eleifend orci ac elit mollis tempor. Nulla egestas odio eu volutpat eleifend. Nunc nec massa eget nisl sodales posuere. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Nunc accumsan pretium sapien a tincidunt. Sed at fringilla mi.','sectionId':2}" http://localhost:8080/v0.1/post/create</code></pre>
+        <pre><code>curl -v -H "Content-Type: application/json" -H "Authorization: Bearer [access token]" --request POST -d "{'title': 'test post','teaser': 'This is just a test post to see if this works. Testing the api post system.','content':'Lorem ipsum dolor sit amet, consectetur adipiscing elit. In vel consequat nisl, quis commodo neque. Integer ultrices vitae nulla lacinia rutrum. Duis ut porta arcu, sed gravida tortor. Donec pulvinar elit turpis, ultricies tristique mi auctor ac. Ut elementum ullamcorper risus ac sollicitudin. Morbi semper ultrices enim vel euismod. Proin eleifend orci ac elit mollis tempor. Nulla egestas odio eu volutpat eleifend. Nunc nec massa eget nisl sodales posuere. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Nunc accumsan pretium sapien a tincidunt. Sed at fringilla mi.','sectionId':2}" http://localhost:8080/v0.1/post/create</code></pre>
 
         <p><b>PUT Example</b></p>
-        <pre><code>curl -v -H "Content-Type: application/json" -H "Authorization: Bearer <access token>" --request PUT -d "{'title':'testamundo'}" "http://localhost:8080/v0.1/post/update/1"</code></pre>
+        <pre><code>curl -v -H "Content-Type: application/json" -H "Authorization: Bearer [access token]" --request PUT -d "{'title':'testamundo'}" "http://localhost:8080/v0.1/post/update/1"</code></pre>
 
       </section>
       <footer>
