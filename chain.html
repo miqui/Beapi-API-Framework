@@ -54,18 +54,15 @@
         <p>For example, when we make our PUT/POST/DELETE requests we can do :</p>
         <ul>
         <li><b>a post-chain request </b>: a GET request that return the data, then specifies the key we wish to pass to the next 'link' in the chain which will make a GET request returning data, etc until the final request method is matched. This can be illustrated as follows:
-<pre><code>
-GET > GET > PUT
+<pre><code>GET > GET > PUT
 </code></pre>
         </li>
         <li><b>a pre-chain request </b>: same as a post chain request except the request method is matched in the beginning and then sends and id to the GET methods after it is called. This can be illustrated as follows:
-<pre><code>
-POST > GET > GET
+<pre><code>POST > GET > GET
 </code></pre>
           </li>
           <li><b>a blank chain (aka get chain) </b>: a blank chain has no additional method; it is merely a series of chained GET requests. Basically this takes the returned data from one GET and you give the KEY to get the data for the next GET request in the chain (just like in other chains).
-<pre><code>
-GET > GET > GET
+<pre><code>GET > GET > GET
 </code></pre>
           </li>
         </ul>
