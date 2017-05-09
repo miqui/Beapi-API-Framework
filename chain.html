@@ -41,9 +41,9 @@
         </ul>
       </header>
       <section>
-        <h3>Explanation Of API Chaining(tm)</h3>
+        <h3>What is API Chaining(tm)</h3>
 
-<p>Quick Definition : API Chaining(tm) is a functional I/O Monad allowing one api call to return data into another api call which returns data into another api call , etc etc, all within ONE REQUEST/RESPONSE. This is allowed through the abstraction of communication logic from business logic through the New API Pattern. This is limited in the fact that you can only use GET as the connectors in the chain and one other 'non-safe' method (ie PUT/POST/DELETE) at either the beginning or the end of the chain (as determined by the REQUEST method).</p>
+        <p><b>Quick Definition</b> : API Chaining(tm) is a functional I/O Monad allowing one api call to return data into another api call which returns data into another api call , etc etc, all within ONE REQUEST/RESPONSE. This is allowed through the abstraction of communication logic from business logic through the New API Pattern. This is limited in the fact that you can only use GET as the connectors in the chain and one other 'non-safe' method (ie PUT/POST/DELETE) at either the beginning or the end of the chain (as determined by the REQUEST method).</p>
         
 <p>We have all used encoded GET data when sending form data via a POST request. This is considered common practice. Why? Because GET is idempotent and SAFE. Because it is SAFE (meaning it doesn't change data), it is commonly used with other types of requests as a mixed request. This may not be RESTful but it is considered normal and not unsafe. This is what I like to refer to as a single link chain since it has only one link which is the same as it's destination request.</p>
 
@@ -61,7 +61,7 @@
 <pre><code>POST > GET > GET
 </code></pre>
           </li>
-          <li><b>a blank chain (aka get chain) </b>: a blank chain has no additional method; it is merely a series of chained GET requests. Basically this takes the returned data from one GET and you give the KEY to get the data for the next GET request in the chain (just like in other chains).
+          <li><b>a blank chain (aka 'GET' chain) </b>: a blank chain has no additional method; it is merely a series of chained GET requests. Basically this takes the returned data from one GET and you give the KEY to get the data for the next GET request in the chain (just like in other chains).
 <pre><code>GET > GET > GET
 </code></pre>
           </li>
