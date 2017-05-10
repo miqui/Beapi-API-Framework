@@ -7,10 +7,12 @@ buildscript {
         mavenCentral()
         mavenLocal()
         maven { url "https://repo.grails.org/grails/core" }
+        jcenter()
     }
     dependencies {
         classpath "org.grails:grails-gradle-plugin:$grailsVersion"
         classpath 'org.grails.plugins:hibernate:4.3.10.6'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
     }
 }
 
@@ -25,10 +27,32 @@ group "org.grails.plugins"
 
 apply plugin: "maven-publish"
 apply plugin: "spring-boot"
+apply plugin: "com.jfrog.bintray"
 //apply plugin: "org.grails.grails-plugin"
 // Used for publishing to central repository, remove if not needed
 apply plugin: "org.grails.grails-plugin"
 apply plugin: "org.grails.grails-plugin-publish"
+
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_KEY')
+    pkg {
+        repo = 'plugins'
+        name = 'api-framework'
+        userOrg = 'nosegrind'
+        licenses = ['AFL-3.0']
+        vcsUrl = 'https://github.com/orubel/Beapi-API-Framework.git'
+        version {
+            name = '0.9'
+            desc = '0.9 STABLE'
+            released = new Date()
+        }
+        filesSpec {
+            from 'build/libs'
+            into 'standalone_files/level1'
+        }
+    }
+}
 
 grailsPublish {
     userOrg = 'nosegrind' // Optional
