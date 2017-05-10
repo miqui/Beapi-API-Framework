@@ -58,7 +58,11 @@
 </code></pre>
 
 <p>And while the plugin is in <b>BETA</b>, you will have to add the Maven Repository:</p>
-<pre><code>maven { url 'https://dl.bintray.com/nosegrind/plugins' }</code></pre>
+<pre><code>repositories {
+    maven {
+        url  "http://dl.bintray.com/nosegrind/plugins" 
+    }
+}</code></pre>
 
 <p>You will also need the following dependencies:</p>
 <pre><code>
