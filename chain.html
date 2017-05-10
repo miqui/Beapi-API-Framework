@@ -93,7 +93,7 @@
 </code></pre>
   </br>
 <h3>How Does It Work?</h3>
-<img src="https://flic.kr/p/jxT5gZ" style="width:auto;height:auto;">
+<img src="api_chaining_map.jpg" style="width:auto;height:auto;">
   <p>Keeping in mind REST methodology, some methods won't return data but some will. In a chain, we want ALL methods to return data (at least the ID for the dataset/modelMap used). That way we can pass it to the next link in the chain.</p>
 <p>The developer can return the ID or a full dataset depending on the functionality they wish to implement and neither will break the API; one just returns additional data that will be irrelevant to the next link in the chain.</p>
   <p><b>NOTE:</b> Keep in mind that no data or a NULL makes it unusable for webhooks/realtime notifications as well as api chains.</p>
