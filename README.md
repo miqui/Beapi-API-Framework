@@ -1,7 +1,7 @@
 
 
 # BeApi(tm) Api Framework 
-### Documentation located at https://github.com/orubel/grails-api-toolkit-docs/
+### Documentation located at http://orubel.github.io/Beapi-API-Framework/
 
 Fully reactive api framework providing automation and simplification of api's for scale. Some features include:
 
