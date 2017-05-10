@@ -15,7 +15,7 @@
   <body>
     <div class="wrapper">
       <header>
-        <img src="beapi_logo2.png" style="width:auto;height:auto;"
+        <img src="beapi_logo2.png" style="width:auto;height:auto;">
         <p></p>
 
         <ul>
@@ -91,6 +91,57 @@
 <p>If you need to send Max/Offset variables, do so as follows:</p>
 <pre><code>curl -v -H "Content-Type: application/json" -H "Authorization: Bearer [access token]" -X POST -d "{'chain':{'key':'dept_id','combine':'false','type':'postchain','order':{'dept/show':'company_id','company/update':'return'}}}" "http://localhost:8080/v0.1/person/show/1?max=1,1,1&offset=0,0,0"
 </code></pre>
+  </br>
+<h3>How Does It Work?</h3>
+<img src="http://www.flickr.com/photos/orubel/12175198295/" style="width:auto;height:auto;">
+  <p>Keeping in mind REST methodology, some methods won't return data but some will. In a chain, we want ALL methods to return data (at least the ID for the dataset/modelMap used). That way we can pass it to the next link in the chain.</p>
+<p>The developer can return the ID or a full dataset depending on the functionality they wish to implement and neither will break the API; one just returns additional data that will be irrelevant to the next link in the chain.</p>
+  <p><b>NOTE:</b> Keep in mind that no data or a NULL makes it unusable for webhooks/realtime notifications as well as api chains.</p>
+  </br>
+<h3>Benefits of API Chaining(tm)</h3>
+But why use API Chaining you may ask? Why not just make each individual request separately? Well API Chaining has benefits over traditional methodologies in the following ways
+
+<p><b>Reduces Data Being Sent</b>
+<ul>
+  <li><b>PROBLEM :</b> In HATEOAS/HAL, all link relations must be returned with each api call; this creates large data returns / processing overhead.</li>
+  <li><b>SOLUTION :</b> API chaining knows all possibilities; no additional data needs to be returned as it puts the burden upon the user to chain the calls. If chains need to be chown, they can be output and cached with the apidocs so users can view them through OPTIONS</li>
+</ul></p>
+
+<p><b>Unlimited Linking</b>
+<ul>
+  <li><b>PROBLEM :</b> HATEOAS/HAL link relations limit what can be called</li>
+  <li><b>SOLUTION :</b> API chaining knows all possibilities that can be chained and allows chains based upon ROLES/Authorities and predefined return data as defined in apidocs</li>
+</ul></p>
+
+<p><b>One Request Handles Multiple API Requests</b>
+  <ul>
+    <li><b>PROBLEM</b> : Multiple API requests can take up additional processing/overhead on your server.</li>
+    <li><b>SOLUTION</b> : Through API chaining, one api request call can handle multiple responses by forwarding additional calls internally, handling role checks and then returning data or handling processing. In regular usage, this can reduce API calls by at least 50%.</li>
+</ul></p>
+
+<p><b>Reduced Link Coding</b>
+  <ul>
+    <li><b>PROBLEM</b> : HATEOAS/HAL link relations require developer to code all possibilities</li>
+    <li><b>SOLUTION</b> : API chains are dynamic. No coding required by client or developer</li>
+</ul></p>
+
+<p><b>Reduced Client/Server Coding</b>
+  <ul>
+    <li><b>PROBLEM</b> : All api calls have to be coded, returned, processed by client</li>
+    <li><b>SOLUTION</b> : API chains handle all calls in a loop reducing client and server coding.</li>
+</ul></p>
+
+<p><b>Api Chain Branching</b>
+  <ul>
+  <li><b>PROBLEM :</b> Link relations do not allow for end user to branch off them</li>
+  <li><b>SOLUTION :</b> API chains can be branched or chained off of using the 'return' statement in the chain. Once the chain has stopped and return, the original chain can be restarted at the point it stopped and branch chains can be started with the returned data</li>
+</ul></p>
+
+<p><b>ID Security</b>
+  <ul>
+    <li><b>PROBLEM :</b> Do Not want to show IDs when passing data</li>
+    <li><b>SOLUTION :</b> Only the first ID is needed in the chain and chains CAN be dynamically created. If chains are dynamically created and secured through privileges/roles, this creates a process for accessing related data through the relationship without exposing the ID since the ID's are always exposed to the backend but will not be available to requesting services.</li>
+</ul></p>
 
   </section>
       <footer>
