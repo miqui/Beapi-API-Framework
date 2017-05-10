@@ -41,8 +41,9 @@
 
         <p>The <b>BeAPI&#8482; API Framework</b> has the following project requirements:</p>
         <ul>
-          <li><b>Grails 3.1.1</b> (or higher)</li>
-          <li><b>spring-security-core 3.0.3</b> (or higher)</li>
+          <li><b>Grails 3.1.9</b> (or higher)</li>
+          <li><b>spring-security-rest:2.0.0.M2</b> (or higher)</li>
+          <li><b>spring-security-rest-gorm:2.0.0.M2</b> (or higher)</li>
         </ul>
 
         <p><b>NOTE:</b> You may notice in the sample project that several rest plugins and web/mvc plugins have been left out from the dependencies. This is deliberate; due to out API abstraction layer, they can cause confusion and unnecessary slowness in the application.</p>
@@ -59,13 +60,16 @@
 <p>And while the plugin is in <b>BETA</b>, you will have to add the Maven Repository:</p>
 <pre><code>maven { url 'https://dl.bintray.com/nosegrind/plugins' }</code></pre>
 
-        <p>You will also need the following dependencies:</p>
+<p>You will also need the following dependencies:</p>
 <pre><code>
   dependencies {
       compile 'org.grails.plugins:api-framework:0.2.1.1'
       compile "org.springframework.boot:spring-boot-starter-logging"
       compile "org.springframework.boot:spring-boot-autoconfigure"
-      compile "org.grails:grails-dependencies"
+      compile "org.grails:grails-dependencies"{
+        exclude(module:'grails-bootstrap')
+        exclude(module:'grails-plugin-gsp')
+      }
 
       // INSTALL DATABASE DRIVER OF YOUR CHOICE; HERE ARE EXAMPLE
       //runtime 'mysql:mysql-connector-java:5.1.29'
@@ -75,11 +79,13 @@
       //runtime 'org.springframework.data:spring-data-mongodb:1.8.1.RELEASE'
 
       provided 'org.springframework.boot:spring-boot-starter-tomcat'
-      compile 'org.grails.plugins:spring-security-core:3.0.3'
+      provided('org.grails.plugins:spring-security-rest:2.0.0.M2'){
+        exclude(module:'org.springframework.security:spring-security-web')
+      }
+      compile 'org.grails.plugins:spring-security-rest-gorm:2.0.0.M2'
 
       compile "org.grails.plugins:hibernate"
       compile "org.hibernate:hibernate-ehcache"
-
 
       testCompile "org.grails.plugins:geb"
       testCompile "org.grails:grails-plugin-testing"
