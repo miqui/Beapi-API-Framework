@@ -93,7 +93,7 @@
 </code></pre>
   </br>
 <h3>How Does It Work?</h3>
-<img src="https://flic.kr/p/jxT5gZ" style="width:auto;height:auto;">
+<img src="http://www.flickr.com/photos/orubel/12175198295/" style="width:auto;height:auto;">
   <p>Keeping in mind REST methodology, some methods won't return data but some will. In a chain, we want ALL methods to return data (at least the ID for the dataset/modelMap used). That way we can pass it to the next link in the chain.</p>
 <p>The developer can return the ID or a full dataset depending on the functionality they wish to implement and neither will break the API; one just returns additional data that will be irrelevant to the next link in the chain.</p>
   <p><b>NOTE:</b> Keep in mind that no data or a NULL makes it unusable for webhooks/realtime notifications as well as api chains.</p>
@@ -142,7 +142,23 @@ But why use API Chaining you may ask? Why not just make each individual request 
     <li><b>PROBLEM :</b> Do Not want to show IDs when passing data</li>
     <li><b>SOLUTION :</b> Only the first ID is needed in the chain and chains CAN be dynamically created. If chains are dynamically created and secured through privileges/roles, this creates a process for accessing related data through the relationship without exposing the ID since the ID's are always exposed to the backend but will not be available to requesting services.</li>
 </ul></p>
-
+  </br>
+<h3>Questions about API Chaining(tm)</h3>
+<p>While API Chaining has received nearly 100% positive feedback, there has been reservation due to implementation</p>
+<ul>
+<li><b>Why can't we use unsafe methods in the middle of a chain?</b></br>
+<p>As only data for one method can be sent, we can only support one unsafe method. By allowing unsafe methods in the middle, it is possible for someone to double send an unsafe method by sending to the exact same method TWICE by looping back around to it. This is bad practice and is better handled by forking the chain.</p>
+</br></li>
+<li><b>Doesn't API Chaining exposes ID's allowing users to freely see all your data and data structure?</b></br>
+<p>API Objects allow you to define how a URI i accessed so you can define NO ID at all but still have it return data; this means that it cant be accessed DIRECTLY but can be accessed through a chain as the BACKEND handles the relationship if you have access the the API. Thus ID's/indexes are only required on the first link in he chain</p>
+</br></li>
+<li><b>Doesn't HATEOAS/HAL actually have the ability to link to other links?</b></br>
+<p>HATEOAS/HAL does urlmapping. URLMapping is not the same thing as you HAVE to send all ID's rather than relying on a relationship. This is effectively HARDCODING. API Objects, on the other hand, create relationships between the URI's themselves.</p>
+</br></li>
+<li><b>How can it access the following links in the chain? Only the first one is called as an API</b></br>
+<p>The first link is handled as the REQUEST and all other are looped in the communication layer until the end is reached, an error occurs or the chain returns on its own. As such, it always stays within that original REQUEST/RESPONSE. The matching REQUEST Method in the chain is what is looked for (which is why you can't have more than one UNSAFE method in the chain). Once it finds it, it will return.</p>
+</br></li>
+</ul>
   </section>
       <footer>
         <p class="view"><a href="https://github.com/orubel/Beapi-API-Framework">View the Project on GitHub <small>orubel/Beapi-API-Framework</small></a></p>
