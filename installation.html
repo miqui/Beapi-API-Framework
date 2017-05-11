@@ -103,9 +103,40 @@
 <p>Then in your <b>application.yml</b> file, you will need to add and modify the following line under each of your environments (ie development/production/etc):</p>
 <pre><code>iostate:
     preloadDir: '/home/yourUserName/.iostate'"</code></pre>
+  </br>
+  <p>Finally, you will also need to add (and configure) this final snippet to your 'application.yml' file: </p>
 
-<h3>
-<a id="samp" class="anchor" href="#samp" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Sample Project</h3>
+<pre><code>---
+apitoolkit:
+    apiName: 'api'
+    attempts: 5
+    roles: ['ROLE_USER','ROLE_ROOT','ROLE_ADMIN','ROLE_ARCH']
+    profilerRoles: ['ROLE_ROOT','ROLE_ADMIN','ROLE_ARCH']
+    apichain:
+        limit: 3
+    rest:
+        postcrement: false
+    chaining:
+        enabled: true
+    batching:
+        enabled: true
+    encoding: 'UTF-8'
+    throttle:
+        rateLimit: {'ROLE_USER':1000}
+        dataLimit: {'ROLE_USER':1000000}
+        # in seconds : 3600 = 60 minutes
+        expires: 3600
+    admin:
+        roles: ['ROLE_ROOT','ROLE_ADMIN','ROLE_ARCH']
+    serverType: 'master'
+    webhook:
+        services: ['iostate']
+    corsConfig:
+        includeEnvironments: ['development','test']
+        excludeEnvironments: ['production']
+        allowedOrigins: ['localhost:3000']
+</code></pre>
+<h3><a id="samp" class="anchor" href="#samp" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Sample Project</h3>
 
 <p>If you are having issues installing or using the Boomstick API Framework, you can always look at or copy from our example project at the link below:</p>
 
