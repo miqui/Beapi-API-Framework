@@ -38,6 +38,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 	GrailsApplication grailsApplication
 	ApiCacheService apiCacheService
 	SpringSecurityService springSecurityService
+	WebhookService webhookService
 
 	// TODO: detect and assign apiObjectVersion from uri
 	String entryPoint = "v${Metadata.current.getProperty(Metadata.APPLICATION_VERSION, String.class)}"
@@ -207,6 +208,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 	boolean after(){
 		//println('##### FILTER (AFTER)')
 
+		List unsafeMethods = ['PUT','POST','DELETE']
 		try {
 			LinkedHashMap newModel = [:]
 			if (params.controller != 'apidoc') {
@@ -220,6 +222,17 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 				newModel = model as LinkedHashMap
 			}
 
+			// store webhook
+			if(unsafeMethods.contains(request.method.toUpperCase())) {
+				// if controller/action ROLES/HOOK has roles, is HOOKABLE
+				LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
+				if (cache) {
+					List hookRoles = cache["${params.apiObject}"]["${params.action}"]['hookRoles'] as List
+					if(hookRoles.size()>0) {
+						webhookService.postData(params.controller.toString(), newModel, params.action.toString())
+					}
+				}
+			}
 
 			//LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
 			ApiDescriptor cachedEndpoint = cache[params.apiObject][(String) params.action] as ApiDescriptor

@@ -13,10 +13,11 @@ package net.nosegrind.apiframework
 import grails.converters.JSON
 import grails.converters.XML
 import org.grails.validation.routines.UrlValidator
+import grails.core.GrailsApplication
 
 class WebhookService {
 
-    def grailsApplication
+    GrailsApplication grailsApplication
 
     static transactional = false
 
@@ -111,4 +112,5 @@ class WebhookService {
             return false
         }
     }
+
 }

@@ -20,13 +20,14 @@ import grails.plugin.cache.GrailsCacheManager
 import org.grails.groovy.grails.commons.*
 import grails.core.GrailsApplication
 
+import javax.annotation.Resource
 
 import static groovyx.gpars.GParsPool.withPool
 
 class ApiCacheService{
 
 	static transactional = false
-	
+
 	GrailsApplication grailsApplication
 	GrailsCacheManager grailsCacheManager
 
