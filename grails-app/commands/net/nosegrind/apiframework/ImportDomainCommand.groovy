@@ -8,6 +8,9 @@ import grails.dev.commands.ApplicationCommand
 import grails.dev.commands.ExecutionContext
 import org.hibernate.metadata.ClassMetadata
 
+import java.util.regex.Matcher
+import java.util.regex.Pattern
+
 class ImportDomainCommand implements ApplicationCommand {
 
 
@@ -16,13 +19,6 @@ class ImportDomainCommand implements ApplicationCommand {
     String iostateDir = ""
 
 
-    String jsonMethod = """
-"<%= methodName %>":{"METHOD":"<%= requestMethod %>","DESCRIPTION":"<%= methodDesc %>",
-    "ROLES":{"DEFAULT":["ROLE_ADMIN"],"BATCH":["ROLE_ADMIN"]},
-    "REQUEST": {"permitAll":[]},
-    "RESPONSE": {"permitAll":[]}
-},
-"""
     boolean handle(ExecutionContext ctx) {
         // SET IOSTATE FILES PATH
         switch(Environment.current){
@@ -40,25 +36,32 @@ class ImportDomainCommand implements ApplicationCommand {
         // GET BINDING VARIABLES
         def domains = grailsApplication.getArtefacts("Domain")
         domains.each(){ it ->
-            String name = it.name
             String logicalName = it.getLogicalPropertyName()
             String packageName = it.getPackageName()
+            String realName = it.getName()
 
 
             def sessionFactory = grailsApplication.mainContext.sessionFactory
             ClassMetadata hibernateMetaClass = sessionFactory.getClassMetadata(it.clazz)
 
             String[] keys = hibernateMetaClass.getKeyColumnNames()
-
+            String values = """
+\t\t\"id\": {
+\t\t\t\"type\": \"PKEY\",
+\t\t\t\"description\": \"Primary Key\"
+\t\t},
+"""
+            String uris = "\r"
             def controller = grailsApplication.getArtefactByLogicalPropertyName('Controller', logicalName)
+
             if(controller){
+                List actions = controller.actions as List
+
+
 
                 def domainProperties = hibernateMetaClass.getPropertyNames()
-                String values = """      "id": {
-            "type": "PKEY",
-            "description":"Primary Key"
-        },
-"""
+
+                List variables = []
                 domainProperties.each() { it2 ->
                     List ignoreList = ['constrainedProperties','gormPersistentEntity','properties','async','gormDynamicFinders','all','attached','class','constraints','reports','dirtyPropertyNames','errors','dirty','transients','count']
 
@@ -71,15 +74,93 @@ class ImportDomainCommand implements ApplicationCommand {
                             type = getValueType(thisType)
                         }
                         String name = (type=='FKEY')?"${it2}Id".toString():it2
-                        String value = """      "${name}": {
-            "type": "${type}",
-            "description":"Description for ${it2}"
-        },
+                        variables.add("\"${name}\"")
+                        String value = """\t\t\"${name}\": {
+\t\t\t\"type\": \"${type}\",
+\t\t\t\"description\": \"Description for ${it2}\"
+\t\t},
 """
-                        values += value
+                        values <<= value
                     }
                 }
-                println values
+                //println values
+
+
+
+                actions.each() { it4 ->
+                    String method = ""
+                    List req = []
+                    List resp = []
+                    Pattern getPattern = Pattern.compile("get|show|list|listBy")
+                    Pattern postPattern = Pattern.compile("create|make|generate|build")
+                    Pattern putPattern = Pattern.compile("edit|update")
+                    Pattern deletePattern = Pattern.compile("delete|destroy|kill")
+
+
+                    Matcher getm = getPattern.matcher(it4)
+                    if (getm.find()) {
+                        method = 'GET'
+                        if (getm.group() == 'list') {
+                            // request is empty
+                            resp = variables
+                        } else {
+                            req.add('\"id\"')
+                            resp = variables
+                        }
+                    }
+
+                    if (method.isEmpty()) {
+                        Matcher postm = postPattern.matcher(it4)
+                        if (postm.find()) {
+                            method = 'POST'
+                            req = variables
+                            resp.add('\"id\"')
+                        }
+                    }
+
+                    if (method.isEmpty()) {
+                        Matcher putm = postPattern.matcher(it4);
+                        if (putm.find()) {
+                            method = 'PUT'
+                            req = variables
+                            resp.add("id")
+                        }
+                    }
+
+                    if (method.isEmpty()) {
+                        Matcher delm = postPattern.matcher(it4);
+                        if (delm.find()) {
+                            method = 'DELETE'
+                            req.add('\"id\"')
+                            resp.add('\"id\"')
+                        }
+                    }
+                    //response.collect{ '"' + it + '"'}
+                    //request.collect{ '"' + it + '"'}
+
+                    String uri = """
+\t\t\t\t\"${it4}\": {
+\t\t\t\t\t\"METHOD\": "${method}",
+\t\t\t\t\t\"DESCRIPTION\": \"Description for ${it4}\",
+\t\t\t\t    \t\"ROLES\": {
+\t\t\t\t\t    \"DEFAULT\": [\"ROLE_ADMIN\"],
+\t\t\t\t\t    \"BATCH\": [\"ROLE_ADMIN\"]
+\t\t\t\t\t},
+\t\t\t\t\t\"REQUEST\": {
+\t\t\t\t\t\t\"permitAll\": ${req}
+\t\t\t\t\t},
+\t\t\t\t\t\"RESPONSE\": {
+\t\t\t\t\t\t\"permitAll\": ${resp}
+\t\t\t\t\t}
+\t\t\t\t},
+"""
+                    uris <<= uri
+
+                }
+                //println(uris)
+            }
+            if(logicalName.length()>0 && values.length()>0 && uris.length()>1) {
+                createTemplate(iostateDir, realName, logicalName, values, uris)
             }
         }
         return true
@@ -123,58 +204,52 @@ class ImportDomainCommand implements ApplicationCommand {
                 return 'ARRAY'
                 break
             default:
-                println("#### getValueType > "+type)
                 return 'COMPOSITE'
                 break
         }
     }
 
-    private void createTemplate(String logicalPropertyName, String values, String uris){
-        String jsonTemplate = ""
 
-
-        // 2. use base JSON template
-        // 3. fill-in base JSON template
-        // 4. write to file
-
+    private void createTemplate(String iostateDir, String realName, String logicalName, String values, String uris){
         // MAKE SURE DIRECTORY EXISTS
-        File ioFile = new File(iostateDir);
-        if (f.exists() && f.isDirectory()) {
-            jsonTemplate = """
-{
-    "NAME":"${logicalPropertyName}",
-    "VALUES": {
-        ${values}
-    },
-    "CURRENTSTABLE": "1",
-    "VERSION": {
-        "1": {
-            "DEFAULTACTION":"list",
-            "URI": {
-                ${uris}
-            }
-        }
-    }
+        File ioFile = new File(iostateDir)
+        if (ioFile.exists() && ioFile.isDirectory()) {
+            String template = """{
+\t\"NAME\": \"${logicalName}\",
+\t\"VALUES\": { ${values}
+\t},
+\t\"CURRENTSTABLE\": \"1\",
+\t\"VERSION\": {
+\t\t\"1\": {
+\t\t\t\"DEFAULTACTION\":\"list\",
+\t\t\t\"URI\": { ${uris}
+
+\t\t\t}
+\t\t}
+\t}
 }
 """
-        }
 
-
-
-        String basedir = BuildSettings.BASE_DIR
-        def ant = new AntBuilder()
-        //basedir = basedir.substring(0,basedir.length())
+            //String basedir = BuildSettings.BASE_DIR
+            //def ant = new AntBuilder()
+            //basedir = basedir.substring(0,basedir.length())
 
         try {
             //Whatever the file path is.
-            File statText = new File("E:/Java/Reference/bin/images/statsTest.txt");
-            FileOutputStream is = new FileOutputStream(statText);
-            OutputStreamWriter osw = new OutputStreamWriter(is);
-            Writer w = new BufferedWriter(osw);
-            w.write("POTATO!!!");
-            w.close();
+            String path = iostateDir+"/${realName}.json" as String
+            File iostateFile = new File(path)
+
+            FileOutputStream is = new FileOutputStream(iostateFile)
+            OutputStreamWriter osw = new OutputStreamWriter(is)
+            Writer w = new BufferedWriter(osw)
+            w.write(template)
+            w.close()
+
         } catch (IOException e) {
-            System.err.println("Problem writing to the file statsTest.txt");
+            println("Problem writing to the file ${path}")
+        }
+
+
         }
     }
 
