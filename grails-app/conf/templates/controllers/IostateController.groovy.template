@@ -7,7 +7,6 @@ class IostateController {
 	def springSecurityService
 	def apiObjectService
 	def apiCacheService
-	def webhookService
 
 	/*
 	* list name of collections of iostate
@@ -43,7 +42,6 @@ class IostateController {
 
 			def cache = apiCacheService.getApiCache(json.NAME)
 			LinkedHashMap model = [name:cache.name,cacheversion:cache.cacheversion]
-			webhookService.postData('Iostate', model,'update')
 			return ['iostate':model]
 		}
 	}
