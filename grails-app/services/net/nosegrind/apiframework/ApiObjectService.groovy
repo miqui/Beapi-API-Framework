@@ -180,8 +180,10 @@ class ApiObjectService{
 		)
 		
 		service['roles'] = apiRoles
-		service['batchRoles'] = batchRoles
-		service['hookRoles'] = hookRoles
+		service['batchRoles'] = (batchRoles)?batchRoles:'permitAll'
+		if(hookRoles) {
+			service['hookRoles'] = hookRoles
+		}
 
 		return service
 	}
