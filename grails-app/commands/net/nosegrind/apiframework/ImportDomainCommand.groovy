@@ -62,6 +62,7 @@ class ImportDomainCommand implements ApplicationCommand {
                 def domainProperties = hibernateMetaClass.getPropertyNames()
 
                 List variables = []
+                variables.add("\"id\"")
                 domainProperties.each() { it2 ->
                     List ignoreList = ['constrainedProperties','gormPersistentEntity','properties','async','gormDynamicFinders','all','attached','class','constraints','reports','dirtyPropertyNames','errors','dirty','transients','count']
 
@@ -143,7 +144,7 @@ class ImportDomainCommand implements ApplicationCommand {
 \t\t\t\t\t\"METHOD\": "${method}",
 \t\t\t\t\t\"DESCRIPTION\": \"Description for ${it4}\",
 \t\t\t\t    \t\"ROLES\": {
-\t\t\t\t\t    \"DEFAULT\": [\"ROLE_ADMIN\"],
+\t\t\t\t\t    \"DEFAULT\": [\"permitAll\"],
 \t\t\t\t\t    \"BATCH\": [\"ROLE_ADMIN\"]
 \t\t\t\t\t},
 \t\t\t\t\t\"REQUEST\": {

@@ -27,6 +27,7 @@ import grails.util.Holders
 //import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import groovy.transform.CompileStatic
+import org.springframework.http.HttpStatus
 
 
 @CompileStatic
@@ -53,7 +54,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 	}
 
 	boolean before(){
-		//println('##### FILTER (BEFORE)')
+		println('##### FILTER (BEFORE)')
 
 		// TESTING: SHOW ALL FILTERS IN CHAIN
 		//def filterChain = grailsApplication.mainContext.getBean('springSecurityFilterChain')
@@ -118,7 +119,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 					// NOTE: expectedMethod must be capitolized in IO State file
 					String expectedMethod = cache[params.apiObject][params.action.toString()]['method'] as String
 					if (!checkRequestMethod(mthd,expectedMethod, restAlt)) {
-						render(status: HttpServletResponse.SC_BAD_REQUEST, text: "Expected request method '${expectedMethod}' does not match sent method '${mthd.getKey()}'")
+						render(status: 400, text: "Expected request method '${expectedMethod}' does not match sent method '${mthd.getKey()}'")
 						return false
 					}
 
@@ -136,7 +137,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 								render(text: result, contentType: request.contentType)
 								return false
 							}else{
-								render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Rate Limit exceeded. Please wait'+getThrottleExpiration()+'seconds til next request.')
+								render(status: 400, text: 'Rate Limit exceeded. Please wait'+getThrottleExpiration()+'seconds til next request.')
 								return false
 							}
 						}
@@ -146,7 +147,9 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 					LinkedHashMap receives = cache[params.apiObject][params.action.toString()]['receives'] as LinkedHashMap
 					//boolean requestKeysMatch = checkURIDefinitions(params, receives)
 					if (!checkURIDefinitions(params, receives)) {
-						render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Expected request variables for endpoint do not match sent variables')
+						render(status: HttpStatus.BAD_REQUEST.value(), text: 'Expected request variables for endpoint do not match sent variables')
+						response.flushBuffer()
+						println("status:"+response.status)
 						return false
 					}
 
@@ -166,7 +169,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 									render(text: result, contentType: request.contentType)
 									return false
 								}else{
-									render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Rate Limit exceeded. Please wait'+getThrottleExpiration()+'seconds til next request.')
+									render(status: 400, text: 'Rate Limit exceeded. Please wait'+getThrottleExpiration()+'seconds til next request.')
 									return false
 								}
 							}
@@ -200,13 +203,13 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 			return false
 
 		}catch(Exception e){
-			//log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
+			log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
 			return false
 		}
 	}
 
 	boolean after(){
-		//println('##### FILTER (AFTER)')
+		println('##### FILTER (AFTER)')
 
 		List unsafeMethods = ['PUT','POST','DELETE']
 		try {

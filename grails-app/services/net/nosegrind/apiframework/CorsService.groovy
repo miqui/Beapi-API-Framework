@@ -28,7 +28,8 @@ class CorsService {
     def grailsApplication
 
     boolean processPreflight(HttpServletRequest request, HttpServletResponse response) {
-
+        println("### CorsService > preflight")
+        println("committed : "+response.isCommitted())
         Map corsInterceptorConfig = (Map) grailsApplication.config.corsInterceptor
 
         String[] includeEnvironments = corsInterceptorConfig['includeEnvironments']?: null
@@ -57,20 +58,26 @@ class CorsService {
                 request.getHeader('Access-Control-Request-Headers')
             }
 
-            response.status = HttpStatus.OK.value()
+            //response.status = HttpStatus.OK.value()
         }
 
         if(allowedOrigins && allowedOrigins.contains(origin)) { // request origin is on the white list
+            println("allowed origins")
             // add CORS access control headers for the given origin
             response.setHeader("Access-Control-Allow-Origin", origin)
             response.setHeader("Access-Control-Allow-Credentials", "true")
-            response.writer.flush()
+            response.status = HttpStatus.OK.value()
+            //response.writer.flush()
+            println("committed : "+response.isCommitted())
             return false
         } else if( !allowedOrigins ) { // no origin; white list
+            println("unallowed origins")
             // add CORS access control headers for all origins
             response.setHeader("Access-Control-Allow-Origin", origin ?: "*")
             response.setHeader("Access-Control-Allow-Credentials", "true")
-            response.writer.flush()
+            response.status = HttpStatus.OK.value()
+            //response.writer.flush()
+            println("committed : "+response.isCommitted())
             return false
         }
 

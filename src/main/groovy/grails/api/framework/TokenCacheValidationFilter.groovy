@@ -72,10 +72,12 @@ class TokenCacheValidationFilter extends GenericFilterBean {
 
     @Override
     void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-
+        println("#### TokenCacheValidationFilter > dofilter")
         HttpServletRequest httpRequest = request as HttpServletRequest
         HttpServletResponse httpResponse = response as HttpServletResponse
         AccessToken accessToken
+
+        println(httpResponse.getStatus())
 
         try {
             accessToken = tokenReader.findToken(httpRequest)
