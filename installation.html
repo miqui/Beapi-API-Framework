@@ -96,15 +96,11 @@
   }
 </code></pre>
 </br>
-<p>Create the following directories in your home directory:</p>
-<pre><code>mkdir ~/.iostate
-</code></pre>
-    </br>
-<p>Then in your <b>application.yml</b> file, you will need to add and modify the following line under each of your environments (ie development/production/etc):</p>
+<p>Then in your <b>grails-app/conf/application.yml</b> file, you will need to modify the following line under each of your environments (ie development/production/etc):</p>
 <pre><code>iostate:
     preloadDir: '/home/yourUserName/.iostate'"</code></pre>
   </br>
-  <p>Finally, you will also need to add (and configure) this final snippet to your 'application.yml' file: </p>
+  <p>You will also need to add and configure this final snippet in your 'application.yml' file: </p>
 
 <pre><code>---
 apitoolkit:
@@ -137,8 +133,11 @@ apitoolkit:
         allowedOrigins: ['localhost:3000']
 </code></pre>
 <h3><a id="samp" class="anchor" href="#samp" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Sample Project</h3>
-
-<p>If you are having issues installing or using the Boomstick API Framework, you can always look at or copy from our example project at the link below:</p>
+</br>
+<p>Finally, once you have generated your controllers and domains, you will want to generate your IO state to get your API's configured by running the following command</p>
+<pre><code>./gradlew generateIostate
+</code></pre>
+<p>If you are having issues installing or using the BeAPI API Framework, you can always look at or copy from our example project at the link below:</p>
 
           <p><a href="https://github.com/orubel/api-framework-example">https://github.com/orubel/api-framework-example</a></p>
 
