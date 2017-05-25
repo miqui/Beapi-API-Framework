@@ -8,6 +8,8 @@ import grails.dev.commands.ApplicationCommand
 import grails.dev.commands.ExecutionContext
 import org.hibernate.metadata.ClassMetadata
 
+import java.util.jar.JarEntry
+import java.util.jar.JarFile
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -17,6 +19,7 @@ class GenerateIostateCommand implements ApplicationCommand {
 	@Autowired
 	GrailsApplication grailsApplication
     String iostateDir = ""
+    List reservedNames = ['hook','iostate','apidoc']
 
 
     boolean handle(ExecutionContext ctx) {
@@ -54,7 +57,7 @@ class GenerateIostateCommand implements ApplicationCommand {
             String uris = "\r"
             def controller = grailsApplication.getArtefactByLogicalPropertyName('Controller', logicalName)
 
-            if(controller){
+            if(controller && !reservedNames.contains(logicalName)){
                 List actions = controller.actions as List
 
 
@@ -167,6 +170,9 @@ class GenerateIostateCommand implements ApplicationCommand {
                 createTemplate(iostateDir, realName, logicalName, values, uris)
             }
         }
+
+        // write templates
+
         return true
     }
 
@@ -254,6 +260,30 @@ class GenerateIostateCommand implements ApplicationCommand {
         }
 
 
+        }
+    }
+
+    void writeFile(String inPath, String outPath){
+        String pluginDir = new File(getClass().protectionDomain.codeSource.location.path).path
+        def plugin = new File(pluginDir)
+        try {
+            if (plugin.isFile() && plugin.name.endsWith("jar")) {
+                JarFile jar = new JarFile(plugin)
+
+                JarEntry entry = jar.getEntry(inPath)
+                InputStream inStream = jar.getInputStream(entry);
+                OutputStream out = new FileOutputStream(outPath);
+                int c;
+                while ((c = inStream.read()) != -1) {
+                    out.write(c);
+                }
+                inStream.close();
+                out.close();
+
+                jar.close();
+            }
+        }catch(Exception e){
+            println("Exception :"+e)
         }
     }
 
