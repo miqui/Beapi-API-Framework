@@ -11,7 +11,7 @@ import org.hibernate.metadata.ClassMetadata
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
-class ImportDomainCommand implements ApplicationCommand {
+class GenerateIostateCommand implements ApplicationCommand {
 
 
 	@Autowired
@@ -92,22 +92,25 @@ class ImportDomainCommand implements ApplicationCommand {
                     String method = ""
                     List req = []
                     List resp = []
-                    Pattern getPattern = Pattern.compile("get|show|list|listBy")
-                    Pattern postPattern = Pattern.compile("create|make|generate|build")
-                    Pattern putPattern = Pattern.compile("edit|update")
-                    Pattern deletePattern = Pattern.compile("delete|destroy|kill")
+                    Pattern listPattern = Pattern.compile("list")
+                    Pattern getPattern = Pattern.compile("get|getBy|show|listBy")
+                    Pattern postPattern = Pattern.compile("create|make|generate|build|save")
+                    Pattern putPattern = Pattern.compile("edit|update|")
+                    Pattern deletePattern = Pattern.compile("delete|destroy|kill|reset")
+
 
 
                     Matcher getm = getPattern.matcher(it4)
                     if (getm.find()) {
                         method = 'GET'
-                        if (getm.group() == 'list') {
-                            // request is empty
-                            resp = variables
-                        } else {
-                            req.add('\"id\"')
-                            resp = variables
-                        }
+                        req.add('\"id\"')
+                        resp = variables
+                    }
+
+                    Matcher listm = listPattern.matcher(it4)
+                    if (listm.find()) {
+                        method = 'GET'
+                        resp = variables
                     }
 
                     if (method.isEmpty()) {
@@ -120,7 +123,7 @@ class ImportDomainCommand implements ApplicationCommand {
                     }
 
                     if (method.isEmpty()) {
-                        Matcher putm = postPattern.matcher(it4);
+                        Matcher putm = putPattern.matcher(it4);
                         if (putm.find()) {
                             method = 'PUT'
                             req = variables
@@ -129,7 +132,7 @@ class ImportDomainCommand implements ApplicationCommand {
                     }
 
                     if (method.isEmpty()) {
-                        Matcher delm = postPattern.matcher(it4);
+                        Matcher delm = deletePattern.matcher(it4);
                         if (delm.find()) {
                             method = 'DELETE'
                             req.add('\"id\"')

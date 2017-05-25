@@ -54,7 +54,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 	}
 
 	boolean before(){
-		println('##### FILTER (BEFORE)')
+		//println('##### FILTER (BEFORE)')
 
 		// TESTING: SHOW ALL FILTERS IN CHAIN
 		//def filterChain = grailsApplication.mainContext.getBean('springSecurityFilterChain')
@@ -144,12 +144,12 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 					}
 
 					// CHECK REQUEST VARIABLES MATCH ENDPOINTS EXPECTED VARIABLES
+					println("${params.controller}/${params.action}")
 					LinkedHashMap receives = cache[params.apiObject][params.action.toString()]['receives'] as LinkedHashMap
 					//boolean requestKeysMatch = checkURIDefinitions(params, receives)
 					if (!checkURIDefinitions(params, receives)) {
 						render(status: HttpStatus.BAD_REQUEST.value(), text: 'Expected request variables for endpoint do not match sent variables')
 						response.flushBuffer()
-						println("status:"+response.status)
 						return false
 					}
 
@@ -170,6 +170,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 									return false
 								}else{
 									render(status: 400, text: 'Rate Limit exceeded. Please wait'+getThrottleExpiration()+'seconds til next request.')
+									response.flushBuffer()
 									return false
 								}
 							}
@@ -209,7 +210,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 	}
 
 	boolean after(){
-		println('##### FILTER (AFTER)')
+		//println('##### FILTER (AFTER)')
 
 		List unsafeMethods = ['PUT','POST','DELETE']
 		try {
@@ -217,6 +218,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 			if (params.controller != 'apidoc') {
 				if (!model) {
 					render(status: HttpServletResponse.SC_NOT_FOUND, text: 'No resource returned / domain is empty')
+					response.flushBuffer()
 					return false
 				} else {
 					newModel = convertModel(model)

@@ -12,6 +12,7 @@ package grails.api.framework
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.filter.GenericFilterBean
+import org.springframework.web.filter.OncePerRequestFilter
 
 import net.nosegrind.apiframework.CorsService
 import javax.servlet.FilterChain
@@ -26,18 +27,17 @@ import javax.servlet.http.HttpServletResponse
 import com.google.common.io.CharStreams
 
 
-class CorsSecurityFilter extends GenericFilterBean {
+class CorsSecurityFilter extends OncePerRequestFilter {
 
     @Autowired
     CorsService crsService
 
     @Override
-    void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        println("#### CorsSecurityFilter > dofilter")
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
+    //void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+
         HttpServletRequest httpRequest = request as HttpServletRequest
         HttpServletResponse httpResponse = response as HttpServletResponse
-
-        println(httpResponse.getStatus())
 
         if( !crsService.processPreflight(httpRequest, httpResponse) ) {
             chain.doFilter(request, response)
