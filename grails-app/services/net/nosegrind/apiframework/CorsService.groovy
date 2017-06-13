@@ -25,6 +25,7 @@ import com.google.common.io.CharStreams
 
 @Transactional
 class CorsService {
+
     def grailsApplication
 
     boolean processPreflight(HttpServletRequest request, HttpServletResponse response) {
@@ -42,7 +43,7 @@ class CorsService {
             return false
         }
 
-        String origin = request.getHeader("Origin");
+        String origin = request.getHeader("Origin")
         boolean options = ("OPTIONS" == request.method)
         if (options) {
             response.setHeader("Allow", "GET, HEAD, POST, PUT, DELETE, TRACE, PATCH, OPTIONS")
@@ -54,6 +55,8 @@ class CorsService {
                 response.setHeader("Access-Control-Max-Age", "3600")
                 //response.setHeader("Access-Control-Expose-Headers","*")
                 request.getHeader('Access-Control-Request-Headers')
+            }else{
+                return
             }
 
             //response.status = HttpStatus.OK.value()
@@ -64,14 +67,24 @@ class CorsService {
             response.setHeader("Access-Control-Allow-Origin", origin)
             response.setHeader("Access-Control-Allow-Credentials", "true")
             response.status = HttpStatus.OK.value()
-            //response.writer.flush()
+
+            String loginUri = grailsApplication.config.grails.plugin.springsecurity.rest.login.endpointUrl
+            String logoutUri = grailsApplication.config.grails.plugin.springsecurity.rest.logout.endpointUrl
+            if(request.getRequestURI() == loginUri || request.getRequestURI() == logoutUri) {
+                response.writer.flush()
+            }
             return false
         } else if( !allowedOrigins ) { // no origin; white list
             // add CORS access control headers for all origins
             response.setHeader("Access-Control-Allow-Origin", origin ?: "*")
             response.setHeader("Access-Control-Allow-Credentials", "true")
             response.status = HttpStatus.OK.value()
-            //response.writer.flush()
+
+            String loginUri = grailsApplication.config.grails.plugin.springsecurity.rest.login.endpointUrl
+            String logoutUri = grailsApplication.config.grails.plugin.springsecurity.rest.logout.endpointUrl
+            if(request.getRequestURI() == loginUri || request.getRequestURI() == logoutUri) {
+                response.writer.flush()
+            }
             return false
         }
 

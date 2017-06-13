@@ -140,20 +140,25 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
         LinkedHashMap methods = [:]
 
         println "### Loading IO State Files ..."
-        new File(path).eachFile() { file ->
-            String fileName = file.name.toString()
-            //println(fileName+" ...")
-            def tmp = fileName.split('\\.')
-            String fileChar = fileName.charAt(fileName.length() - 1)
 
-            if(tmp[1]=='json' && fileChar=="n"){
-                //try{
-                JSONObject json = JSON.parse(file.text)
-                methods[json.NAME.toString()] = parseJson(json.NAME.toString(),json,applicationContext)
-                //}catch(Exception e){
-                //    throw new Exception("[ApiObjectService :: initialize] : Unacceptable file '${file.name}' - full stack trace follows:",e)
-                //}
+        try {
+            new File(path).eachFile() { file ->
+                String fileName = file.name.toString()
+                //println(fileName+" ...")
+                def tmp = fileName.split('\\.')
+                String fileChar = fileName.charAt(fileName.length() - 1)
+
+                if (tmp[1] == 'json' && fileChar == "n") {
+                    //try{
+                    JSONObject json = JSON.parse(file.text)
+                    methods[json.NAME.toString()] = parseJson(json.NAME.toString(), json, applicationContext)
+                    //}catch(Exception e){
+                    //    throw new Exception("[ApiObjectService :: initialize] : Unacceptable file '${file.name}' - full stack trace follows:",e)
+                    //}
+                }
             }
+        }catch(Exception e){
+            throw new Exception("[BeAPIFramework] : No IO State Files found for initialization :",e)
         }
     }
 
