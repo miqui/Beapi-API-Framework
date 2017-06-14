@@ -72,8 +72,8 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
         conf = SpringSecurityUtils.securityConfig
 
             /* restTokenValidationFilter */
-            SpringSecurityUtils.registerFilter 'tokenCacheValidationFilter', SecurityFilterPosition.ANONYMOUS_FILTER.order + 2
-            SpringSecurityUtils.registerFilter 'corsSecurityFilter', SecurityFilterPosition.ANONYMOUS_FILTER.order + 3
+            SpringSecurityUtils.registerFilter 'tokenCacheValidationFilter', SecurityFilterPosition.PRE_AUTH_FILTER.order + 1
+            SpringSecurityUtils.registerFilter 'corsSecurityFilter', SecurityFilterPosition.PRE_AUTH_FILTER.order + 2
 
 
             corsSecurityFilter(CorsSecurityFilter){}

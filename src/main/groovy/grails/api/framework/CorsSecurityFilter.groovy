@@ -35,6 +35,7 @@ class CorsSecurityFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
     //void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+        println("### CorsFilter called... ###")
         HttpServletRequest httpRequest = request as HttpServletRequest
         HttpServletResponse httpResponse = response as HttpServletResponse
 

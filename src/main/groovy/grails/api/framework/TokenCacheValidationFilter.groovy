@@ -48,7 +48,7 @@ import org.springframework.context.ApplicationContext
 
 
 @Slf4j
-@CompileStatic
+//@CompileStatic
 class TokenCacheValidationFilter extends GenericFilterBean {
 
     String headerName
@@ -76,6 +76,19 @@ class TokenCacheValidationFilter extends GenericFilterBean {
         HttpServletRequest httpRequest = request as HttpServletRequest
         HttpServletResponse httpResponse = response as HttpServletResponse
         AccessToken accessToken
+
+        def enumeration = httpRequest.getHeaderNames()
+        while (enumeration.hasMoreElements()) {
+            String test = enumeration.nextElement().toString()
+            println(test)
+        }
+        println(httpRequest.getHeader('access-control-request-method'))
+        println(httpRequest.getHeader('access-control-request-headers'))
+        println(httpRequest.getHeader('authorization'))
+        println(httpRequest.authorization)
+
+
+
 
         try {
             accessToken = tokenReader.findToken(httpRequest)

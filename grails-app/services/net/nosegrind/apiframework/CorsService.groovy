@@ -48,46 +48,43 @@ class CorsService {
         if (options) {
             response.setHeader("Allow", "GET, HEAD, POST, PUT, DELETE, TRACE, PATCH, OPTIONS")
             if (origin != null) {
-                response.setHeader("Access-Control-Allow-Headers", "Cache-Control, Pragma, WWW-Authenticate, Origin, Authorization, Content-Type, Access-control-Request-Headers")
+                response.setHeader("Access-Control-Allow-Headers", "Cache-Control, Pragma, WWW-Authenticate, Origin, authorization, Content-Type, Access-Control-Request-Headers, Access-Control-Expose-Headers")
                 //response.setHeader("Access-Control-Allow-Headers","*")
                 response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, PATCH, OPTIONS")
-                //response.setHeader("Access-Control-Allow-Credentials","true")
                 response.setHeader("Access-Control-Max-Age", "3600")
-                //response.setHeader("Access-Control-Expose-Headers","*")
-                request.getHeader('Access-Control-Request-Headers')
-            }else{
-                return
-            }
 
-            //response.status = HttpStatus.OK.value()
+            }
+            response.status = HttpStatus.OK.value()
         }
 
         if(allowedOrigins && allowedOrigins.contains(origin)) { // request origin is on the white list
             // add CORS access control headers for the given origin
             response.setHeader("Access-Control-Allow-Origin", origin)
             response.setHeader("Access-Control-Allow-Credentials", "true")
-            response.status = HttpStatus.OK.value()
-
+/*
             String loginUri = grailsApplication.config.grails.plugin.springsecurity.rest.login.endpointUrl
             String logoutUri = grailsApplication.config.grails.plugin.springsecurity.rest.logout.endpointUrl
-            if(request.getRequestURI() == loginUri || request.getRequestURI() == logoutUri) {
+            if((request.getRequestURI() == loginUri || request.getRequestURI() == logoutUri)  && options) {
+                println("FLUSH")
                 response.writer.flush()
             }
-            return false
+*/
+            //return false
         } else if( !allowedOrigins ) { // no origin; white list
             // add CORS access control headers for all origins
             response.setHeader("Access-Control-Allow-Origin", origin ?: "*")
             response.setHeader("Access-Control-Allow-Credentials", "true")
             response.status = HttpStatus.OK.value()
-
+/*
             String loginUri = grailsApplication.config.grails.plugin.springsecurity.rest.login.endpointUrl
             String logoutUri = grailsApplication.config.grails.plugin.springsecurity.rest.logout.endpointUrl
-            if(request.getRequestURI() == loginUri || request.getRequestURI() == logoutUri) {
+            if((request.getRequestURI() == loginUri || request.getRequestURI() == logoutUri) && options) {
                 response.writer.flush()
             }
-            return false
+*/
+            //return false
         }
 
-        //options
+        options
     }
 }
