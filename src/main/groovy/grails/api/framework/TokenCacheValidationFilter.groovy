@@ -72,35 +72,20 @@ class TokenCacheValidationFilter extends GenericFilterBean {
 
     @Override
     void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        println("### TokenFilter called... ###")
+
         HttpServletRequest httpRequest = request as HttpServletRequest
         HttpServletResponse httpResponse = response as HttpServletResponse
         AccessToken accessToken
 
-        def enumeration = httpRequest.getHeaderNames()
-        while (enumeration.hasMoreElements()) {
-            String test = enumeration.nextElement().toString()
-            println(test)
-        }
-        println(httpRequest.getHeader('access-control-request-method'))
-        println(httpRequest.getHeader('access-control-request-headers'))
-        println(httpRequest.getHeader('authorization'))
-        println(httpRequest.authorization)
-
-
-
-
         try {
             accessToken = tokenReader.findToken(httpRequest)
             if (accessToken) {
-                println("has accesstoken...")
+
                 //log.debug "Token found: ${accessToken.accessToken}"
-                //log.debug "Trying to authenticate the token"
+
                 accessToken = restAuthenticationProvider.authenticate(accessToken) as AccessToken
 
-                //Object getCredentials()
                 if (accessToken.authenticated) {
-                    println("authenticated...")
                     //log.debug "Token authenticated. Storing the authentication result in the security context"
                     //log.debug "Authentication result: ${accessToken}"
                     SecurityContextHolder.context.setAuthentication(accessToken)
@@ -109,20 +94,17 @@ class TokenCacheValidationFilter extends GenericFilterBean {
 
                     processFilterChain(request, response, chain, accessToken)
                 }else{
-                    println("not authenticated...")
                     httpResponse.status = 401
                     httpResponse.setHeader('ERROR', 'Unauthorized Access attempted')
                     httpResponse.writer.flush()
                     //return
                 }
             } else {
-                println("does not have accesstoken...")
                 //log.debug "Token not found"
                 return
             }
         } catch (AuthenticationException ae) {
             //log.debug "Authentication failed: ${ae.message}"
-            println "Authentication failed: ${ae.message}"
             httpResponse.status = 401
             httpResponse.setHeader('ERROR', 'Authorization Attempt Failed')
             httpResponse.writer.flush()
@@ -145,7 +127,6 @@ class TokenCacheValidationFilter extends GenericFilterBean {
 
             return false
         }catch(Exception e) {
-            println("[ApiCommProcess :: checkAuth] : Exception - full stack trace follows:"+e)
             throw new Exception("[ApiCommProcess :: checkAuth] : Exception - full stack trace follows:",e)
         }
     }
