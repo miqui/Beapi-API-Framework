@@ -60,7 +60,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 		//def filterChain = grailsApplication.mainContext.getBean('springSecurityFilterChain')
 		//println(filterChain)
 
-		format = (request?.format)?request.format:'JSON';
+		format = (request?.format)?request.format.toUpperCase():'JSON';
 		mthdKey = request.method.toUpperCase()
 		mthd = (RequestMethod) RequestMethod[mthdKey]
 
@@ -85,6 +85,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 					break
 				case 'JSON':
 				default:
+
 					String json = request.JSON.toString()
 					if(json!='[:]') {
 						def slurper = new JsonSlurper()
@@ -96,7 +97,6 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 					break
 			}
 		}
-
 
 		try{
 			// INITIALIZE CACHE
