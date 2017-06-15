@@ -136,13 +136,16 @@ abstract class ApiCommLayer extends ApiCommProcess{
                 ArrayList<HashMap> temp1 = requestDefinitions["${authority}"] as ArrayList<HashMap>
                 temp.addAll(temp1)
             }
+
             if(requestDefinitions['permitAll']) {
                 ArrayList<HashMap> temp2 = requestDefinitions['permitAll'] as ArrayList<HashMap>
                 temp.addAll(temp2)
             }
 
 
+
             responseList = (ArrayList)temp?.collect(){ if(it!=null){it.name} }
+
             String content
             if(params.controller!='apidoc') {
                 LinkedHashMap result = parseURIDefinitions(model, responseList)
@@ -192,6 +195,7 @@ abstract class ApiCommLayer extends ApiCommProcess{
             response.setHeader('Authorization', roles.join(', '))
 
             ArrayList<HashMap> temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as ArrayList<HashMap>:requestDefinitions['permitAll'] as ArrayList<HashMap>
+
             ArrayList responseList = (ArrayList)temp.collect(){ it.name }
 
             LinkedHashMap result = parseURIDefinitions(model,responseList)

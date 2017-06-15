@@ -144,7 +144,8 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 					}
 
 					// CHECK REQUEST VARIABLES MATCH ENDPOINTS EXPECTED VARIABLES
-					println("${params.controller}/${params.action}")
+					//String path = "${params.controller}/${params.action}".toString()
+					//println(path)
 					LinkedHashMap receives = cache[params.apiObject][params.action.toString()]['receives'] as LinkedHashMap
 					//boolean requestKeysMatch = checkURIDefinitions(params, receives)
 					if (!checkURIDefinitions(params, receives)) {
@@ -213,6 +214,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 		//println('##### FILTER (AFTER)')
 
 		List unsafeMethods = ['PUT','POST','DELETE']
+
 		try {
 			LinkedHashMap newModel = [:]
 			if (params.controller != 'apidoc') {
