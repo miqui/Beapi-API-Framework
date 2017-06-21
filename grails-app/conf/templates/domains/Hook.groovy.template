@@ -5,7 +5,6 @@ import java.util.Date
 class Hook {
 	
 	Person user
-	String name
 	String url
 	String format = 'JSON'
 	String service
@@ -17,7 +16,6 @@ class Hook {
 	
 	static constraints = {
 		user(nullable:false)
-		name(nullable:false,maxSize:200)
 		url(nullable:false)
 		format(nullable:false)
 		service()

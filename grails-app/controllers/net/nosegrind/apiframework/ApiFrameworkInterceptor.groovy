@@ -16,11 +16,16 @@ import grails.core.GrailsApplication
 import grails.plugin.springsecurity.SpringSecurityService
 
 //import net.nosegrind.apiframework.RequestMethod
+
+import javax.servlet.ServletInputStream
+import com.google.common.io.CharStreams
 import groovy.json.JsonSlurper
+import java.io.InputStreamReader
+
 import grails.util.Metadata
 //import groovy.json.internal.LazyMap
-//import grails.converters.JSON
-//import grails.converters.XML
+import grails.converters.JSON
+import grails.converters.XML
 import org.grails.web.json.JSONObject
 
 import grails.util.Holders
@@ -70,36 +75,26 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 		// TODO: Check if user in USER roles and if this request puts user over 'rateLimit'
 
 		// Init params
-		if (formats.contains(format)) {
-			LinkedHashMap dataParams = [:]
-			switch (format) {
-				case 'XML':
-					String xml = request.XML.toString()
-					if(xml!='[:]') {
-						def slurper = new XmlSlurper()
-						slurper.parseText(xml).each() { k, v ->
-							dataParams[k] = v
-						}
-						request.setAttribute('XML', dataParams)
-					}
-					break
-				case 'JSON':
-				default:
-
-					String json = request.JSON.toString()
-					if(json!='[:]') {
-						def slurper = new JsonSlurper()
-						slurper.parseText(json).each() { k, v ->
-							dataParams[k] = v
-						}
-						request.setAttribute('JSON', dataParams)
-					}
-					break
+			if (formats.contains(format)) {
+				LinkedHashMap attribs = [:]
+				switch (format) {
+					case 'XML':
+						attribs = request.getAttribute('XML') as LinkedHashMap
+						break
+					case 'JSON':
+					default:
+						attribs = request.getAttribute('JSON') as LinkedHashMap
+						break
+				}
+				attribs.each(){ k, v ->
+					params.put(k,v)
+				}
 			}
-		}
 
+
+
+		// INITIALIZE CACHE
 		try{
-			// INITIALIZE CACHE
 			cache = (params.controller)? apiCacheService.getApiCache(params.controller.toString()) as LinkedHashMap:[:]
 
 			// IS APIDOC??
@@ -205,6 +200,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 			return false
 
 		}catch(Exception e){
+			//println("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:"+e)
 			log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
 			return false
 		}

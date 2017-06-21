@@ -45,6 +45,7 @@ class CorsService {
 
         String origin = request.getHeader("Origin")
         boolean options = ("OPTIONS" == request.method)
+
         if (options) {
             response.setHeader("Allow", "GET, HEAD, POST, PUT, DELETE, TRACE, PATCH, OPTIONS")
             if (origin != null) {
@@ -52,8 +53,9 @@ class CorsService {
                 //response.setHeader("Access-Control-Allow-Headers","*")
                 response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, PATCH, OPTIONS")
                 response.setHeader("Access-Control-Max-Age", "3600")
+                //request.getHeader("Access-Control-Request-Headers")
             }
-            response.status = HttpStatus.OK.value()
+            //response.status = HttpStatus.OK.value()
         }
 
         if(allowedOrigins && allowedOrigins.contains(origin)) { // request origin is on the white list
@@ -70,6 +72,6 @@ class CorsService {
             //return false
         }
 
-        options
+        return options
     }
 }

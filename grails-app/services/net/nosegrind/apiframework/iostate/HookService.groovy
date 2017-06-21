@@ -102,12 +102,18 @@ class HookService {
 	}
 	
 	boolean validateUrl(String url){
-		String[] schemes = ["http","https"]
-		UrlValidator urlValidator = new UrlValidator(schemes)
-		if (urlValidator.isValid(url)) {
-			return true
-		}else{
-			return false
+		println("validate url :"+url)
+		try {
+			String[] schemes = ["http", "https"]
+			UrlValidator urlValidator = new UrlValidator(schemes)
+			if (urlValidator.isValid(url)) {
+				return true
+			} else {
+				return false
+			}
+		}catch(Exception e){
+			println(e)
 		}
+		return false
 	}
 }

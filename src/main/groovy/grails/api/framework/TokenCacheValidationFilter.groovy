@@ -80,7 +80,6 @@ class TokenCacheValidationFilter extends GenericFilterBean {
         try {
             accessToken = tokenReader.findToken(httpRequest)
             if (accessToken) {
-
                 //log.debug "Token found: ${accessToken.accessToken}"
 
                 accessToken = restAuthenticationProvider.authenticate(accessToken) as AccessToken
@@ -169,6 +168,7 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                 ApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext(getServletContext());
                 def apiCacheService = ctx.getBean("apiCacheService")
                 LinkedHashMap cache = (controller)?apiCacheService.getApiCache(controller.toString()):[:]
+
                 String version = cache['cacheversion']
 
                 if(!cache?."${version}"?."${action}"){
