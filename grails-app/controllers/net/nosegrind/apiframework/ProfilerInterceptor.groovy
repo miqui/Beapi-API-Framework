@@ -47,7 +47,7 @@ class ProfilerInterceptor extends ProfilerCommLayer{
 	}
 
 	boolean before(){
-		//log.info('##### FILTER (BEFORE)')
+		println('##### PROFILE FILTER (BEFORE)')
 
 		// Check Profiler Roles
 		String authority = getUserRole() as String
@@ -59,7 +59,7 @@ class ProfilerInterceptor extends ProfilerCommLayer{
 		}
 
 		traceService.startTrace('ProfilerInterceptor','before')
-
+println("traceService Started...")
 
 		String format = (request?.format)?request.format:'JSON';
 		Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
@@ -99,16 +99,18 @@ class ProfilerInterceptor extends ProfilerCommLayer{
 				// TODO : return false and render message/error code ???
 			}else{
 				if(cache) {
+					println("has cache")
 					params.apiObject = (params.apiObjectVersion) ? params.apiObjectVersion : cache['currentStable']['value']
 					params.action = (params.action == null) ? cache[params.apiObject]['defaultAction'] : params.action
 
+println("checking request method")
 					String expectedMethod = cache[params.apiObject][params.action.toString()]['method'] as String
 					if(!checkRequestMethod(expectedMethod,restAlt)) {
 						render(status: HttpServletResponse.SC_BAD_REQUEST, text: "Expected request method '${expectedMethod}' does not match sent method '${request.method}'")
 						traceService.endTrace('ProfilerInterceptor','before')
 						return false
 					}
-
+println("request method ok")
 					params.max = (params.max)?params.max:0
 					params.offset = (params.offset)?params.offset:0
 
@@ -118,7 +120,7 @@ class ProfilerInterceptor extends ProfilerCommLayer{
 						// Check that sent request params match expected endpoint params for principal ROLE
 						LinkedHashMap receives = cache[params.apiObject][params.action.toString()]['receives'] as LinkedHashMap
 						boolean requestKeysMatch = checkURIDefinitions(params, receives)
-
+						println("request keys match = "+requestKeysMatch)
 						if (!requestKeysMatch) {
 							render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Expected request variables do not match sent variables')
 							traceService.endTrace('ProfilerInterceptor','before')
@@ -162,14 +164,15 @@ class ProfilerInterceptor extends ProfilerCommLayer{
 			return false
 
 		}catch(Exception e){
-			log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
+			println("[ProfilerInterceptor :: preHandler] : Exception - full stack trace follows:"+e)
+			log.error("[ProfilerInterceptor :: preHandler] : Exception - full stack trace follows:", e)
 			traceService.endTrace('ProfilerInterceptor','before')
 			return false
 		}
 	}
 
 	boolean after(){
-		//log.info('##### FILTER (AFTER)')
+		println('##### PROFILE FILTER (AFTER)')
 		traceService.startTrace('ProfilerInterceptor','after')
 		try{
 			LinkedHashMap newModel = [:]
@@ -202,7 +205,7 @@ class ProfilerInterceptor extends ProfilerCommLayer{
 
 			return false
 		}catch(Exception e){
-			log.error("[ApiToolkitFilters :: apitoolkit.after] : Exception - full stack trace follows:", e);
+			log.error("[ProfilerInterceptor :: apitoolkit.after] : Exception - full stack trace follows:", e);
 			traceService.endTrace('ProfilerInterceptor','after')
 			return false
 		}

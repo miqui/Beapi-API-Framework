@@ -30,23 +30,16 @@ abstract class ProfilerCommLayer extends ProfilerCommProcess{
      * REQUESTS
      ***************************/
     boolean handleApiRequest(ApiDescriptor cache, HttpServletRequest request, HttpServletResponse response, GrailsParameterMap params){
+        println("handleApiRequest called...")
         traceService.startTrace('ProfilerCommLayer','handleApiRequest')
         try{
-            // CHECK ACCESS TO METHOD
-            /*
-            List roles = cache['roles'] as List
-            if(!checkAuth(request,roles)){
-                response.status = 401
-                response.setHeader('ERROR','Unauthorized Access attempted')
-                return false
-            }
-            */
 
             // CHECK VERSION DEPRECATION DATE
             List deprecated = cache['deprecated'] as List
 
             if(deprecated?.get(0)){
                 if(checkDeprecationDate(deprecated[0].toString())){
+                    println("deprecation date")
                     String depMsg = deprecated[1].toString()
                     response.status = 400
                     response.setHeader('ERROR',depMsg)
@@ -58,7 +51,9 @@ abstract class ProfilerCommLayer extends ProfilerCommProcess{
             def method = cache['method']?.toString().trim()
 
             // DOES api.methods.contains(request.method)
+            println("check request macth")
             if(!isRequestMatch(method,request.method.toString())){
+                println("request does not match")
                 response.status = 400
                 response.setHeader('ERROR',"Request method doesn't match expected method.")
                 traceService.endTrace('ProfilerCommLayer','handleApiRequest')
@@ -68,7 +63,7 @@ abstract class ProfilerCommLayer extends ProfilerCommProcess{
             return true
         }catch(Exception e){
             traceService.endTrace('ProfilerCommLayer','handleApiRequest')
-            throw new Exception("[ApiCommLayer : handleApiRequest] : Exception - full stack trace follows:",e)
+            throw new Exception("[ProfileCommLayer : handleApiRequest] : Exception - full stack trace follows:",e)
         }
     }
 
@@ -98,7 +93,7 @@ abstract class ProfilerCommLayer extends ProfilerCommProcess{
 
         }catch(Exception e){
             traceService.endTrace('ProfilerCommLayer','handleApiResponse')
-            throw new Exception("[ApiCommLayer : handleApiResponse] : Exception - full stack trace follows:",e)
+            throw new Exception("[ProfileCommLayer : handleApiResponse] : Exception - full stack trace follows:",e)
         }
     }
 

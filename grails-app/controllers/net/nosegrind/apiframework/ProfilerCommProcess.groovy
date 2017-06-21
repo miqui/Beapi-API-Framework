@@ -46,7 +46,7 @@ abstract class ProfilerCommProcess {
     TraceService traceService
 
     List formats = ['text/html','text/json','application/json','text/xml','application/xml']
-    List optionalParams = ['method','format','contentType','encoding','action','controller','v','apiCombine', 'apiObject','entryPoint','uri']
+    List optionalParams = ['max','offset','method','format','contentType','encoding','action','controller','v','apiCombine', 'apiObject','entryPoint','uri']
 
     boolean batchEnabled = Holders.grailsApplication.config.apitoolkit.batching.enabled
     boolean chainEnabled = Holders.grailsApplication.config.apitoolkit.chaining.enabled
@@ -115,7 +115,8 @@ abstract class ProfilerCommProcess {
 
             // remove reservedNames from List
             reservedNames.each(){ paramsList.remove(it) }
-
+println(paramsList)
+            println(requestList)
             if (paramsList.size() == requestList.intersect(paramsList).size()) {
                 traceService.endTrace('ProfilerCommProcess','checkURIDefinitions')
                 return true
@@ -267,7 +268,6 @@ abstract class ProfilerCommProcess {
         traceService.startTrace('ProfilerCommProcess','getMethodParams')
         try{
             Map paramsRequest = [:]
-            List myList = [1,2,3,4];
             paramsRequest = params.findAll { it2 -> !optionalParams.contains(it2.key) }
             traceService.endTrace('ProfilerCommProcess','getMethodParams')
             return paramsRequest

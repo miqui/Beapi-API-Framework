@@ -126,7 +126,7 @@ abstract class ApiCommLayer extends ApiCommProcess{
     * RESPONSES
      ***************************/
     def handleApiResponse(LinkedHashMap requestDefinitions, List roles, RequestMethod mthd, String format, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
-        //try{
+        try{
             String authority = getUserRole() as String
             response.setHeader('Authorization', roles.join(', '))
 
@@ -157,9 +157,9 @@ abstract class ApiCommLayer extends ApiCommProcess{
             }
             return content
 
-        //}catch(Exception e){
-        //    throw new Exception("[ApiCommLayer : handleApiResponse] : Exception - full stack trace follows:",e)
-        //}
+        }catch(Exception e){
+            throw new Exception("[ApiCommLayer : handleApiResponse] : Exception - full stack trace follows:",e)
+        }
     }
 
     def handleBatchResponse(LinkedHashMap requestDefinitions, List roles, RequestMethod mthd, String format, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
@@ -190,7 +190,7 @@ abstract class ApiCommLayer extends ApiCommProcess{
 
 
     def handleChainResponse(LinkedHashMap requestDefinitions, List roles, RequestMethod mthd, String format, HttpServletResponse response, LinkedHashMap model, GrailsParameterMap params){
-        //try{
+        try{
             String authority = getUserRole() as String
             response.setHeader('Authorization', roles.join(', '))
 
@@ -216,9 +216,9 @@ abstract class ApiCommLayer extends ApiCommProcess{
                 return parseResponseMethod(mthd, format, params, result)
             }
 
-        //}catch(Exception e){
-        //    throw new Exception("[ApiResponseService :: handleApiResponse] : Exception - full stack trace follows:",e)
-        //}
+        }catch(Exception e){
+            throw new Exception("[ApiResponseService :: handleApiResponse] : Exception - full stack trace follows:",e)
+        }
     }
 
 
