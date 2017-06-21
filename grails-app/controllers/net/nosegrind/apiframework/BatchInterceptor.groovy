@@ -67,31 +67,18 @@ class BatchInterceptor extends ApiCommLayer{
 
 		// Init params
 		if (formats.contains(format)) {
-			LinkedHashMap dataParams = [:]
+			LinkedHashMap attribs = [:]
 			switch (format) {
 				case 'XML':
-					String xml = request.XML.toString()
-					if(xml!='[:]') {
-						def slurper = new XmlSlurper()
-						slurper.parseText(xml).each() { k, v ->
-							dataParams[k] = v
-						}
-						request.setAttribute('XML', dataParams)
-					}
+					attribs = request.getAttribute('XML') as LinkedHashMap
 					break
 				case 'JSON':
-					String json = request.JSON.toString()
-					if(json!='[:]') {
-						def slurper = new JsonSlurper()
-						slurper.parseText(json).each() { k, v ->
-							dataParams[k] = v
-						}
-						request.setAttribute('JSON', dataParams)
-					}
-					break
 				default:
-					render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Expecting JSON Formatted batch data')
-					return false
+					attribs = request.getAttribute('JSON') as LinkedHashMap
+					break
+			}
+			attribs.each(){ k, v ->
+				params.put(k,v)
 			}
 		}
 

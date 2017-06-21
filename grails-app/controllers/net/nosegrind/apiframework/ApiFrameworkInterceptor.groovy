@@ -75,21 +75,21 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 		// TODO: Check if user in USER roles and if this request puts user over 'rateLimit'
 
 		// Init params
-			if (formats.contains(format)) {
-				LinkedHashMap attribs = [:]
-				switch (format) {
-					case 'XML':
-						attribs = request.getAttribute('XML') as LinkedHashMap
-						break
-					case 'JSON':
-					default:
-						attribs = request.getAttribute('JSON') as LinkedHashMap
-						break
-				}
-				attribs.each(){ k, v ->
-					params.put(k,v)
-				}
+		if (formats.contains(format)) {
+			LinkedHashMap attribs = [:]
+			switch (format) {
+				case 'XML':
+					attribs = request.getAttribute('XML') as LinkedHashMap
+					break
+				case 'JSON':
+				default:
+					attribs = request.getAttribute('JSON') as LinkedHashMap
+					break
 			}
+			attribs.each(){ k, v ->
+				params.put(k,v)
+			}
+		}
 
 
 

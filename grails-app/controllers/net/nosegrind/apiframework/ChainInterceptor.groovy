@@ -65,21 +65,21 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 
 
 
-
 		//Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 		boolean restAlt = RequestMethod.isRestAlt(mthd.getKey())
 
 		// TODO: Check if user in USER roles and if this request puts user over 'rateLimit'
 
 		// Init params
+
 		if (formats.contains(format)) {
 			switch (format) {
 				case 'XML':
-					chain = request.JSON as LinkedHashMap
+					chain = request.getAttribute('XML') as LinkedHashMap
 					break
 				case 'JSON':
 				case 'JSON':
-					chain = request.JSON as LinkedHashMap
+					chain = request.getAttribute('JSON') as LinkedHashMap
 					break
 				default:
 					render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Expecting JSON Formatted chain data')

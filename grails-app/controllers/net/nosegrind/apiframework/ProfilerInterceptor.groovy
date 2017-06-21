@@ -66,29 +66,19 @@ class ProfilerInterceptor extends ProfilerCommLayer{
 		boolean restAlt = (['OPTIONS','TRACE','HEAD'].contains(request.method))?true:false
 
 		// Init params
-		if (['XML', 'JSON'].contains(format)) {
-			LinkedHashMap dataParams = [:]
+		if (formats.contains(format)) {
+			LinkedHashMap attribs = [:]
 			switch (format) {
 				case 'XML':
-					String xml = request.XML.toString()
-					if(xml!='[:]') {
-						def slurper = new XmlSlurper()
-						slurper.parseText(xml).each() { k, v ->
-							dataParams[k] = v
-						}
-						request.setAttribute('XML', dataParams)
-					}
+					attribs = request.getAttribute('XML') as LinkedHashMap
 					break
 				case 'JSON':
-					String json = request.JSON.toString()
-					if(json!='[:]') {
-						def slurper = new JsonSlurper()
-						slurper.parseText(json).each() { k, v ->
-							dataParams[k] = v
-						}
-						request.setAttribute('JSON', dataParams)
-					}
+				default:
+					attribs = request.getAttribute('JSON') as LinkedHashMap
 					break
+			}
+			attribs.each(){ k, v ->
+				params.put(k,v)
 			}
 		}
 
