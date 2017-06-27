@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        grailsVersion = '3.1.9'
+        grailsVersion = '3.2.9'
         //grailsVersion = project.grailsVersion
     }
     repositories {
@@ -25,12 +25,12 @@ version "0.9"
 group "org.grails.plugins"
 
 apply plugin: "maven-publish"
-apply plugin: "spring-boot"
+apply plugin: "org.springframework.boot"
 apply plugin: "com.jfrog.bintray"
-//apply plugin: "org.grails.grails-plugin"
+
 // Used for publishing to central repository, remove if not needed
+//apply plugin: "org.grails.grails-plugin-publish"
 apply plugin: "org.grails.grails-plugin"
-apply plugin: "org.grails.grails-plugin-publish"
 
 bintray {
     user = System.getenv('BINTRAY_USER')
@@ -53,6 +53,7 @@ bintray {
     }
 }
 
+/*
 grailsPublish {
     userOrg = 'nosegrind' // Optional
     githubSlug = 'orubel/api-framework'
@@ -63,9 +64,10 @@ grailsPublish {
     desc = "BeAPI API Framework is a fully reactive plug-n-play API Framework for Distributed Architectures providing api abstraction, cached IO state, automated batching and more. It is meant to autmoate alot of the issues behind setting up and maintaining API's in distributed architectures as well as handling and simplifying automation."
     developers = [orubel:"Owen Rubel"]
 }
+*/
 
 ext {
-    grailsVersion = '3.1.1'
+    grailsVersion = '3.2.9'
     gradleWrapperVersion = project.gradleWrapperVersion
 }
 
@@ -90,8 +92,8 @@ dependencies {
     compile 'org.grails.plugins:cache:3.0.2'
     compile 'org.springframework.boot:spring-boot-starter-logging'
     compile 'org.springframework.boot:spring-boot-autoconfigure'
-    provided 'org.springframework.boot:spring-boot-starter-tomcat'
-    compile('org.grails.plugins:spring-security-core:3.1.1') {
+    compile 'org.springframework.boot:spring-boot-starter-tomcat'
+    compile ('org.grails.plugins:spring-security-core:3.2.0.M1') {
         exclude(module: 'org.springframework.security:spring-security-web')
     }
 
@@ -113,7 +115,7 @@ dependencies {
     // UNCOMMENT NOSQL DB AS NEEDED FOR LIBRARIES
     //compile 'org.grails.plugins:mongodb:5.0.2'
 
-    compile('org.grails:grails-logging:3.1.1')
+    compile("org.grails:grails-logging:$grailsVersion")
     compile('org.codehaus.groovy:groovy-ant:2.4.5')
 
     //compile "org.grails.plugins:hibernate"

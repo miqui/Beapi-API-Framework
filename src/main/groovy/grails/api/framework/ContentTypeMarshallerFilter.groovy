@@ -17,6 +17,7 @@ import groovy.transform.CompileDynamic
 import groovy.util.logging.Slf4j
 
 import org.springframework.web.filter.GenericFilterBean
+import org.springframework.web.filter.OncePerRequestFilter
 
 import javax.servlet.FilterChain
 import javax.servlet.ServletException
@@ -30,14 +31,14 @@ import groovy.json.JsonSlurper
 
 @Slf4j
 //@CompileStatic
-class ContentTypeMarshallerFilter extends GenericFilterBean {
+class ContentTypeMarshallerFilter extends OncePerRequestFilter {
 
     String headerName
 
     GrailsApplication grailsApplication
 
     @Override
-    void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain chain) throws IOException, ServletException {
+    protected void doFilterInternal(HttpServletRequest servletRequest, HttpServletResponse servletResponse, FilterChain chain) throws ServletException, IOException {
 
         HttpServletRequest request = servletRequest as HttpServletRequest
         HttpServletResponse response = servletResponse as HttpServletResponse
