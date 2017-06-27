@@ -17,7 +17,7 @@ import javax.annotation.Resource
 import javax.servlet.http.HttpServletRequest
 import java.text.SimpleDateFormat
 
-import static groovyx.gpars.GParsPool.withPool
+import groovyx.gpars.*
 import grails.converters.JSON
 import grails.converters.XML
 import grails.web.servlet.mvc.GrailsParameterMap
@@ -32,7 +32,7 @@ import org.grails.core.DefaultGrailsDomainClass
 
 //import groovy.transform.CompileStatic
 //import grails.compiler.GrailsCompileStatic
-import org.codehaus.groovy.grails.commons.DomainClassArtefactHandler
+import org.grails.core.artefact.DomainClassArtefactHandler
 
 
 // extended by ProfilerCommLayer
@@ -115,8 +115,7 @@ abstract class ProfilerCommProcess {
 
             // remove reservedNames from List
             reservedNames.each(){ paramsList.remove(it) }
-println(paramsList)
-            println(requestList)
+
             if (paramsList.size() == requestList.intersect(paramsList).size()) {
                 traceService.endTrace('ProfilerCommProcess','checkURIDefinitions')
                 return true

@@ -22,6 +22,7 @@ import grails.core.GrailsApplication
 
 import javax.annotation.Resource
 
+//import groovyx.gpars.*
 import static groovyx.gpars.GParsPool.withPool
 
 class ApiCacheService{

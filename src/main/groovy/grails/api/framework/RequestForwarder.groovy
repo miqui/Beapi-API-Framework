@@ -19,7 +19,7 @@ import grails.web.UrlConverter
 import grails.web.api.WebAttributes
 import grails.web.servlet.mvc.GrailsParameterMap
 import groovy.transform.CompileStatic
-import org.grails.plugins.web.controllers.metaclass.ForwardMethod
+//import org.grails.plugins.web.controllers.metaclass.ForwardMethod
 import org.grails.web.mapping.ForwardUrlMappingInfo
 import org.grails.web.mapping.UrlMappingUtils
 import org.grails.web.servlet.mvc.GrailsWebRequest

@@ -43,8 +43,8 @@ bintray {
         licenses = ['AFL-3.0']
         vcsUrl = 'https://github.com/orubel/Beapi-API-Framework.git'
         version {
-            name = '0.9'
-            desc = '0.9 STABLE'
+            name = '3.1'
+            desc = '3.1 STABLE'
             released = new Date()
         }
         filesSpec {
@@ -58,7 +58,7 @@ grailsPublish {
     userOrg = 'nosegrind' // Optional
     githubSlug = 'orubel/api-framework'
     license {
-        name = 'MIT'
+        name = 'AFL-3.0'
     }
     title = "BeAPI API Framework"
     desc = "BeAPI API Framework is a fully reactive plug-n-play API Framework for Distributed Architectures providing api abstraction, cached IO state, automated batching and more. It is meant to autmoate alot of the issues behind setting up and maintaining API's in distributed architectures as well as handling and simplifying automation."

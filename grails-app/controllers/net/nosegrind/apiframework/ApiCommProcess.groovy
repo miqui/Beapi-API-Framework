@@ -20,7 +20,9 @@ import org.springframework.security.core.context.SecurityContextHolder as SCH
 import java.text.SimpleDateFormat
 
 import net.nosegrind.apiframework.RequestMethod
+//import groovyx.gpars.*
 import static groovyx.gpars.GParsPool.withPool
+
 import grails.converters.JSON
 import grails.converters.XML
 import grails.web.servlet.mvc.GrailsParameterMap
@@ -33,7 +35,8 @@ import org.springframework.web.context.request.RequestContextHolder as RCH
 import org.grails.core.DefaultGrailsDomainClass
 import org.springframework.beans.factory.annotation.Autowired
 
-import org.codehaus.groovy.grails.commons.DomainClassArtefactHandler
+// import org.codehaus.groovy.grails.commons.DomainClassArtefactHandler
+import org.grails.core.artefact.DomainClassArtefactHandler
 import net.nosegrind.apiframework.ApiCacheService
 import net.nosegrind.apiframework.ThrottleCacheService
 

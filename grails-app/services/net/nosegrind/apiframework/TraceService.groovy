@@ -85,6 +85,7 @@ class TraceService {
 
 	private LinkedHashMap processTrace(LinkedHashMap cache){
 		LinkedHashMap newTrace = [:]
+		newTrace['elapsedTime'] = 0
 		cache['calls'].sort{ a, b -> b.key <=> a.key }
 		cache['calls'].each() { it ->
 			Long startTime = 0
@@ -96,9 +97,12 @@ class TraceService {
 					stopTime = it2.value['stop']
 
 					newTrace[it.key] = ['time': getElapsedTime(it2.value['start'], it2.value['stop']), 'loc': loc]
+					if(!['ProfilerInterceptor/before','ProfilerInterceptor/after'].contains(loc)) {
+						newTrace['elapsedTime'] += newTrace[it.key]['time']
+					}
 			}
 
-			newTrace['elapsedTime'] = getElapsedTime(startTime,stopTime)
+			//newTrace['elapsedTime'] = getElapsedTime(startTime,stopTime)
 		}
 		return newTrace
 	}

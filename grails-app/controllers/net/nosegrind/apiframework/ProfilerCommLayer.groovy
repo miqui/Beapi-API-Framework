@@ -30,7 +30,6 @@ abstract class ProfilerCommLayer extends ProfilerCommProcess{
      * REQUESTS
      ***************************/
     boolean handleApiRequest(ApiDescriptor cache, HttpServletRequest request, HttpServletResponse response, GrailsParameterMap params){
-        println("handleApiRequest called...")
         traceService.startTrace('ProfilerCommLayer','handleApiRequest')
         try{
 
@@ -39,7 +38,6 @@ abstract class ProfilerCommLayer extends ProfilerCommProcess{
 
             if(deprecated?.get(0)){
                 if(checkDeprecationDate(deprecated[0].toString())){
-                    println("deprecation date")
                     String depMsg = deprecated[1].toString()
                     response.status = 400
                     response.setHeader('ERROR',depMsg)
@@ -51,9 +49,7 @@ abstract class ProfilerCommLayer extends ProfilerCommProcess{
             def method = cache['method']?.toString().trim()
 
             // DOES api.methods.contains(request.method)
-            println("check request macth")
             if(!isRequestMatch(method,request.method.toString())){
-                println("request does not match")
                 response.status = 400
                 response.setHeader('ERROR',"Request method doesn't match expected method.")
                 traceService.endTrace('ProfilerCommLayer','handleApiRequest')
