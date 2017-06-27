@@ -24,7 +24,6 @@ plugins {
 version "0.9"
 group "org.grails.plugins"
 
-
 apply plugin: "maven-publish"
 apply plugin: "spring-boot"
 apply plugin: "com.jfrog.bintray"
