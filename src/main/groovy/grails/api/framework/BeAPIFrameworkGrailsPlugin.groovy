@@ -79,9 +79,9 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
 
 
 
-            corsSecurityFilter(CorsSecurityFilter){}
+            corsSecurityFilter(grails.api.framework.CorsSecurityFilter){}
 
-            tokenCacheValidationFilter(TokenCacheValidationFilter) {
+            tokenCacheValidationFilter(grails.api.framework.TokenCacheValidationFilter) {
                 headerName = conf.rest.token.validation.headerName
                 validationEndpointUrl = conf.rest.token.validation.endpointUrl
                 active = conf.rest.token.validation.active
@@ -92,7 +92,7 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
                 restAuthenticationProvider = ref('restAuthenticationProvider')
                 authenticationEventPublisher = ref('authenticationEventPublisher')
             }
-            contentTypeMarshallerFilter(ContentTypeMarshallerFilter){}
+            contentTypeMarshallerFilter(grails.api.framework.ContentTypeMarshallerFilter){}
     } }
 
     def doWithDynamicMethods = { applicationContext ->
