@@ -44,7 +44,7 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
     def title = "Boomstick Api Framework" // Headline display name of the plugin
 	def author = "Owen Rubel"
 	def authorEmail = "orubel@gmail.com"
-	def description = 'Boomstick API Framework is a fully reactive plug-n-play API Framework for Distributed Architectures providing api abstraction, cached IO state, automated batching and more. It is meant to autmoate alot of the issues behind setting up and maintaining API\'s in distributed architectures as well as handling and simplifying automation.'
+	def description = 'BeAPI Framework is a fully reactive plug-n-play API Framework for Distributed Architectures providing api abstraction, cached IO state, automated batching and more. It is meant to autmoate alot of the issues behind setting up and maintaining API\'s in distributed architectures as well as handling and simplifying automation.'
 	def documentation = "https://github.com/orubel/grails-api-toolkit-docs"
 	def license = "MIT"
 	def issueManagement = [system: 'GitHub', url: 'https://github.com/orubel/grails-api-toolkit-docs/issues']
@@ -76,9 +76,6 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
             SpringSecurityUtils.registerFilter 'corsSecurityFilter', SecurityFilterPosition.PRE_AUTH_FILTER.order + 2
             SpringSecurityUtils.registerFilter 'contentTypeMarshallerFilter', SecurityFilterPosition.PRE_AUTH_FILTER.order + 3
 
-
-
-
             corsSecurityFilter(CorsSecurityFilter){}
 
             tokenCacheValidationFilter(TokenCacheValidationFilter) {
@@ -100,7 +97,6 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
         def config = getBean("grailsApplication").config
         def servletContext =  applicationContext.servletContext
         def serverInfo = servletContext.getServerInfo()
-
 
 
         config?.servlets?.each { name, parameters ->
@@ -152,12 +148,12 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
 
                 if (tmp[1] == 'json' && fileChar == "n") {
                     //println(fileName)
-                    //try{
+                    try{
                         JSONObject json = JSON.parse(file.text)
                         methods[json.NAME.toString()] = parseJson(json.NAME.toString(), json, applicationContext)
-                    //}catch(Exception e){
-                     //   throw new Exception("[ApiObjectService :: initialize] : Unacceptable file '${file.name}' - full stack trace follows:",e)
-                    //}
+                    }catch(Exception e){
+                        throw new Exception("[ApiObjectService :: initialize] : Unacceptable file '${file.name}' - full stack trace follows:",e)
+                    }
                 }
             }
         }catch(Exception e){
@@ -291,18 +287,6 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
             List deprecated = (vers.value.DEPRECATED)?vers.value.DEPRECATED:[]
             String domainPackage = (vers.value.DOMAINPACKAGE!=null || vers.value.DOMAINPACKAGE?.size()>0)?vers.value.DOMAINPACKAGE:null
 
-            /*
-            URL url = this.getClass().getClassLoader().getResource("ehcache.xml")
-            System.out.println(this.getClass().getResource("ehcache.xml"));
-            System.out.println(this.getClass().getClassLoader().getResource("ehcache.xml"));
-            CacheManager manager = new CacheManager(url);
-            */
-
-            //CacheManager ehcacheManager = new CacheManager(new ClassPathResource("ehcache.xml").getInputStream());
-            //EhCacheCacheManager manager = new EhCacheCacheManager();
-            //manager.setCacheManager(ehcacheManager);
-            //Cache cache = manager.getCache("ApiCache");
-
             String actionname
             vers.value.URI.each() { it ->
 
@@ -320,8 +304,6 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
 
                 String apiMethod = it.value.METHOD
                 String apiDescription = it.value.DESCRIPTION
-                //List apiRoles = it.value.ROLES
-                //List batchRoles = it.value.BATCH
 
                 List apiRoles = it.value.ROLES.DEFAULT
                 List batchRoles = it.value.ROLES.BATCH
@@ -370,28 +352,13 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
     private ApiDescriptor createApiDescriptor(String apiname,String apiMethod, String apiDescription, List apiRoles, List batchRoles, List hookRoles, String uri, JSONObject values, JSONObject json){
         LinkedHashMap<String,ParamsDescriptor> apiObject = [:]
         ApiParams param = new ApiParams()
-        LinkedHashMap mocks = [
-                "STRING":'Mock String',
-                "DATE":'Mock Date',
-                "LONG":999,
-                "BOOLEAN":true,
-                "FLOAT":0.01,
-                "BIGDECIMAL":123456789,
-                "EMAIL":'test@mockdata.com',
-                "URL":'www.mockdata.com',
-                "ARRAY":['this','is','mock','data']
-        ]
 
         List fkeys = []
         List pkeys= []
-        //try {
+        try {
             values.each { k, v ->
                 v.reference = (v.reference) ? v.reference : 'self';
-                //v.type = (v.reference)?getKeyType(v.reference, v.type):v.type
-
-
                 param.setParam(v.type, k)
-
 
                 String hasKey = (v?.key) ? v.key : null
 
@@ -423,7 +390,6 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
                 String hasDescription = (v?.description) ? v.description : ''
                 param.setDescription(hasDescription)
 
-
                 if (v.mockData!=null) {
                     if(v.mockData.isEmpty()){
                         param.setMockData('')
@@ -437,9 +403,9 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
                 // collect api vars into list to use in apiDescriptor
                 apiObject[param.param.name] = param.toObject()
             }
-        //}catch(Exception e){
-        //    throw new Exception("[Runtime :: createApiDescriptor] : Badly Formatted IO State :",e)
-        //}
+        }catch(Exception e){
+            throw new Exception("[Runtime :: createApiDescriptor] : Badly Formatted IO State :",e)
+        }
 
         LinkedHashMap receives = getIOSet(json.URI[uri]?.REQUEST,apiObject)
         LinkedHashMap returns = getIOSet(json.URI[uri]?.RESPONSE,apiObject)
@@ -494,21 +460,4 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
         return ioSet
     }
 
-    public List getApiParams(LinkedHashMap definitions){
-        try{
-            traceService.startTrace('ProfilerCommProcess','getApiParams')
-            List apiList = []
-            definitions.each(){ key, val ->
-                if (request.isUserInRole(key) || key == 'permitAll') {
-                    val.each(){ it2 ->
-                        apiList.add(it2.name)
-                    }
-                }
-            }
-            traceService.endTrace('ProfilerCommProcess','getApiParams')
-            return apiList
-        }catch(Exception e){
-            throw new Exception("[Runtime :: getApiParams] : Exception - full stack trace follows:",e)
-        }
-    }
 }

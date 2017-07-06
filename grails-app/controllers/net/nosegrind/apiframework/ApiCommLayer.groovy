@@ -29,16 +29,6 @@ abstract class ApiCommLayer extends ApiCommProcess{
      ***************************/
     boolean handleApiRequest(List deprecated, String method, RequestMethod mthd, HttpServletResponse response, GrailsParameterMap params){
         try{
-            // CHECK ACCESS TO METHOD
-            /*
-            List roles = cache['roles'] as List
-            if(!checkAuth(request,roles)){
-                response.status = 401
-                response.setHeader('ERROR','Unauthorized Access attempted')
-                return false
-            }
-            */
-
             // CHECK VERSION DEPRECATION DATE
             if(deprecated?.get(0)){
                 if(checkDeprecationDate(deprecated[0].toString())){
@@ -48,8 +38,6 @@ abstract class ApiCommLayer extends ApiCommProcess{
                     return false
                 }
             }
-
-            //def method = cache['method']?.toString().trim()
 
             // DOES api.methods.contains(request.method)
             if(!isRequestMatch(method,mthd)){
@@ -68,7 +56,6 @@ abstract class ApiCommLayer extends ApiCommProcess{
         try{
 
             // CHECK VERSION DEPRECATION DATE
-            //List deprecated = cache['deprecated'] as List
             if(deprecated?.get(0)){
                 if(checkDeprecationDate(deprecated[0].toString())){
                     String depMsg = deprecated[1].toString()
@@ -78,10 +65,7 @@ abstract class ApiCommLayer extends ApiCommProcess{
                 }
             }
 
-            //def method = cache['method']?.toString().trim()
-
             // DOES api.methods.contains(request.method)
-
             if(!isRequestMatch(method,mthd)){
                 response.status = status
                 response.setHeader('ERROR',"Request method doesn't match expected method.")
@@ -106,10 +90,7 @@ abstract class ApiCommLayer extends ApiCommProcess{
                 }
             }
 
-            //def method = cache['method']?.toString().trim()
-
             // DOES api.methods.contains(request.method)
-
             if(!isRequestMatch(method,mthd)){
                 response.status = 400
                 response.setHeader('ERROR',"Request method doesn't match expected method.")

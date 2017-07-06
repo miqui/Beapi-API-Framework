@@ -44,7 +44,7 @@ class ContentTypeMarshallerFilter extends GenericFilterBean {
 
         String format = (request?.format)?request.format.toUpperCase():'JSON'
         List formats = ['XML', 'JSON']
-        //String contentType = doesContentTypeMatch(request,format)
+        String contentType = doesContentTypeMatch(request)
 
         if(!doesContentTypeMatch(request)){
                 println("ContentType ["+request.getContentType()+"] does not match Requested Format ["+request.format.toUpperCase()+"]")
@@ -55,7 +55,7 @@ class ContentTypeMarshallerFilter extends GenericFilterBean {
         }
 
 
-        //try {
+        try {
             // Init params
 
             if (formats.contains(format)) {
@@ -85,14 +85,14 @@ class ContentTypeMarshallerFilter extends GenericFilterBean {
                 }
 
             }
-        //} catch (Exception e) {
-        //    println("ContentTypeMarshallerFilter: Formatting exception "+e)
-        //   log.error "marshalling failed: ${e.message}"
-        //    response.status = 401
-        //    response.setHeader('ERROR', 'Failed')
-        //    response.writer.flush()
-        //    return
-        //}
+        } catch (Exception e) {
+            println("ContentTypeMarshallerFilter: Formatting exception "+e)
+            log.error "marshalling failed: ${e.message}"
+            response.status = 401
+            response.setHeader('ERROR', 'Failed')
+            response.writer.flush()
+            return
+        }
 
         chain.doFilter(servletRequest, servletResponse)
     }

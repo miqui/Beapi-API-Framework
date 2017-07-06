@@ -254,6 +254,7 @@ abstract class ApiCommProcess{
         }
     }
 
+    // used in ApiCommLayer
     boolean isRequestMatch(String protocol,RequestMethod mthd){
         if(RequestMethod.isRestAlt(mthd.getKey())){
             return true
@@ -275,6 +276,7 @@ abstract class ApiCommProcess{
     }
     */
 
+    // used locally
     Map getMethodParams(GrailsParameterMap params){
         try{
             Map paramsRequest = [:]
@@ -287,8 +289,8 @@ abstract class ApiCommProcess{
         return [:]
     }
 
-
-    Boolean apiRoles(List list) {
+    // used locally
+    Boolean hasRoles(List list) {
         if(springSecurityService.principal.authorities*.authority.any { list.contains(it) }){
             return true
         }
@@ -321,7 +323,7 @@ abstract class ApiCommProcess{
                             newDoc[params.action].receives = []
 
                             doc.receives.each{ it ->
-                                if(apiRoles([it.key]) || it.key=='permitAll'){
+                                if(hasRoles([it.key]) || it.key=='permitAll'){
                                     it.value.each(){ it2 ->
                                         LinkedHashMap values = [:]
                                         it2.each(){ it3 ->
@@ -342,7 +344,7 @@ abstract class ApiCommProcess{
                             newDoc[params.action].returns = []
                             List jsonReturns = []
                             doc.returns.each(){ v ->
-                                if(apiRoles([v.key]) || v.key=='permitAll'){
+                                if(hasRoles([v.key]) || v.key=='permitAll'){
                                     jsonReturns.add(["${v.key}":v.value])
                                     v.value.each(){ v2 ->
                                         LinkedHashMap values3 = [:]
@@ -433,6 +435,7 @@ abstract class ApiCommProcess{
         }
     }
 
+    // interceptor::after (response)
     LinkedHashMap convertModel(Map map){
         try{
             LinkedHashMap newMap = [:]
@@ -456,7 +459,7 @@ abstract class ApiCommProcess{
         }
     }
 
-    // PostProcessService
+    // used by convertModel > interceptor::after (response)
     LinkedHashMap formatDomainObject(Object data){
         try{
             LinkedHashMap newMap = [:]
@@ -479,7 +482,7 @@ abstract class ApiCommProcess{
         }
     }
 
-    // PostProcessService
+    // used by convertModel > interceptor::after (response)
     LinkedHashMap formatMap(LinkedHashMap map){
         LinkedHashMap newMap = [:]
         map.each(){ key,val ->
@@ -494,7 +497,7 @@ abstract class ApiCommProcess{
         return newMap
     }
 
-    // PostProcessService
+    // used by convertModel > interceptor::after (response)
     LinkedHashMap formatList(List list){
         LinkedHashMap newMap = [:]
         list.eachWithIndex(){ val, key ->
@@ -509,7 +512,7 @@ abstract class ApiCommProcess{
         return newMap
     }
 
-
+    // interceptor::after (response)
     boolean isCachedResult(Integer version, String className){
         Class clazz = grailsApplication.domainClasses.find { it.clazz.simpleName == className }.clazz
 
@@ -525,6 +528,7 @@ abstract class ApiCommProcess{
         return (currentVersion > version)?false:true
     }
 
+    // interceptor::after (response)
     boolean isChain(HttpServletRequest request){
         String contentType = request.getContentType()
         try{
@@ -549,10 +553,12 @@ abstract class ApiCommProcess{
         }
     }
 
+    // interceptor::before
     String getThrottleExpiration(){
         return Holders.grailsApplication.config.apitoolkit.throttle.expires as String
     }
 
+    // interceptor::before
     boolean checkLimit(int contentLength){
         LinkedHashMap throttle = Holders.grailsApplication.config.apitoolkit.throttle as LinkedHashMap
         LinkedHashMap rateLimit = throttle.rateLimit as LinkedHashMap
