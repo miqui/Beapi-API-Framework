@@ -77,8 +77,10 @@ class BatchInterceptor extends ApiCommLayer{
 					attribs = request.getAttribute('JSON') as LinkedHashMap
 					break
 			}
-			attribs.each(){ k, v ->
-				params.put(k,v)
+			if(attribs){
+				attribs.each() { k, v ->
+					params.put(k, v)
+				}
 			}
 		}
 
@@ -149,7 +151,7 @@ class BatchInterceptor extends ApiCommLayer{
 					JSONObject json = (JSONObject) cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()]
 					if (isCachedResult((Integer) json.get('version'), domain)) {
 						def result = cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()]
-						render(text: result, contentType: request.contentType)
+						render(text: result, contentType: request.getContentType())
 						return false
 					}
 				} else {
@@ -215,7 +217,7 @@ class BatchInterceptor extends ApiCommLayer{
 			//content = handleBatchResponse(cache[params.apiObject][params.action.toString()],request,response,newModel,params) as LinkedHashMap
 
 			if(content){
-				render(text:content, contentType:request.contentType)
+				render(text:content, contentType:request.getContentType())
 				return false
 			}
 

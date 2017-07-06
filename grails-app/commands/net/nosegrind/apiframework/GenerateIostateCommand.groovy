@@ -42,7 +42,17 @@ class GenerateIostateCommand implements ApplicationCommand {
             String logicalName = it.getLogicalPropertyName()
             String packageName = it.getPackageName()
             String realName = it.getName()
-
+            LinkedHashMap mocks = [
+                    "STRING":'Mock String',
+                    "DATE":'Mock Date',
+                    "LONG":987,
+                    "BOOLEAN":true,
+                    "FLOAT":987.654,
+                    "BIGDECIMAL":987654321,
+                    "EMAIL":'test@mockdata.com',
+                    "URL":'www.mockdata.com',
+                    "MAP":['this','is','mock','data']
+            ]
 
             def sessionFactory = grailsApplication.mainContext.sessionFactory
             ClassMetadata hibernateMetaClass = sessionFactory.getClassMetadata(it.clazz)
@@ -50,8 +60,10 @@ class GenerateIostateCommand implements ApplicationCommand {
             String[] keys = hibernateMetaClass.getKeyColumnNames()
             String values = """
 \t\t\"id\": {
-\t\t\t\"type\": \"PKEY\",
-\t\t\t\"description\": \"Primary Key\"
+\t\t\t"key\": \"PRIMARY\",
+\t\t\t\"type\": \"Long\",
+\t\t\t\"description\": \"Primary Key\",
+\t\t\t"mockData": \"${mocks['LONG']}\",
 \t\t},
 """
             String uris = "\r"
@@ -70,20 +82,39 @@ class GenerateIostateCommand implements ApplicationCommand {
                     List ignoreList = ['constrainedProperties','gormPersistentEntity','properties','async','gormDynamicFinders','all','attached','class','constraints','reports','dirtyPropertyNames','errors','dirty','transients','count']
 
                     String type = ""
+                    String key = ""
+
                     if(!ignoreList.contains(it2)) {
                         String thisType = hibernateMetaClass.getPropertyType(it2).class as String
                         if (keys.contains(it2) || thisType=='class org.hibernate.type.ManyToOneType') {
-                            type = 'FKEY'
+                            key = "FOREIGN"
+                            type = 'LONG'
                         } else {
                             type = getValueType(thisType)
                         }
-                        String name = (type=='FKEY')?"${it2}Id".toString():it2
+                        String name = (['FOREIGN','INDEX'].contains(key))?"${it2}Id".toString():it2
                         variables.add("\"${name}\"")
-                        String value = """\t\t\"${name}\": {
+                        String value = ""
+                        String mock =  mocks."${type}"
+                        if(key){
+                            value = """\t\t\"${name}\": {
+\t\t\t"key": \"${key}\",
+\t\t\t"reference": \"${it2}\",
 \t\t\t\"type\": \"${type}\",
-\t\t\t\"description\": \"Description for ${it2}\"
+\t\t\t\"description\": \"Description for ${it2}\",
+\t\t\t"mockData": \"${mock}\",
 \t\t},
 """
+                        }else{
+
+                            value = """\t\t\"${name}\": {
+\t\t\t\"type\": \"${type}\",
+\t\t\t\"description\": \"Description for ${it2}\",
+\t\t\t"mockData": "${mock}\",
+\t\t},
+"""
+                        }
+
                         values <<= value
                     }
                 }
@@ -100,7 +131,6 @@ class GenerateIostateCommand implements ApplicationCommand {
                     Pattern postPattern = Pattern.compile("create|make|generate|build|save")
                     Pattern putPattern = Pattern.compile("edit|update|")
                     Pattern deletePattern = Pattern.compile("delete|destroy|kill|reset")
-
 
 
                     Matcher getm = getPattern.matcher(it4)
@@ -211,7 +241,7 @@ class GenerateIostateCommand implements ApplicationCommand {
             case 'class org.hibernate.type.MapType':
             case 'class java.util.HashMap':
             case 'java.util.LinkedHashMap':
-                return 'ARRAY'
+                return 'MAP'
                 break
             default:
                 return 'COMPOSITE'

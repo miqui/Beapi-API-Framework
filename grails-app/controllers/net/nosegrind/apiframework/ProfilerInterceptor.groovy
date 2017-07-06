@@ -76,8 +76,10 @@ class ProfilerInterceptor extends ProfilerCommLayer{
 					attribs = request.getAttribute('JSON') as LinkedHashMap
 					break
 			}
-			attribs.each(){ k, v ->
-				params.put(k,v)
+			if(attribs){
+				attribs.each() { k, v ->
+					params.put(k, v)
+				}
 			}
 		}
 		
@@ -125,7 +127,7 @@ class ProfilerInterceptor extends ProfilerCommLayer{
 					}else{
 						LinkedHashMap result = parseRequestMethod(request, params)
 						if(result){
-							render(text:result.apiToolkitContent, contentType:"${result.apiToolkitType}", encoding:result.apiToolkitEncoding)
+							render(text:result.apiToolkitContent, contentType:request.getContentType(), encoding:result.apiToolkitEncoding)
 						}
 						traceService.endTrace('ProfilerInterceptor','before')
 						return false
@@ -193,7 +195,7 @@ class ProfilerInterceptor extends ProfilerCommLayer{
 				LinkedHashMap traceContent = traceService.endAndReturnTrace('ProfilerInterceptor','after')
 
 				String tcontent = traceContent as JSON
-				render(text:tcontent, contentType:request.contentType)
+				render(text:tcontent, contentType:request.getContentType())
 			}
 
 			return false

@@ -181,7 +181,7 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 						} else {
 							if (isCachedResult((Integer) json.get('version'), domain)) {
 								def result = cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()]
-								render(text: result, contentType: request.contentType)
+								render(text: result, contentType: request.getContentType())
 								return false
 							}
 						}
@@ -259,7 +259,7 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 						if (!newModel) {
 							apiCacheService.setApiCachedResult((String) params.controller, (String) params.apiObject, (String) params.action, authority, format, content)
 						}
-						render(text: content, contentType: request.contentType)
+						render(text: content, contentType: request.getContentType())
 						return false
 					}
 				}

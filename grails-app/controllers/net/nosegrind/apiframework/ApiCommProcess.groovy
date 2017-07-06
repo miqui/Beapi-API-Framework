@@ -80,48 +80,6 @@ abstract class ApiCommProcess{
         }
     }
 
-
-    /* TODO : DEPRECATED
-    LinkedHashMap getApiObjectParams(LinkedHashMap definitions){
-        try{
-            LinkedHashMap apiList = [:]
-            definitions.each{ key,val ->
-                if(request.isUserInRole(key) || key=='permitAll'){
-                    val.each{ it ->
-                        if(it){
-                            apiList[it.name] = it.paramType
-                        }
-                    }
-                }
-            }
-            return apiList
-        }catch(Exception e){
-            throw new Exception("[ParamsService :: getApiObjectParams] : Exception - full stack trace follows:",e)
-        }
-        return [:]
-    }
-    */
-
-    /*
-    * TODO : DEPRECATED
-    public List getApiParams(LinkedHashMap definitions){
-        try{
-            List apiList = []
-            definitions.each(){ key, val ->
-                if (request.isUserInRole(key) || key == 'permitAll') {
-                    val.each(){ it2 ->
-                        apiList.add(it2.name)
-                    }
-                }
-            }
-
-            return apiList
-        }catch(Exception e){
-            throw new Exception("[ParamsService :: getApiParams] : Exception - full stack trace follows:",e)
-        }
-    }
-    */
-
     String getUserRole() {
         String authority = 'permitAll'
         if (springSecurityService.loggedIn){
@@ -438,6 +396,7 @@ abstract class ApiCommProcess{
                         if (paramDesc?.values) {
                             j["$paramDesc.name"] = []
                         } else {
+                            println("####"+paramDesc?.paramType+"/"+paramDesc?.keyType)
                             String dataName = (['PKEY', 'FKEY', 'INDEX'].contains(paramDesc?.paramType?.toString())) ? 'ID' : paramDesc.paramType
                             j = (paramDesc?.mockData?.trim()) ? ["$paramDesc.name": "$paramDesc.mockData"] : ["$paramDesc.name": "$dataName"]
                         }
@@ -567,7 +526,7 @@ abstract class ApiCommProcess{
     }
 
     boolean isChain(HttpServletRequest request){
-        String contentType = request.getAttribute('contentType')
+        String contentType = request.getContentType()
         try{
             switch(contentType){
                 case 'text/xml':

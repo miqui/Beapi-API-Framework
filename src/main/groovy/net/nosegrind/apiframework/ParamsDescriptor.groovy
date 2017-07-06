@@ -17,6 +17,7 @@ import grails.validation.Validateable
 class ParamsDescriptor implements Validateable {
 
 	String paramType
+	String keyType
 	String name
 	String idReferences
 	String description = ""
@@ -24,17 +25,18 @@ class ParamsDescriptor implements Validateable {
 	ParamsDescriptor[] values = []
 
 	static constraints = { 
-		paramType(nullable:false,maxSize:100,inList: ["PKEY","FKEY","INDEX","STRING","DATE","LONG","BOOLEAN","FLOAT","BIGDECIMAL","ARRAY","COMPOSITE"])
+		paramType(nullable:false,maxSize:100,inList: ["STRING","DATE","LONG","BOOLEAN","FLOAT","BIGDECIMAL","MAP","COMPOSITE"])
+		keyType(nullable:true,maxSize:100,inList: ["PRIMARY","FOREIGN","INDEX"])
 		name(nullable:false,maxSize:100)
 		idReferences(maxSize:100, validator: { val, obj ->
-			if (paramType!="PKEY" && paramType!="FKEY") {
-			  return ['nullable']
-			}else {
+			if(keyType['FOREIGN','PRIMARY','INDEX'].contains(keyType)) {
 			  return true
+			}else {
+			  return ['nullable']
 			}
 		})
 		description(nullable:false,maxSize:1000)
-		mockData(nullable:true)
+		mockData(nullable:false)
 		values(nullable:true)
 	} 
 }

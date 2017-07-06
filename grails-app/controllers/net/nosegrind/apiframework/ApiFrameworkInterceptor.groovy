@@ -33,7 +33,7 @@ import grails.util.Holders
 import javax.servlet.http.HttpServletResponse
 import groovy.transform.CompileStatic
 import org.springframework.http.HttpStatus
-
+import net.nosegrind.apiframework.HookService
 
 @CompileStatic
 class ApiFrameworkInterceptor extends ApiCommLayer{
@@ -44,7 +44,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 	GrailsApplication grailsApplication
 	ApiCacheService apiCacheService
 	SpringSecurityService springSecurityService
-	WebhookService webhookService
+	HookService hookService
 
 	// TODO: detect and assign apiObjectVersion from uri
 	String entryPoint = "v${Metadata.current.getProperty(Metadata.APPLICATION_VERSION, String.class)}"
@@ -86,13 +86,14 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 					attribs = request.getAttribute('JSON') as LinkedHashMap
 					break
 			}
-			attribs.each(){ k, v ->
-				params.put(k,v)
+			if(attribs){
+				attribs.each() { k, v ->
+					params.put(k, v)
+				}
 			}
 		}
 
-
-
+		
 		// INITIALIZE CACHE
 		try{
 			cache = (params.controller)? apiCacheService.getApiCache(params.controller.toString()) as LinkedHashMap:[:]
@@ -129,7 +130,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 						if (result) {
 							byte[] contentLength = result.getBytes( "ISO-8859-1" )
 							if(checkLimit(contentLength.length)) {
-								render(text: result, contentType: request.contentType)
+								render(text: result, contentType: request.getContentType())
 								return false
 							}else{
 								render(status: 400, text: 'Rate Limit exceeded. Please wait'+getThrottleExpiration()+'seconds til next request.')
@@ -162,7 +163,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 								String result = cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()] as String
 								byte[] contentLength = result.getBytes( "ISO-8859-1" )
 								if(checkLimit(contentLength.length)) {
-									render(text: result, contentType: request.contentType)
+									render(text: result, contentType: request.getContentType())
 									return false
 								}else{
 									render(status: 400, text: 'Rate Limit exceeded. Please wait'+getThrottleExpiration()+'seconds til next request.')
@@ -210,11 +211,12 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 		//println('##### FILTER (AFTER)')
 
 		List unsafeMethods = ['PUT','POST','DELETE']
+		def vals = model.values()
 
 		try {
 			LinkedHashMap newModel = [:]
 			if (params.controller != 'apidoc') {
-				if (!model) {
+				if (!model || vals[0]==null) {
 					render(status: HttpServletResponse.SC_NOT_FOUND, text: 'No resource returned / domain is empty')
 					response.flushBuffer()
 					return false
@@ -227,12 +229,14 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 
 			// store webhook
 			if(unsafeMethods.contains(request.method.toUpperCase())) {
-				// if controller/action ROLES/HOOK has roles, is HOOKABLE
+				// if controller/action HOOK has roles, is HOOKABLE
 				LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
 				if (cache) {
-					List hookRoles = cache["${params.apiObject}"]["${params.action}"]['hookRoles'] as List
+
+					List hookRoles = cache[params.apiObject]["${params.action}"]['hookRoles'] as List
+
 					if(hookRoles.size()>0) {
-						webhookService.postData(params.controller.toString(), newModel, params.action.toString())
+						hookService.postData(params.controller.toString(), newModel, params.action.toString())
 					}
 				}
 			}
@@ -260,7 +264,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 						apiCacheService.setApiCachedResult((String) params.controller, (String) params.apiObject, (String) params.action, authority, format, content)
 					}
 					if(checkLimit(contentLength.length)) {
-						render(text: content, contentType: request.contentType)
+						render(text: content, contentType: request.getContentType())
 						return false
 					}else{
 						render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Rate Limit exceeded. Please wait'+getThrottleExpiration()+'seconds til next request.')
@@ -268,7 +272,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 					}
 				}
 			}else{
-				render(text: newModel, contentType: request.contentType)
+				render(text: newModel, contentType: request.getContentType())
 			}
 
 			return false

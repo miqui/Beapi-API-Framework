@@ -23,6 +23,7 @@ class ApiDescriptor implements Validateable {
 	String defaultAction
 	List deprecated
 	String method
+	List pkey
 	List fkeys
 	List roles
 	List batchRoles
@@ -37,6 +38,7 @@ class ApiDescriptor implements Validateable {
 
 	static constraints = { 
 		method(nullable:false,inList: ["GET","POST","PUT","DELETE"])
+		pkey(nullable:true)
 		fkeys(nullable:true)
 		roles(nullable:true)
 		batchRoles(nullable:true, validator: { val, obj ->

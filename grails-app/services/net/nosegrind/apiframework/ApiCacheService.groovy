@@ -119,7 +119,23 @@ class ApiCacheService{
 						}
 					}
 				}
-				
+
+				if(cache[apiversion][actionname]['pkey']) {
+					doc['pkey'] = []
+					cache[apiversion][actionname]['pkey'].each(){
+							doc['pkey'].add(it)
+					}
+				}
+
+				if(cache[apiversion][actionname]['fkeys']) {
+					doc['fkeys'] = [:]
+					for(fkeyVal in cache[apiversion][actionname]['fkeys']){
+						if(fkeyVal?.key) {
+							doc['fkeys']["$fkeyVal.key"] = fkeyVal.value as JSON
+						}
+					}
+				}
+
 				if(cache[apiversion][actionname]['returns']){
 					doc['returns'] = [:]
 					for(returnVal in cache[apiversion][actionname]['returns']){

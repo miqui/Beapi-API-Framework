@@ -51,22 +51,28 @@ class ApiParams{
 		return result
 	}
 	
-	def hasMockData(String data){
+	def setMockData(String data){
 		this.param.mockData = data
 		return this
 	}
 	
-	def hasDescription(String data){
+	def setDescription(String data){
 		this.param.description = data
 		return this
 	}
-	
+
+	def setKey(String data){
+		this.param.keyType = data
+		return this
+	}
+
+
 	def hasParams(ParamsDescriptor[] values){
 		this.param.values = values
 		return this
 	}
 
-	def referencedBy(String data){
+	def setReference(String data){
 		this.param.idReferences = data
 		return this
 	}

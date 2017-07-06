@@ -144,7 +144,7 @@ abstract class ProfilerCommProcess {
                 break;
             case 'OPTIONS':
                 String doc = getApiDoc(params)
-                data = ['content':doc,'contentType':request.getAttribute('contentType'),'encoding':encoding]
+                data = ['content':doc,'encoding':encoding]
                 break;
             case 'GET':
             case 'PUT':
@@ -158,12 +158,12 @@ abstract class ProfilerCommProcess {
                     case 'JSON':
                     default:
                         content = result as JSON
-                        data = ['content':content,'contentType':request.getAttribute('contentType'),'encoding':encoding]
+                        data = ['content':content,'encoding':encoding]
                 }
                 break;
         }
         traceService.endTrace('ProfilerCommProcess','parseResponseMethod')
-        return ['apiToolkitContent':data.content,'apiToolkitType':request.getAttribute('contentType'),'apiToolkitEncoding':encoding]
+        return ['apiToolkitContent':data.content,'apiToolkitType':request.getContentType(),'apiToolkitEncoding':encoding]
     }
 
     LinkedHashMap parseRequestMethod(HttpServletRequest request, GrailsParameterMap params){
@@ -183,12 +183,12 @@ abstract class ProfilerCommProcess {
                 break;
             case 'OPTIONS':
                 String doc = getApiDoc(params)
-                data = ['content':doc,'contentType':request.getAttribute('contentType'),'encoding':encoding]
+                data = ['content':doc,'encoding':encoding]
                 break;
         }
 
         traceService.endTrace('ProfilerCommProcess','parseRequestMethod')
-        return ['apiToolkitContent':data.content,'apiToolkitType':request.getAttribute('contentType'),'apiToolkitEncoding':encoding]
+        return ['apiToolkitContent':data.content,'apiToolkitType':request.getContentType(),'apiToolkitEncoding':encoding]
     }
 
     LinkedHashMap parseURIDefinitions(LinkedHashMap model,List responseList){

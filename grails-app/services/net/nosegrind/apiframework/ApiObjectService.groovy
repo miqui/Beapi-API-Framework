@@ -195,18 +195,6 @@ class ApiObjectService{
 			List deprecated = (vers.value.DEPRECATED)?vers.value.DEPRECATED:[]
 			String domainPackage = (vers.value.DOMAINPACKAGE!=null || vers.value.DOMAINPACKAGE?.size()>0)?vers.value.DOMAINPACKAGE:null
 
-			/*
-            URL url = this.getClass().getClassLoader().getResource("ehcache.xml")
-            System.out.println(this.getClass().getResource("ehcache.xml"));
-            System.out.println(this.getClass().getClassLoader().getResource("ehcache.xml"));
-            CacheManager manager = new CacheManager(url);
-            */
-
-			//CacheManager ehcacheManager = new CacheManager(new ClassPathResource("ehcache.xml").getInputStream());
-			//EhCacheCacheManager manager = new EhCacheCacheManager();
-			//manager.setCacheManager(ehcacheManager);
-			//Cache cache = manager.getCache("ApiCache");
-
 			String actionname
 			vers.value.URI.each() { it ->
 

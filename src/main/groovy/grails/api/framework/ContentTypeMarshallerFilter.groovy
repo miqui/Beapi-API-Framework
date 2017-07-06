@@ -17,7 +17,6 @@ import groovy.transform.CompileDynamic
 import groovy.util.logging.Slf4j
 
 import org.springframework.web.filter.GenericFilterBean
-import org.springframework.web.filter.OncePerRequestFilter
 
 import javax.servlet.FilterChain
 import javax.servlet.ServletException
@@ -31,22 +30,32 @@ import groovy.json.JsonSlurper
 
 @Slf4j
 //@CompileStatic
-class ContentTypeMarshallerFilter extends OncePerRequestFilter {
+class ContentTypeMarshallerFilter extends GenericFilterBean {
 
     String headerName
 
     GrailsApplication grailsApplication
 
     @Override
-    protected void doFilterInternal(HttpServletRequest servletRequest, HttpServletResponse servletResponse, FilterChain chain) throws ServletException, IOException {
+    void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain chain) throws IOException, ServletException {
 
         HttpServletRequest request = servletRequest as HttpServletRequest
         HttpServletResponse response = servletResponse as HttpServletResponse
 
-        String format = (request?.format)?request.format.toUpperCase():'JSON';
+        String format = (request?.format)?request.format.toUpperCase():'JSON'
         List formats = ['XML', 'JSON']
+        //String contentType = doesContentTypeMatch(request,format)
 
-        try {
+        if(!doesContentTypeMatch(request)){
+                println("ContentType ["+request.getContentType()+"] does not match Requested Format ["+request.format.toUpperCase()+"]")
+                response.status = 401
+                response.setHeader('ERROR', 'ContentType does not match Requested Format')
+                response.writer.flush()
+                return
+        }
+
+
+        //try {
             // Init params
 
             if (formats.contains(format)) {
@@ -54,7 +63,7 @@ class ContentTypeMarshallerFilter extends OncePerRequestFilter {
                 switch (format) {
                     case 'XML':
                         String xml = request.XML.toString()
-                        if(xml!='[:]') {
+                        if(xml!='null') {
                             def xslurper = new XmlSlurper()
                             xslurper.parseText(xml).each() { k, v ->
                                 dataParams[k] = v
@@ -76,16 +85,38 @@ class ContentTypeMarshallerFilter extends OncePerRequestFilter {
                 }
 
             }
-        } catch (Exception e) {
-            println("ContentTypeMarshallerFilter: Formatting exception "+e)
-            log.error "marshalling failed: ${ae.message}"
-            response.status = 401
-            response.setHeader('ERROR', 'Failed')
-            response.writer.flush()
-            return
-        }
+        //} catch (Exception e) {
+        //    println("ContentTypeMarshallerFilter: Formatting exception "+e)
+        //   log.error "marshalling failed: ${e.message}"
+        //    response.status = 401
+        //    response.setHeader('ERROR', 'Failed')
+        //    response.writer.flush()
+        //    return
+        //}
 
         chain.doFilter(servletRequest, servletResponse)
+    }
+
+    boolean doesContentTypeMatch(HttpServletRequest request){
+        String format = (request?.format)?request.format.toUpperCase():'JSON'
+        String contentType = request.getContentType()
+        try{
+            switch(contentType){
+                case 'text/xml':
+                case 'application/xml':
+                    return 'XML'==format
+                    break
+                case 'text/json':
+                case 'application/json':
+                default:
+                    return 'JSON'==format
+                    break
+            }
+            return false
+        }catch(Exception e){
+            println("[ContentTypeMarshallerFilter :: getContentType] : Exception - full stack trace follows:"+e)
+            throw new Exception("[ContentTypeMarshallerFilter :: getContentType] : Exception - full stack trace follows:",e)
+        }
     }
 
 }
