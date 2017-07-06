@@ -39,8 +39,8 @@ import java.util.jar.JarException
 import java.util.jar.JarEntry
 
 class BoomstickApiFrameworkGrailsPlugin extends Plugin{
-	def version = "0.9"
-    def grailsVersion = "3.2.9 > *"
+	def version = "0.2.1.2"
+    def grailsVersion = "3.1.1 > *"
     def title = "Boomstick Api Framework" // Headline display name of the plugin
 	def author = "Owen Rubel"
 	def authorEmail = "orubel@gmail.com"
@@ -79,9 +79,9 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
 
 
 
-            corsSecurityFilter(grails.api.framework.CorsSecurityFilter){}
+            corsSecurityFilter(CorsSecurityFilter){}
 
-            tokenCacheValidationFilter(grails.api.framework.TokenCacheValidationFilter) {
+            tokenCacheValidationFilter(TokenCacheValidationFilter) {
                 headerName = conf.rest.token.validation.headerName
                 validationEndpointUrl = conf.rest.token.validation.endpointUrl
                 active = conf.rest.token.validation.active
@@ -92,7 +92,7 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
                 restAuthenticationProvider = ref('restAuthenticationProvider')
                 authenticationEventPublisher = ref('authenticationEventPublisher')
             }
-            contentTypeMarshallerFilter(grails.api.framework.ContentTypeMarshallerFilter){}
+            contentTypeMarshallerFilter(ContentTypeMarshallerFilter){}
     } }
 
     def doWithDynamicMethods = { applicationContext ->
@@ -146,16 +146,17 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
         try {
             new File(path).eachFile() { file ->
                 String fileName = file.name.toString()
-                //println(fileName+" ...")
+
                 def tmp = fileName.split('\\.')
                 String fileChar = fileName.charAt(fileName.length() - 1)
 
                 if (tmp[1] == 'json' && fileChar == "n") {
+                    //println(fileName)
                     //try{
-                    JSONObject json = JSON.parse(file.text)
-                    methods[json.NAME.toString()] = parseJson(json.NAME.toString(), json, applicationContext)
+                        JSONObject json = JSON.parse(file.text)
+                        methods[json.NAME.toString()] = parseJson(json.NAME.toString(), json, applicationContext)
                     //}catch(Exception e){
-                    //    throw new Exception("[ApiObjectService :: initialize] : Unacceptable file '${file.name}' - full stack trace follows:",e)
+                     //   throw new Exception("[ApiObjectService :: initialize] : Unacceptable file '${file.name}' - full stack trace follows:",e)
                     //}
                 }
             }
@@ -305,7 +306,7 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
             String actionname
             vers.value.URI.each() { it ->
 
-                def cache = apiCacheService.getApiCache(apiName.toString())
+                //def cache = apiCacheService.getApiCache(apiName.toString())
                 //def cache = (temp?.get(apiName))?temp?.get(apiName):[:]
 
                 methods['cacheversion'] = 1
@@ -366,53 +367,6 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
         return methods
     }
 
-    LinkedHashMap generateApiDoc(String controllername, String actionname, String apiversion){
-        try{
-            LinkedHashMap doc = [:]
-
-            //URL url = this.getClass().getClassLoader().getResource("ehcache.xml")
-            //System.out.println(this.getClass().getResource("ehcache.xml"));
-            // System.out.println(this.getClass().getClassLoader().getResource("ehcache.xml"));
-            //CacheManager manager = new CacheManager(url);
-            //def temp = manager.getCache("ApiCache");
-            //def cache = (temp?.get(controllername))?temp?.get(controllername):[:]
-
-            def cache = apiCacheService.getApiCache(controllername.toString())
-
-            String apiPrefix = "v${Metadata.current.getApplicationVersion()}"
-
-            if(cache){
-                String path = "/${apiPrefix}-${apiversion}/${controllername}/${actionname}"
-                doc = ['path':path,'method':cache[apiversion][actionname]['method'],'description':cache[apiversion][actionname]['description']]
-                if(cache[apiversion][actionname]['receives']){
-
-                    doc['receives'] = [:]
-                    for(receiveVal in cache[apiversion][actionname]['receives']){
-                        if(receiveVal?.key) {
-                            doc['receives']["$receiveVal.key"] = receiveVal.value
-                        }
-                    }
-                }
-
-                if(cache[apiversion][actionname]['returns']){
-                    doc['returns'] = [:]
-                    for(returnVal in cache[apiversion][actionname]['returns']){
-                        if(returnVal?.key) {
-                            doc['returns']["$returnVal.key"] = returnVal.value
-                        }
-                    }
-
-                    doc['json'] = [:]
-                    doc['json'] = processJson(doc["returns"])
-                }
-
-            }
-            return doc
-        }catch(Exception e){
-            throw new Exception("[ApiCacheService :: generateApiDoc] : Exception - full stack trace follows:",e)
-        }
-    }
-
     private ApiDescriptor createApiDescriptor(String apiname,String apiMethod, String apiDescription, List apiRoles, List batchRoles, List hookRoles, String uri, JSONObject values, JSONObject json){
         LinkedHashMap<String,ParamsDescriptor> apiObject = [:]
         ApiParams param = new ApiParams()
@@ -429,34 +383,63 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
         ]
 
         List fkeys = []
-        values.each{ k,v ->
-            v.type = (v.references)?getKeyType(v.references, v.type):v.type
-            if(v.type=='FKEY'){
-                fkeys.add(k)
+        List pkeys= []
+        //try {
+            values.each { k, v ->
+                v.reference = (v.reference) ? v.reference : 'self';
+                //v.type = (v.reference)?getKeyType(v.reference, v.type):v.type
+
+
+                param.setParam(v.type, k)
+
+
+                String hasKey = (v?.key) ? v.key : null
+
+                if (hasKey != null) {
+                    param.setKey(hasKey)
+
+                    String hasReference = (v?.reference) ? v.reference : 'self'
+                    param.setReference(hasReference)
+
+                    if (['FOREIGN', 'INDEX', 'PRIMARY'].contains(v.key?.toUpperCase())) {
+                        switch (v.key) {
+                            case 'INDEX':
+                                if (v.reference != 'self') {
+                                    LinkedHashMap fkey = ["${k}": "${v.reference}"]
+                                    fkeys.add(fkey)
+                                }
+                                break;
+                            case 'FOREIGN':
+                                LinkedHashMap fkey = ["${k}": "${v.reference}"]
+                                fkeys.add(fkey)
+                                break;
+                            case 'PRIMARY':
+                                pkeys.add(k)
+                                break;
+                        }
+                    }
+                }
+
+                String hasDescription = (v?.description) ? v.description : ''
+                param.setDescription(hasDescription)
+
+
+                if (v.mockData!=null) {
+                    if(v.mockData.isEmpty()){
+                        param.setMockData('')
+                    }else {
+                        param.setMockData(v.mockData.toString())
+                    }
+                } else {
+                    throw new Exception("[Runtime :: createApiDescriptor] : MockData Required for type '"+k+"' in IO State["+apiname+"]")
+                }
+
+                // collect api vars into list to use in apiDescriptor
+                apiObject[param.param.name] = param.toObject()
             }
-
-            String references = ''
-            String hasDescription = ''
-            String hasMockData = mocks[v.type]?mocks[v.type]:''
-
-            param.setParam(v.type,k)
-
-            def configType = grailsApplication.config.apitoolkit.apiobject.type."${v.type}"
-
-            hasDescription = (configType?.description)?configType.description:hasDescription
-            hasDescription = (v?.description)?v.description:hasDescription
-            if(hasDescription){ param.hasDescription(hasDescription) }
-
-            references = (configType?.references)?configType.references:""
-            references = (v?.references)?v.references:references
-            if(references){ param.referencedBy(references) }
-
-            hasMockData = (v?.mockData)?v.mockData:hasMockData
-            if(hasMockData){ param.hasMockData(hasMockData) }
-
-            // collect api vars into list to use in apiDescriptor
-            apiObject[param.param.name] = param.toObject()
-        }
+        //}catch(Exception e){
+        //    throw new Exception("[Runtime :: createApiDescriptor] : Badly Formatted IO State :",e)
+        //}
 
         LinkedHashMap receives = getIOSet(json.URI[uri]?.REQUEST,apiObject)
         LinkedHashMap returns = getIOSet(json.URI[uri]?.RESPONSE,apiObject)
@@ -464,6 +447,7 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
         ApiDescriptor service = new ApiDescriptor(
                 'empty':false,
                 'method':"$apiMethod",
+                'pkey':pkeys,
                 'fkeys':fkeys,
                 'description':"$apiDescription",
                 'roles':[],
@@ -524,7 +508,7 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
             traceService.endTrace('ProfilerCommProcess','getApiParams')
             return apiList
         }catch(Exception e){
-            throw new Exception("[ParamsService :: getApiParams] : Exception - full stack trace follows:",e)
+            throw new Exception("[Runtime :: getApiParams] : Exception - full stack trace follows:",e)
         }
     }
 }
