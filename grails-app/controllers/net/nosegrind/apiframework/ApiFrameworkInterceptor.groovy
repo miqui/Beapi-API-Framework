@@ -34,6 +34,8 @@ import javax.servlet.http.HttpServletResponse
 import groovy.transform.CompileStatic
 import org.springframework.http.HttpStatus
 import net.nosegrind.apiframework.HookService
+import org.springframework.web.context.request.RequestContextHolder as RCH
+import javax.servlet.http.HttpSession
 
 @CompileStatic
 class ApiFrameworkInterceptor extends ApiCommLayer{
@@ -96,7 +98,9 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 		
 		// INITIALIZE CACHE
 		try{
-			cache = (params.controller)? apiCacheService.getApiCache(params.controller.toString()) as LinkedHashMap:[:]
+			def session = request.getSession()
+			cache = session['cache'] as LinkedHashMap
+
 
 			// IS APIDOC??
 			if(params.controller=='apidoc'){
@@ -230,18 +234,16 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 			// store webhook
 			if(unsafeMethods.contains(request.method.toUpperCase())) {
 				// if controller/action HOOK has roles, is HOOKABLE
-				LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
+				//LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
 				if (cache) {
-
 					List hookRoles = cache[params.apiObject]["${params.action}"]['hookRoles'] as List
-
 					if(hookRoles.size()>0) {
 						hookService.postData(params.controller.toString(), newModel, params.action.toString())
 					}
 				}
 			}
 
-			//LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
+
 			ApiDescriptor cachedEndpoint = cache[params.apiObject][(String) params.action] as ApiDescriptor
 
 			// TEST FOR NESTED MAP; WE DON'T CACHE NESTED MAPS

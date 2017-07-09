@@ -40,11 +40,11 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 	List formats = ['XML', 'JSON']
 	String mthdKey
 	RequestMethod mthd
-	LinkedHashMap cache = [:]
 	List chainKeys = []
 	List chainUris = []
 	int chainLength
 	LinkedHashMap chainOrder = [:]
+	LinkedHashMap cache = [:]
 	LinkedHashMap<String,LinkedHashMap<String,String>> chain
 
 	ChainInterceptor(){
@@ -113,7 +113,9 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 
 		try {
 			// INITIALIZE CACHE
-			cache = (params.controller) ? apiCacheService.getApiCache(params.controller.toString()) as LinkedHashMap : [:]
+			def session = request.getSession()
+			cache = session['cache'] as LinkedHashMap
+
 
 			if (params.controller == 'apidoc') {
 				if (cache) {
@@ -224,7 +226,8 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 				newModel = convertModel(model)
 			}
 
-			LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
+
+			//LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
 			//LinkedHashMap content
 
 			ApiDescriptor cachedEndpoint = cache[params.apiObject][(String)params.action] as ApiDescriptor

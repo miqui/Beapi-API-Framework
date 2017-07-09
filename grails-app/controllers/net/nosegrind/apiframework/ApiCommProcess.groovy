@@ -39,7 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.grails.core.artefact.DomainClassArtefactHandler
 import net.nosegrind.apiframework.ApiCacheService
 import net.nosegrind.apiframework.ThrottleCacheService
-
+import grails.plugin.cache.GrailsCacheManager
 // extended by ApiCommLayer
 abstract class ApiCommProcess{
 
@@ -47,16 +47,18 @@ abstract class ApiCommProcess{
     GrailsApplication grailsApplication
 
     @Autowired
+    GrailsCacheManager grailsCacheManager
+
+    @Autowired
     ThrottleCacheService throttleCacheService
 
     @Autowired
     ApiCacheService apiCacheService
-    List formats = ['text/html','text/json','application/json','text/xml','application/xml']
+    List formats = ['text/json','application/json','text/xml','application/xml']
     List optionalParams = ['method','format','contentType','encoding','action','controller','v','apiCombine', 'apiObject','entryPoint','uri']
 
     boolean batchEnabled = Holders.grailsApplication.config.apitoolkit.batching.enabled
     boolean chainEnabled = Holders.grailsApplication.config.apitoolkit.chaining.enabled
-
 
     // set params for this 'loop'; these will NOT forward
     void setBatchParams(GrailsParameterMap params){
@@ -297,6 +299,20 @@ abstract class ApiCommProcess{
         return false
     }
 
+    LinkedHashMap getApiCache(String controllername){
+        try{
+            def temp = grailsCacheManager?.getCache('ApiCache')
+
+            def cache = temp?.get(controllername)
+            if(cache?.get()){
+                return cache.get() as LinkedHashMap
+            }else{
+                return [:]
+            }
+        }catch(Exception e){
+            throw new Exception("[ApiCommProcess :: getApiCache] : Exception - full stack trace follows:",e)
+        }
+    }
 
     String getApiDoc(GrailsParameterMap params){
         // TODO: Need to compare multiple authorities
@@ -307,7 +323,8 @@ abstract class ApiCommProcess{
         try{
             def controller = grailsApplication.getArtefactByLogicalPropertyName('Controller', params.controller)
             if(controller){
-                def cache = (params.controller)?apiCacheService.getApiCache(params.controller):null
+                def cache = (params.controller)?getApiCache(params.controller):null
+                //LinkedHashMap cache = session['cache'] as LinkedHashMap
                 if(cache){
                     if(cache[params.apiObject][params.action]){
 

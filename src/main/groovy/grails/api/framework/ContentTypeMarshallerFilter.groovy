@@ -10,8 +10,6 @@
 
 package grails.api.framework
 
-import grails.core.GrailsApplication
-
 import grails.util.Metadata
 import groovy.transform.CompileDynamic
 import groovy.util.logging.Slf4j
@@ -34,7 +32,6 @@ class ContentTypeMarshallerFilter extends GenericFilterBean {
 
     String headerName
 
-    GrailsApplication grailsApplication
 
     @Override
     void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain chain) throws IOException, ServletException {

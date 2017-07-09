@@ -37,6 +37,7 @@ class ProfilerInterceptor extends ProfilerCommLayer{
 	ApiCacheService apiCacheService
 	TraceService traceService
 	SpringSecurityService springSecurityService
+	LinkedHashMap cache = [:]
 
 	// TODO: detect and assign apiObjectVersion from uri
 	String entryPoint = "p${Metadata.current.getProperty(Metadata.APPLICATION_VERSION, String.class)}"
@@ -84,9 +85,10 @@ class ProfilerInterceptor extends ProfilerCommLayer{
 		}
 		
 		try{
-			//if(request.class.toString().contains('SecurityContextHolderAwareRequestWrapper')){
 
-			LinkedHashMap cache = (params.controller)? apiCacheService.getApiCache(params.controller.toString()):[:]
+			// INITIALIZE CACHE
+			def session = request.getSession()
+			cache = session['cache'] as LinkedHashMap
 
 
 			if(params.controller=='apidoc'){
@@ -186,7 +188,8 @@ class ProfilerInterceptor extends ProfilerCommLayer{
 				newModel = model as LinkedHashMap
 			}
 
-			LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
+			LinkedHashMap cache = session['cache'] as LinkedHashMap
+			//LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
 			ApiDescriptor cachedEndpoint = cache[params.apiObject][(String)params.action] as ApiDescriptor
 			String content = handleApiResponse(cachedEndpoint['returns'] as LinkedHashMap,cachedEndpoint['roles'] as List,request,response,newModel,params) as LinkedHashMap
 

@@ -100,11 +100,14 @@ dependencies {
         exclude(module: 'com.google.guava:guava-io')
         exclude(module: 'org.springframework.security:spring-security-web')
     }
-    compile('org.grails:grails-web'){
+
+    runtime('org.grails:grails-web'){
         exclude(module: 'org.grails:grails-web-jsp')
         exclude(module:'org.grails:grails-web-sitemesh')
         exclude(module:'org.grails:grails-web-gsp')
+        exclude(module: 'org.grails:grails-web-databinding')
     }
+
     compile('org.grails:grails-dependencies'){
         exclude(module:'grails-plugin-rest')
         exclude(module:'grails-bootstrap')

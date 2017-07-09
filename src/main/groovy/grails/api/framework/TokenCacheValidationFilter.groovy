@@ -36,16 +36,14 @@ import javax.xml.ws.Service
 
 import grails.util.Metadata
 
-import net.sf.ehcache.CacheManager
-import org.springframework.cache.Cache
-import org.springframework.cache.ehcache.EhCacheCacheManager;
-import net.sf.ehcache.Element
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.context.support.WebApplicationContextUtils
-import grails.core.GrailsApplication
 import org.springframework.context.ApplicationContext
 
+import grails.plugin.cache.GrailsCacheManager
+import grails.util.Holders
 
+import javax.servlet.http.HttpSession
+import org.springframework.web.context.request.RequestContextHolder as RCH
 
 @Slf4j
 //@CompileStatic
@@ -59,16 +57,12 @@ class TokenCacheValidationFilter extends GenericFilterBean {
     AuthenticationFailureHandler authenticationFailureHandler
     RestAuthenticationEventPublisher authenticationEventPublisher
 
-
-    //ApiCacheService apiCacheService
-
     TokenReader tokenReader
     String validationEndpointUrl
     Boolean active
 
     Boolean enableAnonymousAccess
-    GrailsApplication grailsApplication
-
+    GrailsCacheManager grailsCacheManager
 
     @Override
     void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
@@ -163,11 +157,19 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                 }
 
 
-                //ApplicationContext ctx = Holders.grailsApplication.mainContext
-                //ApiCacheService apiCacheService = ctx.getBean("apiCacheService");
-                ApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext(getServletContext());
-                def apiCacheService = ctx.getBean("apiCacheService")
-                LinkedHashMap cache = (controller)?apiCacheService.getApiCache(controller.toString()):[:]
+                ApplicationContext ctx = Holders.grailsApplication.mainContext
+                GrailsCacheManager grailsCacheManager = ctx.getBean("grailsCacheManager");
+
+                LinkedHashMap cache = [:]
+                def temp = grailsCacheManager?.getCache('ApiCache')
+                def tempCache = temp?.get(controller.toString())
+
+                if(tempCache?.get()){
+                    cache = tempCache.get() as LinkedHashMap
+                    HttpSession session = httpRequest.getSession()
+                    session['cache'] = cache as LinkedHashMap
+                }
+
 
                 String version = cache['cacheversion']
 
@@ -176,6 +178,10 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                     httpResponse.setHeader('ERROR', 'IO State Not properly Formatted for this URI. Please contact the Administrator.')
                     //httpResponse.writer.flush()
                     return
+                }else{
+                    def session = RCH.currentRequestAttributes().getSession()
+                    session['cache'] = cache
+                    //println(session['cache'].getAttribute('cacheversion'))
                 }
 
                 List roles = cache?."${version}"?."${action}"?.roles as List

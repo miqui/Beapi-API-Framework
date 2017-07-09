@@ -87,7 +87,9 @@ class BatchInterceptor extends ApiCommLayer{
 
 		try{
 			// INITIALIZE CACHE
-			cache = (params.controller)? apiCacheService.getApiCache(params.controller.toString()) as LinkedHashMap:[:]
+			def session = request.getSession()
+			cache = session['cache'] as LinkedHashMap
+
 
 			if(cache) {
 
@@ -199,7 +201,8 @@ class BatchInterceptor extends ApiCommLayer{
 				newModel = convertModel(model)
 			}
 
-			LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
+
+			//LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
 			//LinkedHashMap content
 			int batchLength = (int) request.getAttribute('batchLength')
 			int batchInc = (int) request.getAttribute('batchInc')
@@ -210,6 +213,7 @@ class BatchInterceptor extends ApiCommLayer{
 				forward(params)
 				return false
 			}
+
 
 			ApiDescriptor cachedEndpoint = cache[params.apiObject][(String)params.action] as ApiDescriptor
 			String content = handleBatchResponse(cachedEndpoint['returns'] as LinkedHashMap,cachedEndpoint['roles'] as List,mthd,format,response,newModel,params) as LinkedHashMap
