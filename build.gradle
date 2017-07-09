@@ -92,6 +92,7 @@ dependencies {
     compile 'org.springframework.boot:spring-boot-starter-logging'
     compile 'org.springframework.boot:spring-boot-autoconfigure'
     provided 'org.springframework.boot:spring-boot-starter-tomcat'
+
     compile('org.grails.plugins:spring-security-core:3.1.1') {
         exclude(module: 'org.springframework.security:spring-security-web')
     }
@@ -99,6 +100,7 @@ dependencies {
     compile('org.grails.plugins:spring-security-rest:2.0.0.M2') {
         exclude(module: 'com.google.guava:guava-io')
         exclude(module: 'org.springframework.security:spring-security-web')
+        exclude(module: 'org.grails.plugins:spring-security-core')
     }
 
     runtime('org.grails:grails-web'){
