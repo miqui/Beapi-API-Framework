@@ -67,7 +67,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 		//def filterChain = grailsApplication.mainContext.getBean('springSecurityFilterChain')
 		//println(filterChain)
 
-		format = (request?.format)?request.format.toUpperCase():'JSON';
+		format = (request?.format)?request.format.toUpperCase():'JSON'
 		mthdKey = request.method.toUpperCase()
 		mthd = (RequestMethod) RequestMethod[mthdKey]
 
@@ -206,7 +206,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 
 		}catch(Exception e){
 			//println("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:"+e)
-			log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
+			throw new Exception("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
 			return false
 		}
 	}
@@ -279,7 +279,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 
 			return false
 		}catch(Exception e){
-			log.error("[ApiToolkitFilters :: apitoolkit.after] : Exception - full stack trace follows:", e);
+			throw new Exception("[ApiToolkitFilters :: apitoolkit.after] : Exception - full stack trace follows:", e)
 			return false
 		}
 	}

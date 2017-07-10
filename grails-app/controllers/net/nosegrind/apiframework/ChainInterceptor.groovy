@@ -202,7 +202,7 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 			return false
 
 		} catch (Exception e ) {
-			log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
+			throw new Exception("[ChainInterceptor :: before] : Exception - full stack trace follows:", e)
 			return false
 		}
 
@@ -272,7 +272,7 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 
 			return false
 		}catch(Exception e){
-			log.error("[ApiToolkitFilters :: apitoolkit.after] : Exception - full stack trace follows:", e);
+			throw new Exception("[ChainInterceptor :: after] : Exception - full stack trace follows:", e)
 			return false
 		}
 

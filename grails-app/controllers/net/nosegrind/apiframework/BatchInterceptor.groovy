@@ -184,7 +184,7 @@ class BatchInterceptor extends ApiCommLayer{
 			return false
 
 		}catch(Exception e) {
-			log.error("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
+			throw new Exception("[BatchInterceptor :: before] : Exception - full stack trace follows:", e)
 			return false
 		}
 	}
@@ -227,7 +227,7 @@ class BatchInterceptor extends ApiCommLayer{
 
 			return false
 		}catch(Exception e){
-			log.error("[ApiToolkitFilters :: apitoolkit.after] : Exception - full stack trace follows:", e);
+			throw new Exception("[BatchInterceptor :: after] : Exception - full stack trace follows:", e)
 			return false
 		}
 

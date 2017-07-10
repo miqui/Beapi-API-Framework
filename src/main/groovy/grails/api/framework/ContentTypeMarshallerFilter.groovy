@@ -15,6 +15,7 @@ import groovy.transform.CompileDynamic
 import groovy.util.logging.Slf4j
 
 import org.springframework.web.filter.GenericFilterBean
+import org.springframework.web.filter.OncePerRequestFilter
 
 import javax.servlet.FilterChain
 import javax.servlet.ServletException
@@ -28,13 +29,13 @@ import groovy.json.JsonSlurper
 
 @Slf4j
 //@CompileStatic
-class ContentTypeMarshallerFilter extends GenericFilterBean {
+class ContentTypeMarshallerFilter extends OncePerRequestFilter {
 
     String headerName
 
 
     @Override
-    void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain chain) throws IOException, ServletException {
+    protected void doFilterInternal(HttpServletRequest servletRequest, HttpServletResponse servletResponse, FilterChain chain) throws ServletException, IOException {
 
         HttpServletRequest request = servletRequest as HttpServletRequest
         HttpServletResponse response = servletResponse as HttpServletResponse
@@ -84,7 +85,7 @@ class ContentTypeMarshallerFilter extends GenericFilterBean {
             }
         } catch (Exception e) {
             println("ContentTypeMarshallerFilter: Formatting exception "+e)
-            log.error "marshalling failed: ${e.message}"
+            //log.error "marshalling failed: ${e.message}"
             response.status = 401
             response.setHeader('ERROR', 'Failed')
             response.writer.flush()
@@ -111,7 +112,6 @@ class ContentTypeMarshallerFilter extends GenericFilterBean {
             }
             return false
         }catch(Exception e){
-            println("[ContentTypeMarshallerFilter :: getContentType] : Exception - full stack trace follows:"+e)
             throw new Exception("[ContentTypeMarshallerFilter :: getContentType] : Exception - full stack trace follows:",e)
         }
     }
