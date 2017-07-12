@@ -97,7 +97,6 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                 return
             }
         } catch (AuthenticationException ae) {
-            //log.debug "Authentication failed: ${ae.message}"
             httpResponse.status = 401
             httpResponse.setHeader('ERROR', 'Authorization Attempt Failed')
             httpResponse.writer.flush()
@@ -105,23 +104,6 @@ class TokenCacheValidationFilter extends GenericFilterBean {
             //authenticationFailureHandler.onAuthenticationFailure(httpRequest, httpResponse, ae)
         }
 
-    }
-
-// ehcache may not be accessible at filter. need to grab bean
-    boolean checkAuth(List roles, AccessToken accessToken){
-        try {
-            if(roles.size()==1 && roles[0]=='permitAll'){
-                return true
-            }
-
-            if (accessToken.getAuthorities()*.authority.any { roles.contains(it.toString())}) {
-                return true
-            }
-
-            return false
-        }catch(Exception e) {
-            throw new Exception("[ApiCommProcess :: checkAuth] : Exception - full stack trace follows:",e)
-        }
     }
 
     @CompileDynamic
@@ -132,7 +114,7 @@ class TokenCacheValidationFilter extends GenericFilterBean {
         String actualUri = httpRequest.requestURI - httpRequest.contextPath
 
         if (!active) {
-            //log.debug "Token validation is disabled. Continuing the filter chain"
+            //println("Token validation is disabled. Continuing the filter chain")
             return
         }
 
@@ -156,7 +138,6 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                     return
                 }
 
-
                 ApplicationContext ctx = Holders.grailsApplication.mainContext
                 GrailsCacheManager grailsCacheManager = ctx.getBean("grailsCacheManager");
 
@@ -170,7 +151,6 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                     session['cache'] = cache as LinkedHashMap
                 }
 
-
                 String version = cache['cacheversion']
 
                 if(!cache?."${version}"?."${action}"){
@@ -181,7 +161,6 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                 }else{
                     def session = RCH.currentRequestAttributes().getSession()
                     session['cache'] = cache
-                    //println(session['cache'].getAttribute('cacheversion'))
                 }
 
                 List roles = cache?."${version}"?."${action}"?.roles as List
@@ -192,15 +171,30 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                     //httpResponse.writer.flush()
                     return
                 }else {
-                    //System.out.println("####[TokenCacheValidationFilter :: processFilterChain] ${actualUri} / ${validationEndpointUrl}")
-                    log.debug "Continuing the filter chain"
+                    //log.debug "Continuing the filter chain"
                 }
             }
         } else {
-            log.debug "Request does not contain any token. Letting it continue through the filter chain"
+            //println("Request does not contain any token. Letting it continue through the filter chain")
         }
 
         chain.doFilter(request, response)
     }
 
+
+    boolean checkAuth(List roles, AccessToken accessToken){
+        List tokenRoles = []
+        accessToken.getAuthorities()*.authority.each() { tokenRoles.add(it) }
+        try {
+            if (roles.size()==1 && roles[0] == 'permitAll') {
+                return true
+            } else if(roles.intersect(tokenRoles).size()>0) {
+                return true
+            }
+            return false
+        }catch(Exception e) {
+            //println("[TokenCacheValidationFilter :: checkAuth] : Exception - full stack trace follows:"+e)
+            throw new Exception("[TokenCacheValidationFilter :: checkAuth] : Exception - full stack trace follows:",e)
+        }
+    }
 }

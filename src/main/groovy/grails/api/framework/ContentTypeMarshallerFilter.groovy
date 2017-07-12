@@ -42,7 +42,6 @@ class ContentTypeMarshallerFilter extends OncePerRequestFilter {
 
         String format = (request?.format)?request.format.toUpperCase():'JSON'
         List formats = ['XML', 'JSON']
-        String contentType = doesContentTypeMatch(request)
 
         if(!doesContentTypeMatch(request)){
                 println("ContentType ["+request.getContentType()+"] does not match Requested Format ["+request.format.toUpperCase()+"]")
@@ -84,7 +83,6 @@ class ContentTypeMarshallerFilter extends OncePerRequestFilter {
 
             }
         } catch (Exception e) {
-            println("ContentTypeMarshallerFilter: Formatting exception "+e)
             //log.error "marshalling failed: ${e.message}"
             response.status = 401
             response.setHeader('ERROR', 'Failed')
