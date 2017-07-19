@@ -147,7 +147,7 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
                 String fileChar = fileName.charAt(fileName.length() - 1)
 
                 if (tmp[1] == 'json' && fileChar == "n") {
-                    //println(fileName)
+                    println(fileName)
                     try{
                         JSONObject json = JSON.parse(file.text)
                         methods[json.NAME.toString()] = parseJson(json.NAME.toString(), json, applicationContext)

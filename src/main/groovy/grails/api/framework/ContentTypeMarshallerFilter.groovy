@@ -51,10 +51,8 @@ class ContentTypeMarshallerFilter extends OncePerRequestFilter {
                 return
         }
 
-
         try {
             // Init params
-
             if (formats.contains(format)) {
                 LinkedHashMap dataParams = [:]
                 switch (format) {
@@ -83,7 +81,7 @@ class ContentTypeMarshallerFilter extends OncePerRequestFilter {
 
             }
         } catch (Exception e) {
-            //log.error "marshalling failed: ${e.message}"
+            println "marshalling failed: ${e.message}"
             response.status = 401
             response.setHeader('ERROR', 'Failed')
             response.writer.flush()

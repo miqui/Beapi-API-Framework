@@ -16,6 +16,7 @@ import org.grails.web.json.JSONObject
 import grails.util.Metadata
 import grails.plugin.cache.CacheEvict
 import grails.plugin.cache.CachePut
+import org.springframework.cache.annotation.*
 import grails.plugin.cache.GrailsCacheManager
 import org.grails.groovy.grails.commons.*
 import grails.core.GrailsApplication
@@ -50,41 +51,44 @@ class ApiCacheService{
 	 * Only flush on RESTART.
 	 * DO NOT flush while LIVE!!!
 	 */
+	//@org.springframework.cache.annotation.CacheEvict(value="ApiCache",key="#controllername")
 	@CacheEvict(value="ApiCache",key="#controllername")
-	void flushApiCache(String controllername){} 
+	void flushApiCache(String controllername){}
 
-	
+
+	//@org.springframework.cache.annotation.CachePut(value="ApiCache",key="#controllername")
 	@CachePut(value="ApiCache",key="#controllername")
 	LinkedHashMap setApiCache(String controllername,LinkedHashMap apidesc){
 		return apidesc
 	}
-	
+
+	//@org.springframework.cache.annotation.CachePut(value="ApiCache",key="#controllername")
 	@CachePut(value="ApiCache",key="#controllername")
 	LinkedHashMap setApiCache(String controllername,String methodname, ApiDescriptor apidoc, String apiversion){
 		try{
 			def cache = getApiCache(controllername)
+			if(!cache[apiversion]){
+				cache[apiversion] = [:]
+			}
 			if(!cache[apiversion][methodname]){
 				cache[apiversion][methodname] = [:]
 			}
-			if(cache[apiversion][methodname]){
 
-				cache[apiversion][methodname]['name'] = apidoc.name
-				cache[apiversion][methodname]['description'] = apidoc.description
-				cache[apiversion][methodname]['receives'] = apidoc.receives
-				cache[apiversion][methodname]['returns'] = apidoc.returns
-				cache[apiversion][methodname]['doc'] = generateApiDoc(controllername, methodname,apiversion)
-				cache[apiversion][methodname]['doc']['hookRoles'] = cache[apiversion][methodname]['hookRoles']
-				cache[apiversion][methodname]['doc']['batchRoles'] = cache[apiversion][methodname]['batchRoles']
+			cache[apiversion][methodname]['name'] = apidoc.name
+			cache[apiversion][methodname]['description'] = apidoc.description
+			cache[apiversion][methodname]['receives'] = apidoc.receives
+			cache[apiversion][methodname]['returns'] = apidoc.returns
+			cache[apiversion][methodname]['doc'] = generateApiDoc(controllername, methodname,apiversion)
+			cache[apiversion][methodname]['doc']['hookRoles'] = cache[apiversion][methodname]['hookRoles']
+			cache[apiversion][methodname]['doc']['batchRoles'] = cache[apiversion][methodname]['batchRoles']
 
-			}else{
-				throw new Exception("[ApiCacheService :: setApiCache] : sts for controller/action pair of ${controllername}/${methodname}")
-			}
 			return cache
 		}catch(Exception e){
 			throw new Exception("[ApiCacheService :: setApiCache] : Exception - full stack trace follows:",e)
 		}
 	}
 
+	//@org.springframework.cache.annotation.CachePut(value="ApiCache",key="#controllername")
 	@CachePut(value="ApiCache",key="#controllername")
 	LinkedHashMap setApiCachedResult(String controllername, String apiversion, String methodname, String authority, String format, String content){
 		try{
@@ -195,13 +199,13 @@ class ApiCacheService{
 							String dataName = (['PKEY', 'FKEY', 'INDEX'].contains(paramDesc?.paramType?.toString())) ? 'ID' : paramDesc.paramType
 							j = (paramDesc?.mockData?.trim()) ? ["$paramDesc.name": "$paramDesc.mockData"] : ["$paramDesc.name": "$dataName"]
 						}
-						withPool(20) {
+						withPool(8) {
 							j.eachParallel { key, val ->
 								if (val instanceof List) {
 									def child = [:]
-									withPool(20) {
+									withPool(8) {
 										val.eachParallel { it2 ->
-											withPool(20) {
+											withPool(8) {
 												it2.eachParallel { key2, val2 ->
 													child[key2] = val2
 												}
