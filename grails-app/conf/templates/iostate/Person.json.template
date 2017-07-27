@@ -1,0 +1,147 @@
+/* JSON API Object */
+/* ****************************************************************************
+ * Copyright 2014 Owen Rubel
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed is distributed on an "AS IS" BASIS,WITHOUT WARRANTIES 
+ * OR CONDITIONS OF ANY KIND, either express or implied.
+ *****************************************************************************/
+// NOTES
+
+/* 'permitAll' needs to always come first so other roles can make use of it
+* as they come afterward
+
+net.nosegrind.IOState
+*/
+
+	
+{
+    "NAME":"person",
+    "VALUES": {
+        "id": {
+            "key": "PRIMARY",
+            "type": "Long",
+            "description":"ID for Event",
+	    "mockData":"1"
+        },
+        "version": {
+            "type": "Long",
+            "description":"Version for Event",
+	    "mockData":"0"
+        },
+	"username":{
+            "type": "String",
+            "description":"User Name",
+	    "mockData":"guest"
+	},
+	"password":{
+            "type": "String",
+            "description":"password",
+	    "mockData":"password"
+	},
+	"email":{
+            "type": "String",
+            "description":"Account Email",
+	    "mockData":"test@mockdata.com"
+	},
+	"oauthProvider":{
+            "type": "String",
+            "description":"Oauth Provider (if available)",
+	    "mockData":"GMail"
+	},
+	"avatarUrl":{
+            "type": "String",
+            "description":"Event Type Name",
+	    "mockData":"https://en.gravatar.com/userimage/38053926/62165e36e1f429564a78e82db5b72591.jpg?size=200"
+	},
+	"enabled":{
+            "type": "Boolean",
+            "description":"Is Account Enabled",
+	    "mockData":"true"
+	},
+	"accountExpired":{
+            "type": "Boolean",
+            "description":"Is Account Expired",
+	    "mockData":"false"
+	},
+	"accountLocked":{
+            "type": "Boolean",
+            "description":"Is Account Locked",
+	    "mockData":"false"
+	},
+	"passwordExpired":{
+            "type": "Boolean",
+            "description":"Is Password Expired",
+	    "mockData":"false"
+	}
+    },
+	"CURRENTSTABLE": "1",
+	"VERSION": {
+		"1": {
+			"DEFAULTACTION":"list",
+			"URI": {
+			    "create": {
+			     	"METHOD":"POST",
+			    	"DESCRIPTION":"Create new Person",
+			    	"ROLES":{
+				    "DEFAULT":["ROLE_ADMIN","ROLE_USER"],
+				    "BATCH":["ROLE_ADMIN"],
+				    "HOOK":["ROLE_ADMIN"]
+				},
+			        "REQUEST": {
+			            "permitAll":["username","password","email"]
+			        },
+			        "RESPONSE": {
+			        	"permitAll":["id","version"]
+			        }
+			    },
+			    "get": {
+			     	"METHOD":"GET",
+			    	"DESCRIPTION":"Get Person by ID",
+			    	"ROLES":{
+				    "DEFAULT":["ROLE_ADMIN","ROLE_USER"],
+				    "BATCH":["ROLE_ADMIN"],
+				    "HOOK":["ROLE_ADMIN"]
+				},
+			        "REQUEST": {
+			            "permitAll":[],
+				    "ROLE_ADMIN":["id"],
+			        },
+			        "RESPONSE": {
+			        	"permitAll":["id","version","username","email","enabled","accountExpired"]
+			        }
+			    },
+			    "list": {
+			     	"METHOD":"GET",
+			    	"DESCRIPTION":"List all Event Types",
+			    	"ROLES":{
+				    "DEFAULT":["ROLE_ADMIN"],
+				    "BATCH":["ROLE_ADMIN"],
+				    "HOOK":["ROLE_ADMIN"]
+				},
+			        "REQUEST": {
+			            "permitAll":[]
+			        },
+			        "RESPONSE": {
+			        	"permitAll":["id","version","username","email","enabled","accountExpired"]
+			        }
+			    },
+			    "delete": {
+			     	"METHOD":"DELETE",
+			    	"DESCRIPTION":"Delete Person",
+			    	"ROLES":{
+				    "DEFAULT":["ROLE_ADMIN"],
+				    "BATCH":["ROLE_ADMIN"],
+				    "HOOK":["ROLE_ADMIN"]
+				},
+			        "REQUEST": {
+			            "permitAll":["id"]
+			        },
+			        "RESPONSE": {
+			        	"permitAll":["id"]
+			        }
+			    }
+			}
+		}
+	}
+}

@@ -1,12 +1,17 @@
 package net.nosegrind.apiframework
 
-class AppToken {
+class AppToken implements Serializable {
 
-    String app
-    String tokenValue
-    String username
+	Application app
+	String tokenValue
 
-    static mapping = {
-        version false
-    }
+	static constraints = {
+		app blank: false, unique: true
+		tokenValue blank: false, unique: true
+	}
+
+	static mapping = {
+		cache true
+	}
+
 }
