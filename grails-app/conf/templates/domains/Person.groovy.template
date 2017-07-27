@@ -2,7 +2,7 @@ package net.nosegrind.apiframework
 
 class Person implements Serializable {
 
-	//static transactional = true
+	static transients = ['hasBeforeInsert','hasBeforeValidate','hasBeforeUpdate','springSecurityService']
 
 	transient hasBeforeInsert = false
 	transient hasBeforeValidate = false
@@ -11,49 +11,41 @@ class Person implements Serializable {
 
 	String username
 	String password
-	boolean enabled=true
-	boolean accountExpired=false
-	boolean accountLocked=false
-	boolean passwordExpired=false
-	String externalId
-	Date dateCreated = new Date()
-	Date lastVisited
-	Date lastModified = new Date()
-	String language
-	String timeZone
-	String website
 	String email
 	String oauthId
 	String oauthProvider
 	String avatarUrl
+	boolean enabled=true
+	boolean accountExpired=false
+	boolean accountLocked=false
+	boolean passwordExpired=false
 
-	static constraints = {
-		//id(nullable:true)
-		username(nullable:false,unique:true,maxSize:150)
-		password(nullable:false,maxSize:100)
-		enabled(nullable:false)
-		accountExpired(nullable:false)
-		accountLocked(nullable:false)
-		passwordExpired(nullable:false)
-		externalId(nullable:true)
-		dateCreated(nullable:false)
-		lastVisited(nullable:true)
-		lastModified(nullable:false)
-		language(nullable:true,maxSize:100)
-		timeZone(nullable:true,maxSize:100)
-		website(nullable:true,url:true)
-		email(nullable:false,email:true, unique: true,maxSize:100)
-		oauthId(nullable: true)
-		oauthProvider(nullable: true)
-		avatarUrl(nullable: true)
+/*
+	Person(String username, String password) {
+		this()
+		this.username = username
+		this.password = password
+	}
+	*/
+
+
+	@Override
+	int hashCode() {
+		username?.hashCode() ?: 0
 	}
 
-	static mapping = {
-		password column: '`password`'
+	@Override
+	boolean equals(other) {
+		is(other) || (other instanceof Person && other.username == username)
+	}
+
+	@Override
+	String toString() {
+		username
 	}
 
 	Set<Role> getAuthorities() {
-		PersonRole.findAllByPerson(this).collect { it.role } as Set
+		PersonRole.findAllByPerson(this)*.role
 	}
 
 	def beforeInsert() {
@@ -82,6 +74,27 @@ class Person implements Serializable {
 
 	protected void encodePassword() {
 		password = springSecurityService.encodePassword(password)
+	}
+
+	/*
+	protected void encodePassword() {
+		password = springSecurityService?.passwordEncoder ? springSecurityService.encodePassword(password) : password
+	}
+	*/
+
+	static constraints = {
+		username blank: false, unique: true
+		password blank: false
+		email(nullable:false,email:true, unique: true,maxSize:100)
+		oauthId(nullable: true)
+		oauthProvider(nullable: true)
+		avatarUrl(nullable: true)
+	}
+
+	static mapping = {
+		//datasource 'user'
+		password column: '`password`'
+		cache true
 	}
 
 }

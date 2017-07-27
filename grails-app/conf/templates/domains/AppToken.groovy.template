@@ -1,0 +1,12 @@
+package net.nosegrind.apiframework
+
+class AppToken {
+
+    String app
+    String tokenValue
+    String username
+
+    static mapping = {
+        version false
+    }
+}

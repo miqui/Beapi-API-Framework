@@ -29,7 +29,7 @@ class ThrottleCacheService{
 
 	// called through generateJSON()
 
-
+	// TODO : change from userid to token/appId
 	@CachePut(value="Throttle",key="#userId")
 	LinkedHashMap setThrottleCache(String userId, LinkedHashMap cache){
 		try{
@@ -39,6 +39,7 @@ class ThrottleCacheService{
 		}
 	}
 
+	// TODO : change from userid to token/appId
 	@CachePut(value="Throttle",key="#userId")
 	LinkedHashMap incrementThrottleCache(String userId){
 		try{
@@ -57,6 +58,7 @@ class ThrottleCacheService{
 		return cache
 	}
 
+	// TODO : change from userid to token/appId
 	@CachePut(value="Throttle",key="#userId")
 	LinkedHashMap checkLimitCache(String userId,String role){
 		// check role against config role limit
