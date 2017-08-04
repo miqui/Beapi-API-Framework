@@ -119,6 +119,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 					// NOTE: expectedMethod must be capitolized in IO State file
 					String expectedMethod = cache[params.apiObject][params.action.toString()]['method'] as String
 					if (!checkRequestMethod(mthd,expectedMethod, restAlt)) {
+						String path = "${params.controller}/${params.action}".toString()
 						render(status: 400, text: "Expected request method '${expectedMethod}' does not match sent method '${mthd.getKey()}'")
 						return false
 					}
@@ -146,6 +147,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 					// CHECK REQUEST VARIABLES MATCH ENDPOINTS EXPECTED VARIABLES
 					//String path = "${params.controller}/${params.action}".toString()
 					//println(path)
+
 					LinkedHashMap receives = cache[params.apiObject][params.action.toString()]['receives'] as LinkedHashMap
 					//boolean requestKeysMatch = checkURIDefinitions(params, receives)
 					if (!checkURIDefinitions(params, receives)) {
@@ -205,7 +207,6 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 			return false
 
 		}catch(Exception e){
-			//println("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:"+e)
 			throw new Exception("[ApiToolkitFilters :: preHandler] : Exception - full stack trace follows:", e)
 			return false
 		}
@@ -274,7 +275,8 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 					}
 				}
 			}else{
-				render(text: newModel, contentType: request.getContentType())
+				String content = parseResponseMethod(mthd, format, params, newModel)
+				render(text: content, contentType: request.getContentType())
 			}
 
 			return false

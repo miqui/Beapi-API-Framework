@@ -41,6 +41,7 @@ import net.nosegrind.apiframework.ApiCacheService
 import net.nosegrind.apiframework.ThrottleCacheService
 import grails.plugin.cache.GrailsCacheManager
 // extended by ApiCommLayer
+
 abstract class ApiCommProcess{
 
     @Resource
@@ -415,7 +416,6 @@ abstract class ApiCommProcess{
                         if (paramDesc?.values) {
                             j["$paramDesc.name"] = []
                         } else {
-                            println("####"+paramDesc?.paramType+"/"+paramDesc?.keyType)
                             String dataName = (['PKEY', 'FKEY', 'INDEX'].contains(paramDesc?.paramType?.toString())) ? 'ID' : paramDesc.paramType
                             j = (paramDesc?.mockData?.trim()) ? ["$paramDesc.name": "$paramDesc.mockData"] : ["$paramDesc.name": "$dataName"]
                         }
@@ -490,7 +490,6 @@ abstract class ApiCommProcess{
                     newMap["${it.name}Id"] = data[it.name].id
                 }else{
                     newMap[it.name] = data[it.name]
-                    
                 }
             }
             return newMap

@@ -280,6 +280,8 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
 
     LinkedHashMap parseJson(String apiName,JSONObject json, ApplicationContext applicationContext){
         def apiCacheService = applicationContext.getBean("apiCacheService")
+        apiCacheService.flushAllApiCache()
+
         LinkedHashMap methods = [:]
         json.VERSION.each() { vers ->
             def versKey = vers.key
