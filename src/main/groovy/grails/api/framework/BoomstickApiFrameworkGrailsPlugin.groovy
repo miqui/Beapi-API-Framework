@@ -17,7 +17,7 @@ import net.nosegrind.apiframework.ApiParams
 import net.nosegrind.apiframework.ParamsDescriptor
 
 import javax.servlet.ServletRegistration
-
+import java.util.Collections
 import org.grails.web.servlet.mvc.GrailsDispatcherServlet
 
 import grails.plugins.*
@@ -139,7 +139,7 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
 
         println "### Loading IO State Files ..."
 
-        try {
+        //try {
             new File(path).eachFile() { file ->
                 String fileName = file.name.toString()
 
@@ -147,18 +147,18 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
                 String fileChar = fileName.charAt(fileName.length() - 1)
 
                 if (tmp[1] == 'json' && fileChar == "n") {
-                    println(fileName)
-                    try{
+
+                    //try{
                         JSONObject json = JSON.parse(file.text)
                         methods[json.NAME.toString()] = parseJson(json.NAME.toString(), json, applicationContext)
-                    }catch(Exception e){
-                        throw new Exception("[ApiObjectService :: initialize] : Unacceptable file '${file.name}' - full stack trace follows:",e)
-                    }
+                    //}catch(Exception e){
+                    //    throw new Exception("[ApiObjectService :: initialize] : Unacceptable file '${file.name}' - full stack trace follows:",e)
+                    //}
                 }
             }
-        }catch(Exception e){
-            throw new Exception("[BeAPIFramework] : No IO State Files found for initialization :",e)
-        }
+        //}catch(Exception e){
+        //    throw new Exception("[BeAPIFramework] : No IO State Files found for initialization :",e)
+        //}
     }
 
 	void doInitApiFrameworkInstall(applicationContext) {
@@ -450,15 +450,17 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
             }
         }
 
-        // add permitAll vars to other roles after processing
         def permitAll = ioSet['permitAll']
         ioSet.each(){ key, val ->
             if(key!='permitAll'){
                 permitAll.each(){ it ->
-                    ioSet[key].add(it)
+                    if(!ioSet[key].contains("-${it}")) {
+                        ioSet[key].add(it)
+                    }
                 }
             }
         }
+
         return ioSet
     }
 

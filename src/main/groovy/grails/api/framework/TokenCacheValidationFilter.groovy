@@ -163,7 +163,7 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                     session['cache'] = cache
                 }
 
-                List roles = cache?."${version}"?."${action}"?.roles as List
+                HashSet roles = cache?."${version}"?."${action}"?.roles as HashSet
 
                 if(!checkAuth(roles,authenticationResult)) {
                     httpResponse.status = 401
@@ -182,8 +182,8 @@ class TokenCacheValidationFilter extends GenericFilterBean {
     }
 
 
-    boolean checkAuth(List roles, AccessToken accessToken){
-        List tokenRoles = []
+    boolean checkAuth(HashSet roles, AccessToken accessToken){
+        HashSet tokenRoles = []
         accessToken.getAuthorities()*.authority.each() { tokenRoles.add(it) }
         try {
             if (roles.size()==1 && roles[0] == 'permitAll') {

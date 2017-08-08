@@ -27,6 +27,8 @@ import grails.converters.JSON
 import grails.converters.XML
 import grails.web.servlet.mvc.GrailsParameterMap
 
+import java.util.LinkedList
+
 import javax.servlet.forward.*
 import org.grails.groovy.grails.commons.*
 import grails.core.GrailsApplication
@@ -99,12 +101,11 @@ abstract class ApiCommProcess{
     }
 
     boolean checkAuth(HttpServletRequest request, List roles){
-
         try {
             boolean hasAuth = false
             if (springSecurityService.loggedIn) {
                 def principal = springSecurityService.principal
-                List userRoles = principal.authorities*.authority
+                HashSet userRoles = principal.authorities*.authority as HashSet
                 roles.each {
                     if (userRoles.contains(it) || it=='permitAll') {
                         hasAuth = true
@@ -118,7 +119,6 @@ abstract class ApiCommProcess{
             throw new Exception("[ApiCommProcess :: checkAuth] : Exception - full stack trace follows:",e)
         }
     }
-
 
     boolean checkDeprecationDate(String deprecationDate){
         try{
@@ -143,15 +143,14 @@ abstract class ApiCommProcess{
 
     // TODO: put in OPTIONAL toggle in application.yml to allow for this check
     boolean checkURIDefinitions(GrailsParameterMap params,LinkedHashMap requestDefinitions){
-        List reservedNames = ['batchLength','batchInc','chainInc','apiChain','_','max','offset']
+        HashSet reservedNames = ['batchLength','batchInc','chainInc','apiChain','_','max','offset']
         try{
             String authority = getUserRole() as String
-            List temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as List:(requestDefinitions['permitAll'][0]!=null)? requestDefinitions['permitAll'] as List:[]
-            List requestList = (temp!=null)?temp.collect(){ it.name }:[]
+            HashSet temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as HashSet:(requestDefinitions['permitAll'][0]!=null)? requestDefinitions['permitAll'] as HashSet:[]
+            HashSet requestList = (temp!=null)?temp.collect(){ it.name }:[]
 
             Map methodParams = getMethodParams(params)
-
-            List paramsList = methodParams.keySet() as List
+            HashSet paramsList = methodParams.keySet() as HashSet
 
             // remove reservedNames from List
             reservedNames.each(){ paramsList.remove(it) }
@@ -231,10 +230,9 @@ abstract class ApiCommProcess{
 
                 //List paramsList
                 //Integer msize = model.size()
-                List paramsList = (model.size()==0)?[:]:model.keySet() as List
-
+                //List paramsList = (model.size()==0)?[:]:model.keySet() as List
+                HashSet paramsList = (model.size()==0)?[:]:model.keySet() as HashSet
                 paramsList?.removeAll(optionalParams)
-
 
                 if (!responseList.containsAll(paramsList)) {
                     paramsList.removeAll(responseList)
@@ -283,7 +281,6 @@ abstract class ApiCommProcess{
     Map getMethodParams(GrailsParameterMap params){
         try{
             Map paramsRequest = [:]
-            List myList = [1,2,3,4];
             paramsRequest = params.findAll { it2 -> !optionalParams.contains(it2.key) }
             return paramsRequest
         }catch(Exception e){
@@ -293,8 +290,8 @@ abstract class ApiCommProcess{
     }
 
     // used locally
-    Boolean hasRoles(List list) {
-        if(springSecurityService.principal.authorities*.authority.any { list.contains(it) }){
+    Boolean hasRoles(HashSet set) {
+        if(springSecurityService.principal.authorities*.authority.any { set.contains(it) }){
             return true
         }
         return false
@@ -579,7 +576,7 @@ abstract class ApiCommProcess{
         LinkedHashMap throttle = Holders.grailsApplication.config.apitoolkit.throttle as LinkedHashMap
         LinkedHashMap rateLimit = throttle.rateLimit as LinkedHashMap
         LinkedHashMap dataLimit = throttle.dataLimit as LinkedHashMap
-        List roles = rateLimit.keySet() as List
+        HashSet roles = rateLimit.keySet() as HashSet
         String auth = getUserRole()
 
         if(roles.contains(auth)){

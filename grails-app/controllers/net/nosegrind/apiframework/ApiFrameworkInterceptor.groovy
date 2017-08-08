@@ -150,6 +150,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 
 					LinkedHashMap receives = cache[params.apiObject][params.action.toString()]['receives'] as LinkedHashMap
 					//boolean requestKeysMatch = checkURIDefinitions(params, receives)
+
 					if (!checkURIDefinitions(params, receives)) {
 						render(status: HttpStatus.BAD_REQUEST.value(), text: 'Expected request variables for endpoint do not match sent variables')
 						response.flushBuffer()

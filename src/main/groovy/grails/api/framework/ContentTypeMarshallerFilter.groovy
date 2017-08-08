@@ -41,10 +41,10 @@ class ContentTypeMarshallerFilter extends OncePerRequestFilter {
         HttpServletResponse response = servletResponse as HttpServletResponse
 
         String format = (request?.format)?request.format.toUpperCase():'JSON'
-        List formats = ['XML', 'JSON']
+        HashSet formats = ['XML', 'JSON']
 
         if(!doesContentTypeMatch(request)){
-                println("ContentType ["+request.getContentType()+"] does not match Requested Format ["+request.format.toUpperCase()+"]")
+                //println("ContentType ["+request.getContentType()+"] does not match Requested Format ["+request.format.toUpperCase()+"]")
                 response.status = 401
                 response.setHeader('ERROR', 'ContentType does not match Requested Format')
                 response.writer.flush()

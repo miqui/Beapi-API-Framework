@@ -92,15 +92,17 @@ class ApiObjectService{
 			}
 		}
 
-		// add permitAll vars to other roles after processing
 		def permitAll = ioSet['permitAll']
 		ioSet.each(){ key, val ->
 			if(key!='permitAll'){
 				permitAll.each(){ it ->
-					ioSet[key].add(it)
+					if(!ioSet[key].contains("-${it}")) {
+						ioSet[key].add(it)
+					}
 				}
 			}
 		}
+
 		return ioSet
 	}
 
