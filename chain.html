@@ -101,6 +101,12 @@
 <h3>Benefits of API Chaining(tm)</h3>
 But why use API Chaining you may ask? Why not just make each individual request separately? Well API Chaining has benefits over traditional methodologies in the following ways
 
+<p>API Chaining as a process is only considered successfully implemented if:
+  <li>it uses one REQUEST/RESPONSE</li>
+  <li>the client can dynamically create chains based on endpoints accessible by their ROLE/PRIVILEGE; no hardcoded chains</li>
+  <li>no more than ONE non-safe REQUEST method is used in a chain; chains CAN chain off each other however</li>
+</p>
+
 <p><b>Reduces Data Being Sent</b>
 <ul>
   <li><b>PROBLEM :</b> In HATEOAS/HAL, all link relations must be returned with each api call; this creates large data returns / processing overhead.</li>
