@@ -56,6 +56,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 	RequestMethod mthd
 	LinkedHashMap cache = [:]
 
+
 	ApiFrameworkInterceptor(){
 		match(uri:"/${entryPoint}/**")
 	}
@@ -100,7 +101,6 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 		try{
 			def session = request.getSession()
 			cache = session['cache'] as LinkedHashMap
-
 
 			// IS APIDOC??
 			if(params.controller=='apidoc'){
@@ -249,12 +249,13 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 			ApiDescriptor cachedEndpoint = cache[params.apiObject][(String) params.action] as ApiDescriptor
 
 			// TEST FOR NESTED MAP; WE DON'T CACHE NESTED MAPS
-			boolean isNested = false
+			//boolean isNested = false
 			if (newModel != [:]) {
-				Object key = newModel?.keySet()?.iterator()?.next()
-				if (newModel[key].getClass().getName() == 'java.util.LinkedHashMap') {
-					isNested = true
-				}
+
+				//Object key = newModel?.keySet()?.iterator()?.next()
+				//if (newModel[key].getClass().getName() == 'java.util.LinkedHashMap') {
+				//	isNested = true
+				//}
 
 				String content = handleApiResponse(cachedEndpoint['returns'] as LinkedHashMap, cachedEndpoint['roles'] as List, mthd, format, response, newModel, params)
 

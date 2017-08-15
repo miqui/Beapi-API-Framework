@@ -105,7 +105,7 @@ abstract class ApiCommProcess{
             boolean hasAuth = false
             if (springSecurityService.loggedIn) {
                 def principal = springSecurityService.principal
-                HashSet userRoles = principal.authorities*.authority as HashSet
+                ArrayList userRoles = principal.authorities*.authority as ArrayList
                 roles.each {
                     if (userRoles.contains(it) || it=='permitAll') {
                         hasAuth = true
@@ -143,14 +143,14 @@ abstract class ApiCommProcess{
 
     // TODO: put in OPTIONAL toggle in application.yml to allow for this check
     boolean checkURIDefinitions(GrailsParameterMap params,LinkedHashMap requestDefinitions){
-        HashSet reservedNames = ['batchLength','batchInc','chainInc','apiChain','_','max','offset']
+        ArrayList reservedNames = ['batchLength','batchInc','chainInc','apiChain','_','max','offset']
         try{
             String authority = getUserRole() as String
-            HashSet temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as HashSet:(requestDefinitions['permitAll'][0]!=null)? requestDefinitions['permitAll'] as HashSet:[]
-            HashSet requestList = (temp!=null)?temp.collect(){ it.name }:[]
+            ArrayList temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as ArrayList:(requestDefinitions['permitAll'][0]!=null)? requestDefinitions['permitAll'] as ArrayList:[]
+            ArrayList requestList = (temp!=null)?temp.collect(){ it.name }:[]
 
-            Map methodParams = getMethodParams(params)
-            HashSet paramsList = methodParams.keySet() as HashSet
+            LinkedHashMap methodParams = getMethodParams(params)
+            ArrayList paramsList = methodParams.keySet() as ArrayList
 
             // remove reservedNames from List
             reservedNames.each(){ paramsList.remove(it) }
@@ -231,7 +231,7 @@ abstract class ApiCommProcess{
                 //List paramsList
                 //Integer msize = model.size()
                 //List paramsList = (model.size()==0)?[:]:model.keySet() as List
-                HashSet paramsList = (model.size()==0)?[:]:model.keySet() as HashSet
+                ArrayList paramsList = (model.size()==0)?[:]:model.keySet() as ArrayList
                 paramsList?.removeAll(optionalParams)
 
                 if (!responseList.containsAll(paramsList)) {
@@ -278,9 +278,9 @@ abstract class ApiCommProcess{
     */
 
     // used locally
-    Map getMethodParams(GrailsParameterMap params){
+    LinkedHashMap getMethodParams(GrailsParameterMap params){
         try{
-            Map paramsRequest = [:]
+            LinkedHashMap paramsRequest = [:]
             paramsRequest = params.findAll { it2 -> !optionalParams.contains(it2.key) }
             return paramsRequest
         }catch(Exception e){
@@ -290,7 +290,7 @@ abstract class ApiCommProcess{
     }
 
     // used locally
-    Boolean hasRoles(HashSet set) {
+    Boolean hasRoles(ArrayList set) {
         if(springSecurityService.principal.authorities*.authority.any { set.contains(it) }){
             return true
         }
@@ -576,7 +576,7 @@ abstract class ApiCommProcess{
         LinkedHashMap throttle = Holders.grailsApplication.config.apitoolkit.throttle as LinkedHashMap
         LinkedHashMap rateLimit = throttle.rateLimit as LinkedHashMap
         LinkedHashMap dataLimit = throttle.dataLimit as LinkedHashMap
-        HashSet roles = rateLimit.keySet() as HashSet
+        ArrayList roles = rateLimit.keySet() as ArrayList
         String auth = getUserRole()
 
         if(roles.contains(auth)){

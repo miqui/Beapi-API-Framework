@@ -105,9 +105,9 @@ class ApiCacheService{
 		}
 	}
 	
-	Map generateApiDoc(String controllername, String actionname, String apiversion){
+	LinkedHashMap generateApiDoc(String controllername, String actionname, String apiversion){
 		try{
-			Map doc = [:]
+			LinkedHashMap doc = [:]
 			def cache = getApiCache(controllername)
 
 			String apiPrefix = "v${Metadata.current.getApplicationVersion()}"

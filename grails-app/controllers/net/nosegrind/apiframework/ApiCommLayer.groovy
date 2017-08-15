@@ -112,12 +112,12 @@ abstract class ApiCommLayer extends ApiCommProcess{
             String authority = getUserRole() as String
             response.setHeader('Authorization', roles.join(', '))
             ArrayList responseList = []
-            ArrayList<HashMap> temp = new ArrayList()
+            ArrayList<LinkedHashMap> temp = new ArrayList()
             if(requestDefinitions["${authority}".toString()]) {
-                ArrayList<HashMap> temp1 = requestDefinitions["${authority}".toString()] as ArrayList<HashMap>
+                ArrayList<LinkedHashMap> temp1 = requestDefinitions["${authority}".toString()] as ArrayList<LinkedHashMap>
                 temp.addAll(temp1)
             }else{
-                ArrayList<HashMap> temp2 = requestDefinitions['permitAll'] as ArrayList<HashMap>
+                ArrayList<LinkedHashMap> temp2 = requestDefinitions['permitAll'] as ArrayList<LinkedHashMap>
                 temp.addAll(temp2)
             }
 
@@ -145,7 +145,7 @@ abstract class ApiCommLayer extends ApiCommProcess{
             String authority = getUserRole() as String
             response.setHeader('Authorization', roles.join(', '))
 
-            ArrayList<HashMap> temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as ArrayList<HashMap>:requestDefinitions['permitAll'] as ArrayList<HashMap>
+            ArrayList<LinkedHashMap> temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as ArrayList<LinkedHashMap>:requestDefinitions['permitAll'] as ArrayList<LinkedHashMap>
             ArrayList responseList = (ArrayList)temp.collect(){ it.name }
 
             LinkedHashMap result = parseURIDefinitions(model,responseList)
@@ -172,7 +172,7 @@ abstract class ApiCommLayer extends ApiCommProcess{
             String authority = getUserRole() as String
             response.setHeader('Authorization', roles.join(', '))
 
-            ArrayList<HashMap> temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as ArrayList<HashMap>:requestDefinitions['permitAll'] as ArrayList<HashMap>
+            ArrayList<LinkedHashMap> temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as ArrayList<LinkedHashMap>:requestDefinitions['permitAll'] as ArrayList<LinkedHashMap>
 
             ArrayList responseList = (ArrayList)temp.collect(){ it.name }
 
