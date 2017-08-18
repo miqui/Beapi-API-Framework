@@ -21,6 +21,7 @@ import net.nosegrind.apiframework.RequestMethod
 
 import org.grails.web.util.WebUtils
 
+import grails.util.Holders
 import javax.servlet.http.HttpServletResponse
 import groovy.transform.CompileStatic
 
@@ -43,6 +44,7 @@ class BatchInterceptor extends ApiCommLayer{
 	String mthdKey
 	RequestMethod mthd
 	LinkedHashMap cache = [:]
+	boolean apiThrottle
 
 	BatchInterceptor(){
 		match(uri:"/${entryPoint}/**")
@@ -58,6 +60,8 @@ class BatchInterceptor extends ApiCommLayer{
 		format = (request?.format)?request.format:'JSON';
 		mthdKey = request.method.toUpperCase()
 		mthd = (RequestMethod) RequestMethod[mthdKey]
+
+		apiThrottle = Holders.grailsApplication.config.apiThrottle as boolean
 
 		//Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 		boolean restAlt = RequestMethod.isRestAlt(mthd.getKey())
@@ -104,6 +108,29 @@ class BatchInterceptor extends ApiCommLayer{
 					return false
 				}
 
+				params.max = (params.max!=null)?params.max:0
+				params.offset = (params.offset!=null)?params.offset:0
+
+				// CHECK FOR REST ALTERNATIVES
+				if (restAlt) {
+					// PARSE REST ALTS (TRACE, OPTIONS, ETC)
+					String result = parseRequestMethod(mthd, params)
+					if (result) {
+						byte[] contentLength = result.getBytes("ISO-8859-1")
+						if (apiThrottle) {
+							if (checkLimit(contentLength.length)) {
+								render(text: result, contentType: request.getContentType())
+								return false
+							} else {
+								render(status: 400, text: 'Rate Limit exceeded. Please wait' + getThrottleExpiration() + 'seconds til next request.')
+								return false
+							}
+						}else{
+							render(text: result, contentType: request.getContentType())
+							return false
+						}
+					}
+				}
 
 				if (request?.getAttribute('batchInc')==null) {
 					request.setAttribute('batchInc',0)
@@ -151,10 +178,26 @@ class BatchInterceptor extends ApiCommLayer{
 					String domain = ((String) params.controller).capitalize()
 
 					JSONObject json = (JSONObject) cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()]
-					if (isCachedResult((Integer) json.get('version'), domain)) {
-						def result = cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()]
-						render(text: result, contentType: request.getContentType())
+					if(!json){
 						return false
+					}else{
+						if (isCachedResult((Integer) json.get('version'), domain)) {
+							String result = cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()] as String
+							byte[] contentLength = result.getBytes( "ISO-8859-1" )
+							if(apiThrottle) {
+								if (checkLimit(contentLength.length)) {
+									render(text: result, contentType: request.getContentType())
+									return false
+								} else {
+									render(status: 400, text: 'Rate Limit exceeded. Please wait' + getThrottleExpiration() + 'seconds til next request.')
+									response.flushBuffer()
+									return false
+								}
+							}else{
+								render(text: result, contentType: request.getContentType())
+								return false
+							}
+						}
 					}
 				} else {
 					if (params.action == null || !params.action) {
@@ -201,28 +244,45 @@ class BatchInterceptor extends ApiCommLayer{
 				newModel = convertModel(model)
 			}
 
-
 			//LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
 			//LinkedHashMap content
 			int batchLength = (int) request.getAttribute('batchLength')
 			int batchInc = (int) request.getAttribute('batchInc')
 			if(batchEnabled && (batchLength > batchInc+1)){
 				WebUtils.exposeRequestAttributes(request, params);
-				// this will work fine when we upgrade to newer version that has fix in iut
+				// this will work fine when we upgrade to newer version that has fix in it
 				params.uri = request.forwardURI.toString()
 				forward(params)
 				return false
 			}
-
 
 			ApiDescriptor cachedEndpoint = cache[params.apiObject][(String)params.action] as ApiDescriptor
 			String content = handleBatchResponse(cachedEndpoint['returns'] as LinkedHashMap,cachedEndpoint['roles'] as List,mthd,format,response,newModel,params) as LinkedHashMap
 
 			//content = handleBatchResponse(cache[params.apiObject][params.action.toString()],request,response,newModel,params) as LinkedHashMap
 
+			byte[] contentLength = content.getBytes( "ISO-8859-1" )
 			if(content){
-				render(text:content, contentType:request.getContentType())
-				return false
+				// STORE CACHED RESULT
+				String format = request.format.toUpperCase()
+				String authority = getUserRole() as String
+
+				if (!newModel) {
+					apiCacheService.setApiCachedResult((String) params.controller, (String) params.apiObject, (String) params.action, authority, format, content)
+				}
+
+				if(apiThrottle) {
+					if (checkLimit(contentLength.length)) {
+						render(text: content, contentType: request.getContentType())
+						return false
+					} else {
+						render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Rate Limit exceeded. Please wait' + getThrottleExpiration() + 'seconds til next request.')
+						return false
+					}
+				}else{
+					render(text: content, contentType: request.getContentType())
+					return false
+				}
 			}
 
 			return false

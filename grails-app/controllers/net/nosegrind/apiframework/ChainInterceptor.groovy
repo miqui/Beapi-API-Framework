@@ -19,6 +19,7 @@ import groovy.json.JsonSlurper
 import net.nosegrind.apiframework.RequestMethod
 import org.grails.web.util.WebUtils
 
+import grails.util.Holders
 import javax.servlet.http.HttpServletResponse
 import groovy.transform.CompileStatic
 
@@ -46,6 +47,7 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 	LinkedHashMap chainOrder = [:]
 	LinkedHashMap cache = [:]
 	LinkedHashMap<String,LinkedHashMap<String,String>> chain
+	boolean apiThrottle
 
 	ChainInterceptor(){
 		match(uri:"/${entryPoint}/**")
@@ -62,7 +64,7 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 		mthdKey = request.method.toUpperCase()
 		mthd = (RequestMethod) RequestMethod[mthdKey]
 
-
+		apiThrottle = Holders.grailsApplication.config.apiThrottle as boolean
 
 
 		//Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
@@ -138,6 +140,29 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 						return false
 					}
 
+					params.max = (params.max!=null)?params.max:0
+					params.offset = (params.offset!=null)?params.offset:0
+
+					// CHECK FOR REST ALTERNATIVES
+					if (restAlt) {
+						// PARSE REST ALTS (TRACE, OPTIONS, ETC)
+						String result = parseRequestMethod(mthd, params)
+						if (result) {
+							byte[] contentLength = result.getBytes("ISO-8859-1")
+							if (apiThrottle) {
+								if (checkLimit(contentLength.length)) {
+									render(text: result, contentType: request.getContentType())
+									return false
+								} else {
+									render(status: 400, text: 'Rate Limit exceeded. Please wait' + getThrottleExpiration() + 'seconds til next request.')
+									return false
+								}
+							}else{
+								render(text: result, contentType: request.getContentType())
+								return false
+							}
+						}
+					}
 
 					if (request?.getAttribute('chainInc') == null) {
 						request.setAttribute('chainInc', 0)
@@ -178,13 +203,25 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 						String domain = ((String) params.controller).capitalize()
 
 						JSONObject json = (JSONObject) cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()]
-						if (!json) {
+						if(!json){
 							return false
-						} else {
+						}else{
 							if (isCachedResult((Integer) json.get('version'), domain)) {
-								def result = cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()]
-								render(text: result, contentType: request.getContentType())
-								return false
+								String result = cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()] as String
+								byte[] contentLength = result.getBytes( "ISO-8859-1" )
+								if(apiThrottle) {
+									if (checkLimit(contentLength.length)) {
+										render(text: result, contentType: request.getContentType())
+										return false
+									} else {
+										render(status: 400, text: 'Rate Limit exceeded. Please wait' + getThrottleExpiration() + 'seconds til next request.')
+										response.flushBuffer()
+										return false
+									}
+								}else{
+									render(text: result, contentType: request.getContentType())
+									return false
+								}
 							}
 						}
 					} else {
@@ -192,7 +229,6 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 						// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
 						ApiDescriptor cachedEndpoint = cache[(String) params.apiObject][(String) params.action] as ApiDescriptor
 						boolean result = handleApiRequest(cachedEndpoint['deprecated'] as List, (cachedEndpoint['method'])?.toString(), mthd, response, params)
-
 
 						return result
 					}
@@ -226,7 +262,6 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 				newModel = convertModel(model)
 			}
 
-
 			//LinkedHashMap cache = apiCacheService.getApiCache(params.controller.toString())
 			//LinkedHashMap content
 
@@ -254,7 +289,9 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 				} else {
 					String content = handleChainResponse(cachedEndpoint['returns'] as LinkedHashMap, cachedEndpoint['roles'] as List, mthd, format, response, newModel, params)
 
-					if (content) {
+					byte[] contentLength = content.getBytes( "ISO-8859-1" )
+					if(content) {
+
 						// STORE CACHED RESULT
 						String format = request.format.toUpperCase()
 						String authority = getUserRole() as String
@@ -262,8 +299,19 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 						if (!newModel) {
 							apiCacheService.setApiCachedResult((String) params.controller, (String) params.apiObject, (String) params.action, authority, format, content)
 						}
-						render(text: content, contentType: request.getContentType())
-						return false
+
+						if (apiThrottle) {
+							if (checkLimit(contentLength.length)) {
+								render(text: content, contentType: request.getContentType())
+								return false
+							} else {
+								render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Rate Limit exceeded. Please wait' + getThrottleExpiration() + 'seconds til next request.')
+								return false
+							}
+						} else {
+							render(text: content, contentType: request.getContentType())
+							return false
+						}
 					}
 				}
 
