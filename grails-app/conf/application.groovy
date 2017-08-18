@@ -3,10 +3,10 @@ import grails.util.Metadata
 String apiVersion = Metadata.current.getApplicationVersion()
 // fix for dots not working with spring security pathing
 String entryPoint = "/v${apiVersion}".toString()
-String batchEntryPoint = "b${apiVersion}".toString()
-String chainEntryPoint = "c${apiVersion}".toString()
-String metricsEntryPoint = "m${apiVersion}".toString()
-String domainEntryPoint = "d${apiVersion}".toString()
+String batchEntryPoint = "/b${apiVersion}".toString()
+String chainEntryPoint = "/c${apiVersion}".toString()
+String metricsEntryPoint = "/m${apiVersion}".toString()
+//String domainEntryPoint = "d${apiVersion}".toString()
 
 
 // The ACCEPT header will not be used for content negotiation for user agents containing the following strings (defaults to the 4 major rendering engines)

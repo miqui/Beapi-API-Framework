@@ -101,16 +101,6 @@ apitoolkit:
         allowedOrigins: ['localhost:3000']
 
 ---
-server:
-    tomcat:
-        backgroundProcessorDelay: 30
-        maxThreads: 250
-        uriEncoding: UTF-8
-        compression: off
-        compressableMimeTypes: application/json,text/json,application/xml,text/xml,text/plain
-    use-forward-headers: false
-
----
 security:
     headers:
         cache: false

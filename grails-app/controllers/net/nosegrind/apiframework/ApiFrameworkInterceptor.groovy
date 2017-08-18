@@ -47,6 +47,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 	ApiCacheService apiCacheService
 	SpringSecurityService springSecurityService
 	HookService hookService
+	boolean apiThrottle
 
 	// TODO: detect and assign apiObjectVersion from uri
 	String entryPoint = "v${Metadata.current.getProperty(Metadata.APPLICATION_VERSION, String.class)}"
@@ -71,6 +72,8 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 		format = (request?.format)?request.format.toUpperCase():'JSON'
 		mthdKey = request.method.toUpperCase()
 		mthd = (RequestMethod) RequestMethod[mthdKey]
+
+		apiThrottle = Holders.grailsApplication.config.apiThrottle as boolean
 
 		//Map methods = ['GET':'show','PUT':'update','POST':'create','DELETE':'delete']
 		boolean restAlt = RequestMethod.isRestAlt(mthd.getKey())
@@ -127,18 +130,23 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 					params.max = (params.max!=null)?params.max:0
 					params.offset = (params.offset!=null)?params.offset:0
 
-
 					// CHECK FOR REST ALTERNATIVES
 					if (restAlt) {
 						// PARSE REST ALTS (TRACE, OPTIONS, ETC)
 						String result = parseRequestMethod(mthd, params)
 						if (result) {
-							byte[] contentLength = result.getBytes( "ISO-8859-1" )
-							if(checkLimit(contentLength.length)) {
-								render(text: result, contentType: request.getContentType())
-								return false
+							byte[] contentLength = result.getBytes("ISO-8859-1")
+
+							if (apiThrottle) {
+								if (checkLimit(contentLength.length)) {
+									render(text: result, contentType: request.getContentType())
+									return false
+								} else {
+									render(status: 400, text: 'Rate Limit exceeded. Please wait' + getThrottleExpiration() + 'seconds til next request.')
+									return false
+								}
 							}else{
-								render(status: 400, text: 'Rate Limit exceeded. Please wait'+getThrottleExpiration()+'seconds til next request.')
+								render(text: result, contentType: request.getContentType())
 								return false
 							}
 						}
@@ -169,12 +177,17 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 							if (isCachedResult((Integer) json.get('version'), domain)) {
 								String result = cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()] as String
 								byte[] contentLength = result.getBytes( "ISO-8859-1" )
-								if(checkLimit(contentLength.length)) {
-									render(text: result, contentType: request.getContentType())
-									return false
+								if(apiThrottle) {
+									if (checkLimit(contentLength.length)) {
+										render(text: result, contentType: request.getContentType())
+										return false
+									} else {
+										render(status: 400, text: 'Rate Limit exceeded. Please wait' + getThrottleExpiration() + 'seconds til next request.')
+										response.flushBuffer()
+										return false
+									}
 								}else{
-									render(status: 400, text: 'Rate Limit exceeded. Please wait'+getThrottleExpiration()+'seconds til next request.')
-									response.flushBuffer()
+									render(text: result, contentType: request.getContentType())
 									return false
 								}
 							}
@@ -268,11 +281,17 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 					if (!newModel) {
 						apiCacheService.setApiCachedResult((String) params.controller, (String) params.apiObject, (String) params.action, authority, format, content)
 					}
-					if(checkLimit(contentLength.length)) {
-						render(text: content, contentType: request.getContentType())
-						return false
+
+					if(apiThrottle) {
+						if (checkLimit(contentLength.length)) {
+							render(text: content, contentType: request.getContentType())
+							return false
+						} else {
+							render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Rate Limit exceeded. Please wait' + getThrottleExpiration() + 'seconds til next request.')
+							return false
+						}
 					}else{
-						render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Rate Limit exceeded. Please wait'+getThrottleExpiration()+'seconds til next request.')
+						render(text: content, contentType: request.getContentType())
 						return false
 					}
 				}

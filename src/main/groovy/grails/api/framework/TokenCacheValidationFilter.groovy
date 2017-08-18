@@ -114,7 +114,7 @@ class TokenCacheValidationFilter extends GenericFilterBean {
         String actualUri = httpRequest.requestURI - httpRequest.contextPath
 
         if (!active) {
-            //println("Token validation is disabled. Continuing the filter chain")
+            println("Token validation is disabled. Continuing the filter chain")
             return
         }
 
@@ -127,7 +127,8 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                 String entryPoint = Metadata.current.getProperty(Metadata.APPLICATION_VERSION, String.class)
                 String controller
                 String action
-                if(actualUri ==~ /\\/.{0}[a-z].{0}${entryPoint}(.*)/){
+
+                if(actualUri ==~ /\/.{0}[a-z]${entryPoint}\/(.*)/){
                     List params = actualUri.split('/')
                     controller = params[2]
                     action = params[3]

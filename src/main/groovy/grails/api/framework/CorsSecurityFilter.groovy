@@ -39,7 +39,7 @@ class CorsSecurityFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
-    //void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+
         HttpServletRequest httpRequest = request as HttpServletRequest
         HttpServletResponse httpResponse = response as HttpServletResponse
 
@@ -49,6 +49,7 @@ class CorsSecurityFilter extends OncePerRequestFilter {
     }
 
     boolean processPreflight(HttpServletRequest request, HttpServletResponse response) {
+
         Map corsInterceptorConfig = (Map) Holders.grailsApplication.config.corsInterceptor
 
         String[] includeEnvironments = corsInterceptorConfig['includeEnvironments']?: null
