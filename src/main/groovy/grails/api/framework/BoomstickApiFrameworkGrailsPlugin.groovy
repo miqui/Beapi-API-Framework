@@ -15,6 +15,7 @@ import grails.plugin.springsecurity.SecurityFilterPosition
 import net.nosegrind.apiframework.ApiDescriptor
 import net.nosegrind.apiframework.ApiParams
 import net.nosegrind.apiframework.ParamsDescriptor
+import groovy.util.AntBuilder
 
 import javax.servlet.ServletRegistration
 import java.util.Collections
@@ -63,13 +64,15 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
     def developers = [ [ name: "Owen Rubel", email: "orubel@gmail.com" ]]
 
     Closure doWithSpring() { { ->
-        def conf = SpringSecurityUtils.securityConfig
-        if (!conf || !conf.active) {
-            return
-        }
 
-        SpringSecurityUtils.loadSecondaryConfig 'DefaultRestSecurityConfig'
-        conf = SpringSecurityUtils.securityConfig
+        try{
+            def conf = SpringSecurityUtils.securityConfig
+            if (!conf || !conf.active) {
+                return
+            }
+
+            SpringSecurityUtils.loadSecondaryConfig 'DefaultRestSecurityConfig'
+            conf = SpringSecurityUtils.securityConfig
 
             /* restTokenValidationFilter */
             SpringSecurityUtils.registerFilter 'tokenCacheValidationFilter', SecurityFilterPosition.PRE_AUTH_FILTER.order + 1
@@ -90,48 +93,60 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
                 authenticationEventPublisher = ref('authenticationEventPublisher')
             }
             contentTypeMarshallerFilter(ContentTypeMarshallerFilter){}
+        }catch(Exception e){
+            throw new Exception("[BeAPIFramework] : Issue creating Filters :",e)
+        }
     } }
 
     def doWithDynamicMethods = { applicationContext ->
         // Configure servlets
-        def config = getBean("grailsApplication").config
-        def servletContext =  applicationContext.servletContext
-        def serverInfo = servletContext.getServerInfo()
+        try {
+            def config = getBean("grailsApplication").config
+            def servletContext = applicationContext.servletContext
+            def serverInfo = servletContext.getServerInfo()
 
 
-        config?.servlets?.each { name, parameters ->
-            ServletRegistration servletRegistration = servletContext.addServlet(name, parameters.className)
-            servletRegistration.addMapping(parameters.mapping)
-            servletRegistration.setAsyncSupported(Boolean.TRUE)
-            servletRegistration.setLoadOnStartup(1)
+            config?.servlets?.each { name, parameters ->
+                ServletRegistration servletRegistration = servletContext.addServlet(name, parameters.className)
+                servletRegistration.addMapping(parameters.mapping)
+                servletRegistration.setAsyncSupported(Boolean.TRUE)
+                servletRegistration.setLoadOnStartup(1)
 
-            // servletRegistration.setInitParameter("org.atmosphere.cpr.asyncSupport", "org.atmosphere.container.JettyServlet30AsyncSupportWithWebSocket")
+                // servletRegistration.setInitParameter("org.atmosphere.cpr.asyncSupport", "org.atmosphere.container.JettyServlet30AsyncSupportWithWebSocket")
 
-            def initParams = parameters.initParams
-            if (initParams != "none") {
-                initParams?.each { param, value ->
-                    servletRegistration.setInitParameter(param, value)
+                def initParams = parameters.initParams
+                if (initParams != "none") {
+                    initParams?.each { param, value ->
+                        servletRegistration.setInitParameter(param, value)
+                    }
                 }
             }
+        }catch(Exception e){
+            throw new Exception("[BeAPIFramework] : Bad Mapping for initialization :",e)
         }
     }
 
     void doWithApplicationContext() {
 
         // Delegate OPTIONS requests to controllers
-        applicationContext.dispatcherServlet.setDispatchOptionsRequest(true)
+        //try{
+            applicationContext.dispatcherServlet.setDispatchOptionsRequest(true)
 
-		String basedir = BuildSettings.BASE_DIR
-		def ant = new AntBuilder()
-		ant.mkdir(dir: "${basedir}/src/iostate")
-		ant.mkdir(dir: "${System.properties.'user.home'}/.iostate")
+            String basedir = BuildSettings.BASE_DIR
+            def ant = new AntBuilder()
 
-        //def ctx = applicationContext.getServletContext()
-        //ctx.setInitParameter("dispatchOptionsRequest", "true");
+            ant.mkdir(dir: "${basedir}/src/iostate")
+            ant.mkdir(dir: "${System.properties.'user.home'}/.iostate")
 
-		doInitApiFrameworkInstall(applicationContext)
-        String apiObjectSrc = grails.util.Holders.grailsApplication.config.iostate.preloadDir
-        parseFiles(apiObjectSrc.toString(), applicationContext)
+            //def ctx = applicationContext.getServletContext()
+            //ctx.setInitParameter("dispatchOptionsRequest", "true");
+
+            doInitApiFrameworkInstall(applicationContext)
+            String apiObjectSrc = grails.util.Holders.grailsApplication.config.iostate.preloadDir
+            parseFiles(apiObjectSrc.toString(), applicationContext)
+        //}catch(Exception e){
+        //    throw new Exception("[BeAPIFramework] : Cannot set system properties :",e)
+        //}
     }
 
     private parseFiles(String path, ApplicationContext applicationContext){
@@ -139,7 +154,7 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
 
         println "### Loading IO State Files ..."
 
-        //try {
+        try {
             new File(path).eachFile() { file ->
                 String fileName = file.name.toString()
 
@@ -148,17 +163,17 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
 
                 if (tmp[1] == 'json' && fileChar == "n") {
 
-                    //try{
+                    try{
                         JSONObject json = JSON.parse(file.text)
                         methods[json.NAME.toString()] = parseJson(json.NAME.toString(), json, applicationContext)
-                    //}catch(Exception e){
-                    //    throw new Exception("[ApiObjectService :: initialize] : Unacceptable file '${file.name}' - full stack trace follows:",e)
-                    //}
+                    }catch(Exception e){
+                        throw new Exception("[ApiObjectService :: initialize] : Unacceptable file '${file.name}' - full stack trace follows:",e)
+                    }
                 }
             }
-        //}catch(Exception e){
-        //    throw new Exception("[BeAPIFramework] : No IO State Files found for initialization :",e)
-        //}
+        }catch(Exception e){
+            throw new Exception("[BeAPIFramework] : No IO State Files found for initialization :",e)
+        }
     }
 
 	void doInitApiFrameworkInstall(applicationContext) {

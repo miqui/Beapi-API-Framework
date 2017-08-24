@@ -41,7 +41,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.grails.core.artefact.DomainClassArtefactHandler
 import net.nosegrind.apiframework.ApiCacheService
 import net.nosegrind.apiframework.ThrottleCacheService
-import grails.plugin.cache.GrailsCacheManager
+//import grails.plugin.cache.GrailsCacheManager
+import org.grails.plugin.cache.GrailsCacheManager
 // extended by ApiCommLayer
 
 abstract class ApiCommProcess{

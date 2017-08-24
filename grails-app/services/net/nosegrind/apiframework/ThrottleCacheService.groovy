@@ -13,7 +13,8 @@ package net.nosegrind.apiframework
 import grails.converters.JSON
 //import grails.converters.XML
 import grails.plugin.cache.CachePut
-import grails.plugin.cache.GrailsCacheManager
+//import grails.plugin.cache.GrailsCacheManager
+import org.grails.plugin.cache.GrailsCacheManager
 import org.grails.groovy.grails.commons.*
 import grails.core.GrailsApplication
 import grails.plugin.springsecurity.SpringSecurityService
@@ -30,7 +31,7 @@ class ThrottleCacheService{
 	// called through generateJSON()
 
 	// TODO : change from userid to token/appId
-	@CachePut(value="Throttle",key="#userId")
+	@org.springframework.cache.annotation.CachePut(value="Throttle",key="#userId")
 	LinkedHashMap setThrottleCache(String userId, LinkedHashMap cache){
 		try{
 			return cache
@@ -40,7 +41,7 @@ class ThrottleCacheService{
 	}
 
 	// TODO : change from userid to token/appId
-	@CachePut(value="Throttle",key="#userId")
+	@org.springframework.cache.annotation.CachePut(value="Throttle",key="#userId")
 	LinkedHashMap incrementThrottleCache(String userId){
 		try{
 			def cache = getLimitCache(userId)
@@ -51,7 +52,7 @@ class ThrottleCacheService{
 		}
 	}
 
-	@CachePut(value="Throttle",key="#userId")
+	@org.springframework.cache.annotation.CachePut(value="Throttle",key="#userId")
 	LinkedHashMap lockLimitCache(String uri){
 		def cache = getLimitCache(userId)
 		cache['locked']=true
@@ -59,7 +60,7 @@ class ThrottleCacheService{
 	}
 
 	// TODO : change from userid to token/appId
-	@CachePut(value="Throttle",key="#userId")
+	@org.springframework.cache.annotation.CachePut(value="Throttle",key="#userId")
 	LinkedHashMap checkLimitCache(String userId,String role){
 		// check role against config role limit
 	}

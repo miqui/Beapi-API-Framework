@@ -39,7 +39,8 @@ import grails.util.Metadata
 import org.springframework.web.context.support.WebApplicationContextUtils
 import org.springframework.context.ApplicationContext
 
-import grails.plugin.cache.GrailsCacheManager
+//import grails.plugin.cache.GrailsCacheManager
+import org.grails.plugin.cache.GrailsCacheManager
 import grails.util.Holders
 
 import javax.servlet.http.HttpSession

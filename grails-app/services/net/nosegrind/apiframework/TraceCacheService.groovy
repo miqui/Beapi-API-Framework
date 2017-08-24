@@ -13,7 +13,8 @@ package net.nosegrind.apiframework
 import grails.converters.JSON
 //import grails.converters.XML
 import grails.plugin.cache.CachePut
-import grails.plugin.cache.GrailsCacheManager
+//import grails.plugin.cache.GrailsCacheManager
+import org.grails.plugin.cache.GrailsCacheManager
 import org.grails.groovy.grails.commons.*
 import grails.core.GrailsApplication
 /*
@@ -41,7 +42,7 @@ class TraceCacheService{
 		}
 	}
 
-	@CachePut(value="Trace",key="#uri")
+	@org.springframework.cache.annotation.CachePut(value="Trace",key="#uri")
 	LinkedHashMap putTraceCache(String uri, LinkedHashMap cache){
 		try{
 			return cache
@@ -50,7 +51,7 @@ class TraceCacheService{
 		}
 	}
 
-	@CachePut(value="Trace",key="#uri")
+	@org.springframework.cache.annotation.CachePut(value="Trace",key="#uri")
 	LinkedHashMap setTraceMethod(String uri,LinkedHashMap cache){
 		try{
 			return cache

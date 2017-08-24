@@ -17,7 +17,8 @@ import grails.util.Metadata
 import grails.plugin.cache.CacheEvict
 import grails.plugin.cache.CachePut
 import org.springframework.cache.annotation.*
-import grails.plugin.cache.GrailsCacheManager
+//import grails.plugin.cache.GrailsCacheManager
+import org.grails.plugin.cache.GrailsCacheManager
 import org.grails.groovy.grails.commons.*
 import grails.core.GrailsApplication
 
@@ -39,11 +40,15 @@ class ApiCacheService{
 	 * Need to lock this down to avoid process calling this.
 	 */
 	void flushAllApiCache(){
-		grailsApplication?.controllerClasses?.each { controllerClass ->
-			String controllername = controllerClass.logicalPropertyName
-			if(controllername!='aclClass'){
-				flushApiCache(controllername)
+		try {
+			grailsApplication?.controllerClasses?.each { controllerClass ->
+				String controllername = controllerClass.logicalPropertyName
+				if (controllername != 'aclClass') {
+					flushApiCache(controllername)
+				}
 			}
+		}catch(Exception e){
+			throw new Exception("[ApiCacheService :: flushApiCache] : Error :",e)
 		}
 	}
 
@@ -52,18 +57,18 @@ class ApiCacheService{
 	 * DO NOT flush while LIVE!!!
 	 */
 	//@org.springframework.cache.annotation.CacheEvict(value="ApiCache",key="#controllername")
-	@CacheEvict(value="ApiCache",key="#controllername")
+	@org.springframework.cache.annotation.CacheEvict(value="ApiCache",key="#controllername")
 	void flushApiCache(String controllername){}
 
 
 	//@org.springframework.cache.annotation.CachePut(value="ApiCache",key="#controllername")
-	@CachePut(value="ApiCache",key="#controllername")
+	@org.springframework.cache.annotation.CachePut(value="ApiCache",key="#controllername")
 	LinkedHashMap setApiCache(String controllername,LinkedHashMap apidesc){
 		return apidesc
 	}
 
 	//@org.springframework.cache.annotation.CachePut(value="ApiCache",key="#controllername")
-	@CachePut(value="ApiCache",key="#controllername")
+	@org.springframework.cache.annotation.CachePut(value="ApiCache",key="#controllername")
 	LinkedHashMap setApiCache(String controllername,String methodname, ApiDescriptor apidoc, String apiversion){
 		try{
 			def cache = getApiCache(controllername)
@@ -89,7 +94,7 @@ class ApiCacheService{
 	}
 
 	//@org.springframework.cache.annotation.CachePut(value="ApiCache",key="#controllername")
-	@CachePut(value="ApiCache",key="#controllername")
+	@org.springframework.cache.annotation.CachePut(value="ApiCache",key="#controllername")
 	LinkedHashMap setApiCachedResult(String controllername, String apiversion, String methodname, String authority, String format, String content){
 		try{
 			JSONObject json = JSON.parse(content)
