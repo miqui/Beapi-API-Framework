@@ -14,7 +14,8 @@ import grails.converters.JSON
 //import grails.converters.XML
 import grails.plugin.cache.CachePut
 //import grails.plugin.cache.GrailsCacheManager
-import org.grails.plugin.cache.GrailsCacheManager
+//import org.grails.plugin.cache.GrailsCacheManager
+import org.springframework.cache.CacheManager
 import org.grails.groovy.grails.commons.*
 import grails.core.GrailsApplication
 /*
@@ -28,21 +29,21 @@ class TraceCacheService{
 	static transactional = false
 	
 	GrailsApplication grailsApplication
-	GrailsCacheManager grailsCacheManager
+	CacheManager cacheManager
 	
 	// called through generateJSON()
 
 	public void flushCache(String uri){
 		try{
-			grailsCacheManager?.getCache('Trace').clear()
-			//Cache cache = grailsCacheManager.getCache('Trace')
+			cacheManager?.getCache('Trace').clear()
+			//Cache cache = cacheManager.getCache('Trace')
 			//cache.clear()
 		}catch(Exception e){
 			throw new Exception("[TraceCacheService :: getTraceCache] : Exception - full stack trace follows:",e)
 		}
 	}
 
-	@org.springframework.cache.annotation.CachePut(value="Trace",key="#uri")
+	@CachePut(value="Trace",key= {"uri"})
 	LinkedHashMap putTraceCache(String uri, LinkedHashMap cache){
 		try{
 			return cache
@@ -51,7 +52,7 @@ class TraceCacheService{
 		}
 	}
 
-	@org.springframework.cache.annotation.CachePut(value="Trace",key="#uri")
+	@CachePut(value="Trace",key= {"uri"})
 	LinkedHashMap setTraceMethod(String uri,LinkedHashMap cache){
 		try{
 			return cache
@@ -62,7 +63,7 @@ class TraceCacheService{
 
 	LinkedHashMap getTraceCache(String uri){
 		try{
-			def temp = grailsCacheManager?.getCache('Trace')
+			def temp = cacheManager?.getCache('Trace')
 			def cache = temp?.get(uri)
 			if(cache?.get()){
 				return cache.get() as LinkedHashMap
@@ -77,7 +78,7 @@ class TraceCacheService{
 	
 	List getCacheNames(){
 		List cacheNames = []
-		cacheNames = grailsCacheManager?.getCache('Trace')?.getAllKeys() as List
+		cacheNames = cacheManager?.getCache('Trace')?.getAllKeys() as List
 		return cacheNames
 	}
 }

@@ -36,7 +36,7 @@ class ContentTypeMarshallerFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest servletRequest, HttpServletResponse servletResponse, FilterChain chain) throws ServletException, IOException {
-
+        println("#### ContentTypeMarshallerFilter ####")
         HttpServletRequest request = servletRequest as HttpServletRequest
         HttpServletResponse response = servletResponse as HttpServletResponse
 

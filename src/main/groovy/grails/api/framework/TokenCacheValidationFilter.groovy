@@ -67,7 +67,7 @@ class TokenCacheValidationFilter extends GenericFilterBean {
 
     @Override
     void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-
+        println("#### TokenCacheValidationFilter ####")
         HttpServletRequest httpRequest = request as HttpServletRequest
         HttpServletResponse httpResponse = response as HttpServletResponse
         AccessToken accessToken
@@ -146,14 +146,18 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                 LinkedHashMap cache = [:]
                 def temp = grailsCacheManager?.getCache('ApiCache')
                 def tempCache = temp?.get(controller.toString())
-
                 if(tempCache?.get()){
+println("has cache")
                     cache = tempCache.get() as LinkedHashMap
+println(cache)
                     HttpSession session = httpRequest.getSession()
                     session['cache'] = cache as LinkedHashMap
                 }
 
                 String version = cache['cacheversion']
+println(version)
+println(cache["${version}"])
+println(action)
 
                 if(!cache?."${version}"?."${action}"){
                     httpResponse.status = 401

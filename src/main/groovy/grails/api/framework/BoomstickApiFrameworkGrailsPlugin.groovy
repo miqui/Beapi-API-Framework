@@ -143,6 +143,7 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
 
             doInitApiFrameworkInstall(applicationContext)
             String apiObjectSrc = grails.util.Holders.grailsApplication.config.iostate.preloadDir
+        println("IO src :" + apiObjectSrc)
             parseFiles(apiObjectSrc.toString(), applicationContext)
         //}catch(Exception e){
         //    throw new Exception("[BeAPIFramework] : Cannot set system properties :",e)
@@ -154,7 +155,7 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
 
         println "### Loading IO State Files ..."
 
-        try {
+        //try {
             new File(path).eachFile() { file ->
                 String fileName = file.name.toString()
 
@@ -163,17 +164,18 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
 
                 if (tmp[1] == 'json' && fileChar == "n") {
 
-                    try{
+                    //try{
                         JSONObject json = JSON.parse(file.text)
                         methods[json.NAME.toString()] = parseJson(json.NAME.toString(), json, applicationContext)
-                    }catch(Exception e){
-                        throw new Exception("[ApiObjectService :: initialize] : Unacceptable file '${file.name}' - full stack trace follows:",e)
-                    }
+
+                    //}catch(Exception e){
+                    //    throw new Exception("[ApiObjectService :: initialize] : Unacceptable file '${file.name}' - full stack trace follows:",e)
+                    //}
                 }
             }
-        }catch(Exception e){
-            throw new Exception("[BeAPIFramework] : No IO State Files found for initialization :",e)
-        }
+        //}catch(Exception e){
+        //    throw new Exception("[BeAPIFramework] : No IO State Files found for initialization :",e)
+        //}
     }
 
 	void doInitApiFrameworkInstall(applicationContext) {
@@ -294,13 +296,16 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
 	}
 
     LinkedHashMap parseJson(String apiName,JSONObject json, ApplicationContext applicationContext){
+        println("... parseJson")
         def apiCacheService = applicationContext.getBean("apiCacheService")
         apiCacheService.flushAllApiCache()
 
         LinkedHashMap methods = [:]
+
         json.VERSION.each() { vers ->
             def versKey = vers.key
             String defaultAction = (vers.value['DEFAULTACTION'])?vers.value.DEFAULTACTION:'index'
+
             List deprecated = (vers.value.DEPRECATED)?vers.value.DEPRECATED:[]
             String domainPackage = (vers.value.DOMAINPACKAGE!=null || vers.value.DOMAINPACKAGE?.size()>0)?vers.value.DOMAINPACKAGE:null
 
@@ -362,6 +367,12 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
 
             }
 
+            List l = apiCacheService.getCacheNames() as List
+            l.each(){
+                println(it.simpleKey)
+            }
+            def test = apiCacheService.getApiCache(apiName)
+            println(apiName+"="+test)
         }
         return methods
     }

@@ -63,7 +63,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 	}
 
 	boolean before(){
-		//println('##### FILTER (BEFORE)')
+		println('##### FILTER (BEFORE)')
 
 		// TESTING: SHOW ALL FILTERS IN CHAIN
 		//def filterChain = grailsApplication.mainContext.getBean('springSecurityFilterChain')
@@ -227,7 +227,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 	}
 
 	boolean after(){
-		//println('##### FILTER (AFTER)')
+		println('##### FILTER (AFTER)')
 
 		List unsafeMethods = ['PUT','POST','DELETE']
 		def vals = model.values()
