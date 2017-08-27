@@ -34,15 +34,19 @@ import org.grails.groovy.grails.commons.*
 import grails.core.GrailsApplication
 import grails.util.Holders
 import org.springframework.web.context.request.RequestContextHolder as RCH
-import org.grails.core.DefaultGrailsDomainClass
+import org.grails.core.artefact.DomainClassArtefactHandler
+
 import org.springframework.beans.factory.annotation.Autowired
 
 // import org.codehaus.groovy.grails.commons.DomainClassArtefactHandler
+
+
 import org.grails.core.artefact.DomainClassArtefactHandler
 import net.nosegrind.apiframework.ApiCacheService
 import net.nosegrind.apiframework.ThrottleCacheService
 //import grails.plugin.cache.GrailsCacheManager
 import org.grails.plugin.cache.GrailsCacheManager
+
 // extended by ApiCommLayer
 
 abstract class ApiCommProcess{
@@ -452,7 +456,7 @@ abstract class ApiCommProcess{
 
     // interceptor::after (response)
     LinkedHashMap convertModel(Map map){
-        try{
+        //try{
             LinkedHashMap newMap = [:]
             String k = map.entrySet().toList().first().key
 
@@ -469,20 +473,23 @@ abstract class ApiCommProcess{
                 }
             }
             return newMap
-        }catch(Exception e){
-            throw new Exception("[ApiCommProcess :: convertModel] : Exception - full stack trace follows:",e)
-        }
+        //}catch(Exception e){
+        //    throw new Exception("[ApiCommProcess :: convertModel] : Exception - full stack trace follows:",e)
+        //}
     }
 
     // used by convertModel > interceptor::after (response)
     LinkedHashMap formatDomainObject(Object data){
-        try{
+        //try{
             LinkedHashMap newMap = [:]
 
             newMap.put('id',data?.id)
             newMap.put('version',data?.version)
 
-            DefaultGrailsDomainClass d = new DefaultGrailsDomainClass(data.class)
+            //DefaultGrailsDomainClass d = new DefaultGrailsDomainClass(data.class)
+
+            def d = grailsApplication?.getArtefact(DomainClassArtefactHandler.TYPE, data.class.getName())
+
             d.persistentProperties.each() { it ->
                 if((DomainClassArtefactHandler.isDomainClass(data[it.name].getClass()))){
                     newMap["${it.name}Id"] = data[it.name].id
@@ -491,9 +498,9 @@ abstract class ApiCommProcess{
                 }
             }
             return newMap
-        }catch(Exception e){
-            throw new Exception("[ApiCommProcess :: formatDomainObject] : Exception - full stack trace follows:",e)
-        }
+        //}catch(Exception e){
+        //   throw new Exception("[ApiCommProcess :: formatDomainObject] : Exception - full stack trace follows:",e)
+        //}
     }
 
     // used by convertModel > interceptor::after (response)

@@ -63,7 +63,7 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 	}
 
 	boolean before(){
-		println('##### FILTER (BEFORE)')
+		//println('##### FILTER (BEFORE)')
 
 		// TESTING: SHOW ALL FILTERS IN CHAIN
 		//def filterChain = grailsApplication.mainContext.getBean('springSecurityFilterChain')
@@ -227,12 +227,12 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 	}
 
 	boolean after(){
-		println('##### FILTER (AFTER)')
+		//println('##### FILTER (AFTER)')
 
 		List unsafeMethods = ['PUT','POST','DELETE']
 		def vals = model.values()
 
-		try {
+		//try {
 			LinkedHashMap newModel = [:]
 			if (params.controller != 'apidoc') {
 				if (!model || vals[0]==null) {
@@ -301,10 +301,10 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 			}
 
 			return false
-		}catch(Exception e){
-			throw new Exception("[ApiToolkitFilters :: apitoolkit.after] : Exception - full stack trace follows:", e)
-			return false
-		}
+		//}catch(Exception e){
+		//	throw new Exception("[ApiToolkitFilters :: apitoolkit.after] : Exception - full stack trace follows:", e)
+		//	return false
+		//}
 	}
 
 }

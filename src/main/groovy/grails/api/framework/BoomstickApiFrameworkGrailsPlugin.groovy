@@ -143,7 +143,7 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
 
             doInitApiFrameworkInstall(applicationContext)
             String apiObjectSrc = grails.util.Holders.grailsApplication.config.iostate.preloadDir
-        println("IO src :" + apiObjectSrc)
+
             parseFiles(apiObjectSrc.toString(), applicationContext)
         //}catch(Exception e){
         //    throw new Exception("[BeAPIFramework] : Cannot set system properties :",e)
@@ -296,7 +296,6 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
 	}
 
     LinkedHashMap parseJson(String apiName,JSONObject json, ApplicationContext applicationContext){
-        println("... parseJson")
         def apiCacheService = applicationContext.getBean("apiCacheService")
         apiCacheService.flushAllApiCache()
 
@@ -367,12 +366,6 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
 
             }
 
-            List l = apiCacheService.getCacheNames() as List
-            l.each(){
-                println(it.simpleKey)
-            }
-            def test = apiCacheService.getApiCache(apiName)
-            println(apiName+"="+test)
         }
         return methods
     }

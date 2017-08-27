@@ -36,7 +36,7 @@ class ContentTypeMarshallerFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest servletRequest, HttpServletResponse servletResponse, FilterChain chain) throws ServletException, IOException {
-        println("#### ContentTypeMarshallerFilter ####")
+        //println("#### ContentTypeMarshallerFilter ####")
         HttpServletRequest request = servletRequest as HttpServletRequest
         HttpServletResponse response = servletResponse as HttpServletResponse
 
@@ -81,7 +81,6 @@ class ContentTypeMarshallerFilter extends OncePerRequestFilter {
 
             }
         } catch (Exception e) {
-            println "marshalling failed: ${e.message}"
             response.status = 401
             response.setHeader('ERROR', 'Failed')
             response.writer.flush()

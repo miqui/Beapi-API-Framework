@@ -45,6 +45,7 @@ import grails.util.Holders
 
 import javax.servlet.http.HttpSession
 import org.springframework.web.context.request.RequestContextHolder as RCH
+import org.grails.plugin.cache.GrailsCacheManager
 
 @Slf4j
 //@CompileStatic
@@ -67,7 +68,7 @@ class TokenCacheValidationFilter extends GenericFilterBean {
 
     @Override
     void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        println("#### TokenCacheValidationFilter ####")
+        //println("#### TokenCacheValidationFilter ####")
         HttpServletRequest httpRequest = request as HttpServletRequest
         HttpServletResponse httpResponse = response as HttpServletResponse
         AccessToken accessToken
@@ -129,11 +130,11 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                 String controller
                 String action
 
-                if(actualUri ==~ /\/.{0}[a-z]${entryPoint}\/(.*)/){
+                if (actualUri ==~ /\/.{0}[a-z]${entryPoint}\/(.*)/) {
                     List params = actualUri.split('/')
                     controller = params[2]
                     action = params[3]
-                }else{
+                } else {
                     httpResponse.status = 401
                     httpResponse.setHeader('ERROR', 'BAD Access attempted')
                     //httpResponse.writer.flush()
@@ -142,34 +143,42 @@ class TokenCacheValidationFilter extends GenericFilterBean {
 
                 ApplicationContext ctx = Holders.grailsApplication.mainContext
                 GrailsCacheManager grailsCacheManager = ctx.getBean("grailsCacheManager");
+                //def temp = grailsCacheManager?.getCache('ApiCache')
 
                 LinkedHashMap cache = [:]
                 def temp = grailsCacheManager?.getCache('ApiCache')
-                def tempCache = temp?.get(controller.toString())
+
+                List cacheNames = temp.getAllKeys() as List
+
+                def tempCache
+                while (tempCache == null) {
+                    cacheNames.each() {
+                        if (it.simpleKey == controller) {
+                            tempCache = temp.get(it)
+                        }
+                    }
+                }
+
+                def cache2
+                String version
                 if(tempCache?.get()){
-println("has cache")
-                    cache = tempCache.get() as LinkedHashMap
-println(cache)
-                    HttpSession session = httpRequest.getSession()
-                    session['cache'] = cache as LinkedHashMap
+                    cache2 = tempCache.get() as LinkedHashMap
+                    version = cache2['cacheversion']
+                    if(!cache2?."${version}"?."${action}"){
+                        httpResponse.status = 401
+                        httpResponse.setHeader('ERROR', 'IO State Not properly Formatted for this URI. Please contact the Administrator.')
+                        //httpResponse.writer.flush()
+                        return
+                    }else{
+                        def session = RCH.currentRequestAttributes().getSession()
+                        session['cache'] = cache2
+                        //HttpSession session = httpRequest.getSession()
+                        //session['cache'] = cache2
+                    }
+
                 }
 
-                String version = cache['cacheversion']
-println(version)
-println(cache["${version}"])
-println(action)
-
-                if(!cache?."${version}"?."${action}"){
-                    httpResponse.status = 401
-                    httpResponse.setHeader('ERROR', 'IO State Not properly Formatted for this URI. Please contact the Administrator.')
-                    //httpResponse.writer.flush()
-                    return
-                }else{
-                    def session = RCH.currentRequestAttributes().getSession()
-                    session['cache'] = cache
-                }
-
-                HashSet roles = cache?."${version}"?."${action}"?.roles as HashSet
+                HashSet roles = cache2?."${version}"?."${action}"?.roles as HashSet
 
                 if(!checkAuth(roles,authenticationResult)) {
                     httpResponse.status = 401

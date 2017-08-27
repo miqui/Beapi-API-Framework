@@ -70,10 +70,8 @@ class ApiCacheService{
 	//@org.springframework.cache.annotation.CachePut(value="ApiCache",key="#controllername")
 	@CachePut(value="ApiCache",key={controllername})
 	LinkedHashMap setApiCache(String controllername,String methodname, ApiDescriptor apidoc, String apiversion){
-		println("####### setApiCache2 ########")
 		try{
 			def cache = getApiCache(controllername)
-			println("cache : " + cache)
 			if(!cache[apiversion]){
 				cache[apiversion] = [:]
 			}
@@ -175,11 +173,9 @@ class ApiCacheService{
 			cacheNames.each(){
 				if(it.simpleKey==controllername) {
 					cache = temp.get(it)
-					//println(it.simpleKey + " : " + test.get())
 				}
 			}
-			//def cache = temp?.get(controllername)
-			//println("cache : "+cache)
+
 			if(cache?.get()){
 				return cache.get() as LinkedHashMap
 			}else{ 
