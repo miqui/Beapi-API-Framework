@@ -10,7 +10,6 @@
 
 // Place your Spring DSL code here
 beans = {
-
     requestForwarder(grails.api.framework.RequestForwarder)
-
+    tokenStorageService(net.nosegrind.apiframework.ApiTokenStorageService)
 }

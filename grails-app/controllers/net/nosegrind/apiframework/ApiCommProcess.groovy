@@ -456,7 +456,7 @@ abstract class ApiCommProcess{
 
     // interceptor::after (response)
     LinkedHashMap convertModel(Map map){
-        //try{
+        try{
             LinkedHashMap newMap = [:]
             String k = map.entrySet().toList().first().key
 
@@ -473,14 +473,14 @@ abstract class ApiCommProcess{
                 }
             }
             return newMap
-        //}catch(Exception e){
-        //    throw new Exception("[ApiCommProcess :: convertModel] : Exception - full stack trace follows:",e)
-        //}
+        }catch(Exception e){
+            throw new Exception("[ApiCommProcess :: convertModel] : Exception - full stack trace follows:",e)
+        }
     }
 
     // used by convertModel > interceptor::after (response)
     LinkedHashMap formatDomainObject(Object data){
-        //try{
+        try{
             LinkedHashMap newMap = [:]
 
             newMap.put('id',data?.id)
@@ -498,9 +498,9 @@ abstract class ApiCommProcess{
                 }
             }
             return newMap
-        //}catch(Exception e){
-        //   throw new Exception("[ApiCommProcess :: formatDomainObject] : Exception - full stack trace follows:",e)
-        //}
+        }catch(Exception e){
+           throw new Exception("[ApiCommProcess :: formatDomainObject] : Exception - full stack trace follows:",e)
+        }
     }
 
     // used by convertModel > interceptor::after (response)
