@@ -25,7 +25,7 @@ class ParamsDescriptor implements Validateable {
 	ParamsDescriptor[] values = []
 
 	static constraints = { 
-		paramType(nullable:false,maxSize:100,inList: ["STRING","DATE","LONG","BOOLEAN","FLOAT","BIGDECIMAL","MAP","COMPOSITE"])
+		paramType(nullable:false,maxSize:100,inList: ["STRING","DATE","LONG","BOOLEAN","FLOAT","BIGDECIMAL","MAP","LIST","COMPOSITE"])
 		keyType(nullable:true,maxSize:100,inList: ["PRIMARY","FOREIGN","INDEX"])
 		name(nullable:false,maxSize:100)
 		idReferences(maxSize:100, validator: { val, obj ->

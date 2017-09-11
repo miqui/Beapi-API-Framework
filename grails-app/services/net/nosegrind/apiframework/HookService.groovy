@@ -13,6 +13,8 @@ package net.nosegrind.apiframework
 import grails.converters.JSON
 import grails.converters.XML
 import org.grails.validation.routines.UrlValidator
+import org.grails.core.artefact.DomainClassArtefactHandler
+import grails.core.GrailsDomainClass
 
 class HookService {
 
@@ -30,8 +32,15 @@ class HookService {
 	}
 	
     private boolean send(Map data, String state, String service) {
-	
-		def hooks = grailsApplication.getClassForName('net.nosegrind.apiframework.Hook').findAll("from Hook where service='${service}'")
+
+		def hooks = grailsApplication.getClassForName('net.nosegrind.apiframework.Hook').findAll("from Hook where service=?",[service])
+
+		/*
+		GrailsDomainClass dc = grailsApplication.getDomainClass('net.nosegrind.apiframework.Hook')
+		def tempHook = dc.clazz.newInstance()
+
+		def hooks = tempHook.find("from Hook where service=?",[service])
+		*/
 
 		hooks.each { hook ->
 			String format = hook.format.toLowerCase()

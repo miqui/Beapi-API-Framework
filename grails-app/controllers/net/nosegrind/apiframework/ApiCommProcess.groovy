@@ -41,7 +41,6 @@ import org.springframework.beans.factory.annotation.Autowired
 // import org.codehaus.groovy.grails.commons.DomainClassArtefactHandler
 
 
-import org.grails.core.artefact.DomainClassArtefactHandler
 import net.nosegrind.apiframework.ApiCacheService
 import net.nosegrind.apiframework.ThrottleCacheService
 //import grails.plugin.cache.GrailsCacheManager
@@ -491,10 +490,12 @@ abstract class ApiCommProcess{
             def d = grailsApplication?.getArtefact(DomainClassArtefactHandler.TYPE, data.class.getName())
 
             d.persistentProperties.each() { it ->
-                if((DomainClassArtefactHandler.isDomainClass(data[it.name].getClass()))){
-                    newMap["${it.name}Id"] = data[it.name].id
-                }else{
-                    newMap[it.name] = data[it.name]
+                if (it?.name) {
+                    if ((DomainClassArtefactHandler.isDomainClass(data[it.name].getClass()))) {
+                        newMap["${it.name}Id"] = data[it.name].id
+                    } else {
+                        newMap[it.name] = data[it.name]
+                    }
                 }
             }
             return newMap

@@ -81,6 +81,7 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                 accessToken = restAuthenticationProvider.authenticate(accessToken) as AccessToken
 
                 if (accessToken.authenticated) {
+
                     //log.debug "Token authenticated. Storing the authentication result in the security context"
                     //log.debug "Authentication result: ${accessToken}"
                     SecurityContextHolder.context.setAuthentication(accessToken)
@@ -99,6 +100,7 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                 return
             }
         } catch (AuthenticationException ae) {
+            // NOTE: This will happen if token not found in database
             httpResponse.status = 401
             httpResponse.setHeader('ERROR', 'Authorization Attempt Failed')
             httpResponse.writer.flush()
@@ -110,6 +112,7 @@ class TokenCacheValidationFilter extends GenericFilterBean {
 
     @CompileDynamic
     private void processFilterChain(ServletRequest request, ServletResponse response, FilterChain chain, AccessToken authenticationResult) {
+
         HttpServletRequest httpRequest = request as HttpServletRequest
         HttpServletResponse httpResponse = response as HttpServletResponse
 
@@ -123,7 +126,6 @@ class TokenCacheValidationFilter extends GenericFilterBean {
         if (authenticationResult?.accessToken) {
             if (actualUri == validationEndpointUrl) {
                 //log.debug "Validation endpoint called. Generating response."
-
                 authenticationSuccessHandler.onAuthenticationSuccess(httpRequest, httpResponse, authenticationResult)
             } else {
                 String entryPoint = Metadata.current.getProperty(Metadata.APPLICATION_VERSION, String.class)
@@ -142,51 +144,58 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                 }
 
                 ApplicationContext ctx = Holders.grailsApplication.mainContext
-                GrailsCacheManager grailsCacheManager = ctx.getBean("grailsCacheManager");
-                //def temp = grailsCacheManager?.getCache('ApiCache')
+                if(ctx) {
+                    GrailsCacheManager grailsCacheManager = ctx.getBean("grailsCacheManager");
+                    //def temp = grailsCacheManager?.getCache('ApiCache')
 
-                LinkedHashMap cache = [:]
-                def temp = grailsCacheManager?.getCache('ApiCache')
+                    LinkedHashMap cache = [:]
+                    def temp = grailsCacheManager?.getCache('ApiCache')
 
-                List cacheNames = temp.getAllKeys() as List
+                    List cacheNames = temp.getAllKeys() as List
 
-                def tempCache
-                while (tempCache == null) {
-                    cacheNames.each() {
-                        if (it.simpleKey == controller) {
+                    def tempCache
+
+                    for(it in cacheNames){
+                        if (it.simpleKey.toString() == controller) {
                             tempCache = temp.get(it)
+                            break
                         }
                     }
-                }
 
-                def cache2
-                String version
-                if(tempCache?.get()){
-                    cache2 = tempCache.get() as LinkedHashMap
-                    version = cache2['cacheversion']
-                    if(!cache2?."${version}"?."${action}"){
-                        httpResponse.status = 401
-                        httpResponse.setHeader('ERROR', 'IO State Not properly Formatted for this URI. Please contact the Administrator.')
-                        //httpResponse.writer.flush()
-                        return
+
+                    def cache2
+                    String version
+                    if (tempCache?.get()) {
+                        cache2 = tempCache.get() as LinkedHashMap
+                        version = cache2['cacheversion']
+                        if (!cache2?."${version}"?."${action}") {
+                            httpResponse.status = 401
+                            httpResponse.setHeader('ERROR', 'IO State Not properly Formatted for this URI. Please contact the Administrator.')
+                            //httpResponse.writer.flush()
+                            return
+                        } else {
+                            def session = RCH.currentRequestAttributes().getSession()
+                            session['cache'] = cache2
+                            //HttpSession session = httpRequest.getSession()
+                            //session['cache'] = cache2
+                        }
+
                     }else{
-                        def session = RCH.currentRequestAttributes().getSession()
-                        session['cache'] = cache2
-                        //HttpSession session = httpRequest.getSession()
-                        //session['cache'] = cache2
+                        println("no cache found")
                     }
 
-                }
+                    HashSet roles = cache2?."${version}"?."${action}"?.roles as HashSet
 
-                HashSet roles = cache2?."${version}"?."${action}"?.roles as HashSet
-
-                if(!checkAuth(roles,authenticationResult)) {
-                    httpResponse.status = 401
-                    httpResponse.setHeader('ERROR', 'Unauthorized Access attempted')
-                    //httpResponse.writer.flush()
-                    return
-                }else {
-                    //log.debug "Continuing the filter chain"
+                    if (!checkAuth(roles, authenticationResult)) {
+                        httpResponse.status = 401
+                        httpResponse.setHeader('ERROR', 'Unauthorized Access attempted')
+                        //httpResponse.writer.flush()
+                        return
+                    } else {
+                        //log.debug "Continuing the filter chain"
+                    }
+                }else{
+                    println("no ctx found")
                 }
             }
         } else {
