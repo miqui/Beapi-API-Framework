@@ -179,7 +179,6 @@ class TokenCacheValidationFilter extends GenericFilterBean {
                             //HttpSession session = httpRequest.getSession()
                             //session['cache'] = cache2
                         }
-
                     }else{
                         println("no cache found")
                     }

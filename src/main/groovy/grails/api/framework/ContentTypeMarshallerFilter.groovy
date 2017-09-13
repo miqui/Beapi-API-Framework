@@ -24,7 +24,8 @@ import javax.servlet.ServletResponse
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
-import groovy.json.JsonSlurper
+// import groovy.json.JsonSlurper
+import groovy.json.JsonSlurperClassic
 
 
 @Slf4j
@@ -70,7 +71,7 @@ class ContentTypeMarshallerFilter extends OncePerRequestFilter {
                     default:
                         def json = request.JSON.toString()
                         if(json!='[:]') {
-                            def slurper = new JsonSlurper()
+                            def slurper = new JsonSlurperClassic()
                             slurper.parseText(json).each() { k, v ->
                                 dataParams[k] = v
                             }

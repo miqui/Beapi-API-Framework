@@ -54,7 +54,7 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 	}
 
 	boolean before() {
-		println('##### CHAININTERCEPTOR (BEFORE)')
+		//println('##### CHAININTERCEPTOR (BEFORE)')
 
 		// TESTING: SHOW ALL FILTERS IN CHAIN
 		//def filterChain = grailsApplication.mainContext.getBean('springSecurityFilterChain')
@@ -73,31 +73,40 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 		// TODO: Check if user in USER roles and if this request puts user over 'rateLimit'
 
 		// Init params
-
 		if (formats.contains(format)) {
+			LinkedHashMap attribs = [:]
 			switch (format) {
 				case 'XML':
-					chain = request.getAttribute('XML') as LinkedHashMap
+					attribs = request.getAttribute('XML') as LinkedHashMap
 					break
 				case 'JSON':
-				case 'JSON':
-					chain = request.getAttribute('JSON') as LinkedHashMap
-					break
 				default:
-					render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Expecting JSON Formatted chain data')
-					return false
+					attribs = request.getAttribute('JSON') as LinkedHashMap
+					break
+			}
+			if(attribs){
+				attribs.each() { k, v ->
+					if(k.toString()=='chain'){
+						chain = v as LinkedHashMap
+					}else{ params.put(k, v) }
+				}
 			}
 		}
 
+		// INITIALIZE CACHE
+
+		session['cache'] = apiCacheService.getApiCache(params.controller.toString())
+		cache = session['cache'] as LinkedHashMap
+
 		// INIT local Chain Variables
-		if(chain?.chain==null){
+		if(chain==null){
 			render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Expected chain variables not sent')
 			return false
 		}
 		int inc = 0
-		chainKeys[0] = chain['chain']['key']
+		chainKeys[0] = chain['key']
 		chainUris[0] = request.forwardURI
-		LinkedHashMap order = chain.chain.order as LinkedHashMap
+		HashMap order = chain.order as HashMap
 		order.each(){ key, val ->
 			chainOrder[key] = val
 			inc++
@@ -106,7 +115,6 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 		}
 		chainLength = inc
 
-
 		// TODO : test for where chain data was sent
 		if(!isChain(request)){
 			render(status: HttpServletResponse.SC_BAD_REQUEST, text: 'Expected request variables for endpoint do not match sent variables')
@@ -114,17 +122,19 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 		}
 
 
-		// INITIALIZE CACHE
-		def session = request.getSession()
-		cache = session['cache'] as LinkedHashMap
+
+
+
 		if(cache) {
 			params.apiObject = (params.apiObjectVersion) ? params.apiObjectVersion : cache['currentStable']['value']
 			params.action = (params.action == null) ? cache[params.apiObject]['defaultAction'] : params.action
 		}
 
+
 		// CHECK REQUEST VARIABLES MATCH ENDPOINTS EXPECTED VARIABLES
-		String path = "${params.controller}/${params.action}".toString()
-		println(path)
+		//String path = "${params.controller}/${params.action}".toString()
+		//println(path)
+
 
 		try{
 			if (params.controller == 'apidoc') {
@@ -202,9 +212,6 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 					setChainParams(params)
 
 					// CHECK REQUEST VARIABLES MATCH ENDPOINTS EXPECTED VARIABLES
-					println("cache : "+cache[params.apiObject][params.action.toString()]['name'])
-					println("cache : "+cache[params.apiObject][params.action.toString()]['description'])
-					println("cache : "+cache[params.apiObject][params.action.toString()]['roles'])
 					LinkedHashMap receives = cache[params.apiObject][params.action.toString()]['receives'] as LinkedHashMap
 					//boolean requestKeysMatch = checkURIDefinitions(params, receives)
 					if (!checkURIDefinitions(params, receives)) {
@@ -260,7 +267,7 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 	}
 
 	boolean after(){
-		println('##### CHAININTERCEPTOR (AFTER)')
+		//println('##### CHAININTERCEPTOR (AFTER)')
 
 		// getChainVars and reset Chain
 		LinkedHashMap<String,LinkedHashMap<String,String>> chain = params.apiChain as LinkedHashMap
@@ -295,15 +302,12 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 
 				params.id = ((chainInc + 1) == 1) ? chainKeys[0] : chainKeys[(chainInc)]
 				if (chainEnabled && (chainLength >= (chainInc + 1)) && params.id!='return') {
-println("chainable")
 					WebUtils.exposeRequestAttributes(request, params);
 					// this will work fine when we upgrade to newer version that has fix in it
 					String forwardUri = "/${entryPoint}/${chainUris[chainInc + 1]}/${newModel.get(params.id)}"
-					println(forwardUri)
 					forward(URI: forwardUri, params: [apiObject: params.apiObject, apiChain: params.apiChain])
 					return false
 				} else {
-					println("not chainable")
 					String content = handleChainResponse(cachedEndpoint['returns'] as LinkedHashMap, cachedEndpoint['roles'] as List, mthd, format, response, newModel, params)
 
 					byte[] contentLength = content.getBytes( "ISO-8859-1" )

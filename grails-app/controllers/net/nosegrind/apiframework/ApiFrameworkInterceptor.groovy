@@ -99,10 +99,10 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 			}
 		}
 
-		
 		// INITIALIZE CACHE
 		def session = request.getSession()
 		cache = session['cache'] as LinkedHashMap
+
 		if(cache) {
 			params.apiObject = (params.apiObjectVersion) ? params.apiObjectVersion : cache['currentStable']['value']
 			params.action = (params.action == null) ? cache[params.apiObject]['defaultAction'] : params.action
