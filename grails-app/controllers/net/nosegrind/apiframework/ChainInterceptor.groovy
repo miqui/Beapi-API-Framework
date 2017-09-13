@@ -54,7 +54,7 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 	}
 
 	boolean before() {
-		//println('##### CHAININTERCEPTOR (BEFORE)')
+		println('##### CHAININTERCEPTOR (BEFORE)')
 
 		// TESTING: SHOW ALL FILTERS IN CHAIN
 		//def filterChain = grailsApplication.mainContext.getBean('springSecurityFilterChain')
@@ -113,21 +113,26 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 			return false
 		}
 
-		try {
-			// INITIALIZE CACHE
-			def session = request.getSession()
-			cache = session['cache'] as LinkedHashMap
 
+		// INITIALIZE CACHE
+		def session = request.getSession()
+		cache = session['cache'] as LinkedHashMap
+		if(cache) {
+			params.apiObject = (params.apiObjectVersion) ? params.apiObjectVersion : cache['currentStable']['value']
+			params.action = (params.action == null) ? cache[params.apiObject]['defaultAction'] : params.action
+		}
 
+		// CHECK REQUEST VARIABLES MATCH ENDPOINTS EXPECTED VARIABLES
+		String path = "${params.controller}/${params.action}".toString()
+		println(path)
+
+		try{
 			if (params.controller == 'apidoc') {
 				if (cache) {
-					params.apiObject = (params.apiObjectVersion) ? params.apiObjectVersion : cache['currentStable']['value']
-					params.action = (params.action == null) ? cache[params.apiObject]['defaultAction'] : params.action
 					return true
 				}
 				return false
 			} else {
-
 				if (cache) {
 					params.apiObject = (params.apiObjectVersion) ? params.apiObjectVersion : cache['currentStable']['value']
 					params.action = (params.action == null) ? cache[params.apiObject]['defaultAction'] : params.action
@@ -164,6 +169,7 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 						}
 					}
 
+
 					if (request?.getAttribute('chainInc') == null) {
 						request.setAttribute('chainInc', 0)
 					} else {
@@ -171,25 +177,34 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 						request.setAttribute('chainInc', newBI + 1)
 					}
 
-
-
-					int chainInc = (int) request.getAttribute('chainInc')
+/*
+					int chainInc = request.getAttribute('chainInc') as int
 					if(params.max!=null) {
 						List max = params.max as List
-						params.max = max[chainInc]
+						println("chaininc :"+chainInc)
+						println("max :"+max)
+						println("test:"+max.get(chainInc))
+						params.max = max.get(chainInc)
+						println("params.max : "+params.max)
 					}else{
+						println("max is null")
 						params.max = 0
 					}
+
 					if(params.offset!=null) {
 						List offset = params.offset as List
 						params.offset = offset[chainInc]
 					}else{
 						params.offset = 0
 					}
+				*/
 
 					setChainParams(params)
 
 					// CHECK REQUEST VARIABLES MATCH ENDPOINTS EXPECTED VARIABLES
+					println("cache : "+cache[params.apiObject][params.action.toString()]['name'])
+					println("cache : "+cache[params.apiObject][params.action.toString()]['description'])
+					println("cache : "+cache[params.apiObject][params.action.toString()]['roles'])
 					LinkedHashMap receives = cache[params.apiObject][params.action.toString()]['receives'] as LinkedHashMap
 					//boolean requestKeysMatch = checkURIDefinitions(params, receives)
 					if (!checkURIDefinitions(params, receives)) {
@@ -207,6 +222,7 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 							return false
 						}else{
 							if (isCachedResult((Integer) json.get('version'), domain)) {
+
 								String result = cache[params.apiObject][params.action.toString()]['cachedResult'][authority][request.format.toUpperCase()] as String
 								byte[] contentLength = result.getBytes( "ISO-8859-1" )
 								if(apiThrottle) {
@@ -225,7 +241,6 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 							}
 						}
 					} else {
-
 						// SET PARAMS AND TEST ENDPOINT ACCESS (PER APIOBJECT)
 						ApiDescriptor cachedEndpoint = cache[(String) params.apiObject][(String) params.action] as ApiDescriptor
 						boolean result = handleApiRequest(cachedEndpoint['deprecated'] as List, (cachedEndpoint['method'])?.toString(), mthd, response, params)
@@ -245,7 +260,7 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 	}
 
 	boolean after(){
-		//println('##### CHAININTERCEPTOR (AFTER)')
+		println('##### CHAININTERCEPTOR (AFTER)')
 
 		// getChainVars and reset Chain
 		LinkedHashMap<String,LinkedHashMap<String,String>> chain = params.apiChain as LinkedHashMap
@@ -280,13 +295,15 @@ class ChainInterceptor extends ApiCommLayer implements grails.api.framework.Requ
 
 				params.id = ((chainInc + 1) == 1) ? chainKeys[0] : chainKeys[(chainInc)]
 				if (chainEnabled && (chainLength >= (chainInc + 1)) && params.id!='return') {
-
+println("chainable")
 					WebUtils.exposeRequestAttributes(request, params);
 					// this will work fine when we upgrade to newer version that has fix in it
 					String forwardUri = "/${entryPoint}/${chainUris[chainInc + 1]}/${newModel.get(params.id)}"
+					println(forwardUri)
 					forward(URI: forwardUri, params: [apiObject: params.apiObject, apiChain: params.apiChain])
 					return false
 				} else {
+					println("not chainable")
 					String content = handleChainResponse(cachedEndpoint['returns'] as LinkedHashMap, cachedEndpoint['roles'] as List, mthd, format, response, newModel, params)
 
 					byte[] contentLength = content.getBytes( "ISO-8859-1" )

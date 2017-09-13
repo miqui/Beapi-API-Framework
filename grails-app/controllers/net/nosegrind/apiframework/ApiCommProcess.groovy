@@ -150,7 +150,13 @@ abstract class ApiCommProcess{
         ArrayList reservedNames = ['batchLength','batchInc','chainInc','apiChain','_','max','offset']
         try{
             String authority = getUserRole() as String
-            ArrayList temp = (requestDefinitions["${authority}"])?requestDefinitions["${authority}"] as ArrayList:(requestDefinitions['permitAll'][0]!=null)? requestDefinitions['permitAll'] as ArrayList:[]
+            ArrayList temp = []
+            if(requestDefinitions["${authority}"]){
+                temp = requestDefinitions["${authority}"] as ArrayList
+            }else if(requestDefinitions['permitAll'][0]!=null){
+                temp = requestDefinitions['permitAll'] as ArrayList
+            }
+
             ArrayList requestList = (temp!=null)?temp.collect(){ it.name }:[]
 
             LinkedHashMap methodParams = getMethodParams(params)
@@ -223,12 +229,12 @@ abstract class ApiCommProcess{
     }
 
     LinkedHashMap parseURIDefinitions(LinkedHashMap model,ArrayList responseList){
-        if(model[0].getClass().getName()=='java.util.LinkedHashMap'){
-            model.each(){ key,val ->
-                model[key] = this.parseURIDefinitions(val,responseList)
+        if(model[0].getClass().getName()=='java.util.LinkedHashMap') {
+            model.each() { key, val ->
+                model[key] = parseURIDefinitions(val, responseList)
             }
             return model
-        }else {
+        }else{
             try {
                 String msg = 'Error. Invalid variables being returned. Please see your administrator'
 
@@ -237,7 +243,6 @@ abstract class ApiCommProcess{
                 //List paramsList = (model.size()==0)?[:]:model.keySet() as List
                 ArrayList paramsList = (model.size()==0)?[:]:model.keySet() as ArrayList
                 paramsList?.removeAll(optionalParams)
-
                 if (!responseList.containsAll(paramsList)) {
                     paramsList.removeAll(responseList)
                     paramsList.each() { it2 ->
@@ -258,6 +263,7 @@ abstract class ApiCommProcess{
             }
         }
     }
+
 
     // used in ApiCommLayer
     boolean isRequestMatch(String protocol,RequestMethod mthd){
@@ -524,10 +530,18 @@ abstract class ApiCommProcess{
         LinkedHashMap newMap = [:]
         list.eachWithIndex(){ val, key ->
             if(val){
-                if(DomainClassArtefactHandler.isDomainClass(val.getClass())){
-                    newMap[key]=formatDomainObject(val)
-                }else{
-                    newMap[key] = ((val in java.util.ArrayList || val in java.util.List) || val in java.util.Map)?val:val.toString()
+                if(val[0]){
+                    if(DomainClassArtefactHandler.isDomainClass(val[0].getClass())){
+                        newMap[key]=formatDomainObject(val[0])
+                    }else{
+                        newMap[key] = ((val[0] in java.util.ArrayList || val[0] in java.util.List) || val[0] in java.util.Map)?val[0]:val[0].toString()
+                    }
+                }else {
+                    if (DomainClassArtefactHandler.isDomainClass(val.getClass())) {
+                        newMap[key] = formatDomainObject(val)
+                    } else {
+                        newMap[key] = ((val in java.util.ArrayList || val in java.util.List) || val in java.util.Map) ? list[key] : val.toString()
+                    }
                 }
             }
         }

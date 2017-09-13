@@ -158,7 +158,7 @@ class BoomstickApiFrameworkGrailsPlugin extends Plugin{
         //try {
             new File(path).eachFile() { file ->
                 String fileName = file.name.toString()
-
+println(fileName)
                 def tmp = fileName.split('\\.')
                 String fileChar = fileName.charAt(fileName.length() - 1)
 

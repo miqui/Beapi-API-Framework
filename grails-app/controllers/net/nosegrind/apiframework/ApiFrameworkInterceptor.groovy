@@ -101,28 +101,31 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 
 		
 		// INITIALIZE CACHE
-		try{
-			def session = request.getSession()
-			cache = session['cache'] as LinkedHashMap
+		def session = request.getSession()
+		cache = session['cache'] as LinkedHashMap
+		if(cache) {
+			params.apiObject = (params.apiObjectVersion) ? params.apiObjectVersion : cache['currentStable']['value']
+			params.action = (params.action == null) ? cache[params.apiObject]['defaultAction'] : params.action
+		}
 
+		// CHECK REQUEST VARIABLES MATCH ENDPOINTS EXPECTED VARIABLES
+		//String path = "${params.controller}/${params.action}".toString()
+		//println(path)
+
+
+		try{
 			// IS APIDOC??
 			if(params.controller=='apidoc'){
 				if(cache){
-					params.apiObject = (params.apiObjectVersion) ? params.apiObjectVersion : cache['currentStable']['value']
-					params.action = (params.action == null) ? cache[params.apiObject]['defaultAction'] : params.action
 					return true
 				}
 				return false
 			}else{
 				if(cache) {
-					params.apiObject = (params.apiObjectVersion) ? params.apiObjectVersion : cache['currentStable']['value']
-					params.action = (params.action == null) ? cache[params.apiObject]['defaultAction'] : params.action
-
 					// CHECK REQUEST METHOD FOR ENDPOINT
 					// NOTE: expectedMethod must be capitolized in IO State file
 					String expectedMethod = cache[params.apiObject][params.action.toString()]['method'] as String
 					if (!checkRequestMethod(mthd,expectedMethod, restAlt)) {
-						String path = "${params.controller}/${params.action}".toString()
 						render(status: 400, text: "Expected request method '${expectedMethod}' does not match sent method '${mthd.getKey()}'")
 						return false
 					}
@@ -151,10 +154,6 @@ class ApiFrameworkInterceptor extends ApiCommLayer{
 							}
 						}
 					}
-
-					// CHECK REQUEST VARIABLES MATCH ENDPOINTS EXPECTED VARIABLES
-					//String path = "${params.controller}/${params.action}".toString()
-					//println(path)
 
 					LinkedHashMap receives = cache[params.apiObject][params.action.toString()]['receives'] as LinkedHashMap
 					//boolean requestKeysMatch = checkURIDefinitions(params, receives)
